@@ -1,0 +1,21 @@
+TPSchrome binding
+=================
+
+The device tree node which describes the operation of the Texas Instrument
+TPS65090 power regulator chip is as follows:
+
+Required properties :
+- compatible : "ti,tps65090"
+- reg : slave address on the i2c bus
+
+The tps65090 node should appear as a subnode of the i2c bus that connects it.
+
+Example
+=======
+
+	i2c@12ca0000 {
+		power-regulator@48 {
+			compatible = "ti,tps65090"
+			reg = <0x48>;
+		};
+	};
