@@ -21,7 +21,9 @@
  */
 
 #include <common.h>
+#include <asm/arch/board.h>
 #include <asm/arch/cpu.h>
+#include <asm/arch/gpio.h>
 #include <asm/arch/spl.h>
 #include <asm/arch/clk.h>
 
@@ -66,3 +68,16 @@ struct spl_machine_param *spl_get_machine_params(void)
 
 	return &machine_param;
 }
+
+/* TODO(SLSI): This file should not be included unless CONFIG_SPL_BUILD */
+#ifdef CONFIG_SPL_BUILD
+int board_get_revision(void)
+{
+	struct spl_machine_param *params = spl_get_machine_params();
+	unsigned gpio[CONFIG_BOARD_REV_GPIO_COUNT];
+
+	gpio[0] = params->board_rev_gpios & 0xffff;
+	gpio[1] = params->board_rev_gpios >> 16;
+	return gpio_decode_number(gpio, CONFIG_BOARD_REV_GPIO_COUNT);
+}
+#endif

@@ -95,6 +95,7 @@ enum fdt_compat_id {
 	COMPAT_SAMSUNG_EXYNOS5_DWMMC,	/* Exynos5 DWMMC controller */
 	COMPAT_SAMSUNG_EXYNOS_SERIAL,	/* Exynos UART */
 	COMPAT_MAXIM_98095_CODEC,	/* MAX98095 Codec */
+	COMPAT_GOOGLE_BOARD_REV,	/* Google board revision number */
 
 	COMPAT_COUNT,
 };

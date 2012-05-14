@@ -29,6 +29,7 @@
 #include <netdev.h>
 #include <spi.h>
 #include <asm/arch/cpu.h>
+#include <asm/arch/board.h>
 #include <asm/arch/dwmmc.h>
 #include <asm/arch/gpio.h>
 #include <asm/arch/mmc.h>
@@ -274,7 +275,20 @@ int board_eth_init(bd_t *bis)
 #ifdef CONFIG_DISPLAY_BOARDINFO
 int checkboard(void)
 {
+#ifdef CONFIG_OF_CONTROL
+	const char *board_name;
+
+	board_name = fdt_getprop(gd->fdt_blob, 0, "model", NULL);
+	if (board_name == NULL) {
+		printf("\nUnknown Board\n");
+	} else {
+		printf("\nBoard: %s, rev %d\n", board_name,
+		       board_get_revision());
+	}
+#else
 	printf("\nBoard: SMDK5250\n");
+#endif
+
 	return 0;
 }
 #endif
@@ -442,3 +456,31 @@ void init_panel_info(vidinfo_t *vid)
 	exynos_set_dp_platform_data(&dp_platform_data);
 }
 #endif
+
+int board_get_revision(void)
+{
+	struct fdt_gpio_state gpios[CONFIG_BOARD_REV_GPIO_COUNT];
+	unsigned gpio_list[CONFIG_BOARD_REV_GPIO_COUNT];
+	int board_rev = -1;
+	int count = 0;
+	int node;
+
+	node = fdtdec_next_compatible(gd->fdt_blob, 0,
+				      COMPAT_GOOGLE_BOARD_REV);
+	if (node >= 0) {
+		count = fdtdec_decode_gpios(gd->fdt_blob, node,
+				"google,board-rev-gpios", gpios,
+				CONFIG_BOARD_REV_GPIO_COUNT);
+	}
+	if (count > 0) {
+		int i;
+
+		for (i = 0; i < count; i++)
+			gpio_list[i] = gpios[i].gpio;
+		board_rev = gpio_decode_number(gpio_list, count);
+	} else {
+		debug("%s: No board revision information in fdt\n", __func__);
+	}
+
+	return board_rev;
+}

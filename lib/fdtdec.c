@@ -68,6 +68,7 @@ static const char * const compat_names[COMPAT_COUNT] = {
 	COMPAT(SAMSUNG_EXYNOS5_DWMMC, "samsung,exynos5250-dwmmc"),
 	COMPAT(SAMSUNG_EXYNOS_SERIAL, "samsung,exynos4210-uart"),
 	COMPAT(MAXIM_98095_CODEC, "maxim,max98095-codec"),
+	COMPAT(GOOGLE_BOARD_REV, "google,board-revision"),
 };
 
 const char *fdtdec_get_compatible(enum fdt_compat_id id)
