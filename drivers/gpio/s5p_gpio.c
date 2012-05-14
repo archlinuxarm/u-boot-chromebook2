@@ -196,3 +196,53 @@ int gpio_set_value(unsigned gpio, int value)
 
 	return 0;
 }
+
+int gpio_set_pull(unsigned gpio, int value)
+{
+	s5p_gpio_set_pull(s5p_gpio_get_bank(gpio),
+				 s5p_gpio_get_pin(gpio), value);
+	return 0;
+}
+
+/*
+ * Add a delay here to give the lines time to settle
+ * TODO(sjg): 1us does not always work, 2 is stable, so use 5 to be safe
+ * Come back to this and sort out what the datasheet says
+ */
+#define GPIO_DELAY_US 5
+
+int gpio_decode_number(unsigned gpio_list[], int count)
+{
+	int result = 0;
+	int multiplier = 1;
+	int value, high, low;
+	int gpio, i;
+
+	for (i = 0; i < count; i++) {
+		gpio = gpio_list[i];
+
+		/* TODO(SLSI): Fix this up to check correctly:
+		 *
+		 * if (gpio >= GPIO_MAX_PORT)
+		 *	return -1;
+		 */
+		gpio_direction_input(gpio);
+		gpio_set_pull(gpio, GPIO_PULL_UP);
+		udelay(GPIO_DELAY_US);
+		high = gpio_get_value(gpio);
+		gpio_set_pull(gpio, GPIO_PULL_DOWN);
+		udelay(GPIO_DELAY_US);
+		low = gpio_get_value(gpio);
+
+		if (high && low)
+			value = 2;
+		else if (!high && !low)
+			value = 1;
+		else
+			value = 0;
+		result += value * multiplier;
+		multiplier *= 3;
+	}
+
+	return result;
+}

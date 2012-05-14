@@ -331,4 +331,28 @@ static inline unsigned int s5p_gpio_part_max(int nr)
 #define GPIO_DRV_4X	0x3
 #define GPIO_DRV_FAST	0x0
 #define GPIO_DRV_SLOW	0x1
+
+/**
+ * Decode a list of GPIOs into an integer.
+ *
+ * TODO(sjg@chromium.org): This could perhaps become a generic function?
+ *
+ * Each GPIO pin can be put into three states using external resistors:
+ *	- pulled up
+ *	- pulled down
+ *	- not connected
+ *
+ * Read each GPIO in turn to produce an integer value. The first GPIO
+ * produces a number 1 * (0 to 2), the second produces 3 * (0 to 2), etc.
+ * In this way, each GPIO increases the number of possible states by a
+ * factor of 3.
+ *
+ * @param gpio_list	List of GPIO numbers to decode
+ * @param count		Number of GPIOs in list
+ * @return -1 if the value cannot be determined, or any GPIO number is
+ *		invalid. Otherwise returns the calculated value
+ */
+
+int gpio_decode_number(unsigned gpio_list[], int count);
+
 #endif
