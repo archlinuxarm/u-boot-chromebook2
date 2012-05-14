@@ -61,6 +61,8 @@
 #define CONFIG_INITRD_TAG
 #define CONFIG_CMDLINE_EDITING
 
+#define CONFIG_BOARD_REV_GPIO_COUNT	2
+
 /* MACH_TYPE_SMDK5250 macro will be removed once added to mach-types */
 #define MACH_TYPE_SMDK5250		3774
 #define CONFIG_MACH_TYPE		MACH_TYPE_SMDK5250
