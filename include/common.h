@@ -785,6 +785,7 @@ ulong	lcd_setmem (ulong);
 ulong	video_setmem (ulong);
 
 /* arch/$(ARCH)/lib/cache.c */
+ulong	dcache_get_line_size(void);
 void	enable_caches(void);
 void	flush_cache   (unsigned long, unsigned long);
 void	flush_dcache_all(void);

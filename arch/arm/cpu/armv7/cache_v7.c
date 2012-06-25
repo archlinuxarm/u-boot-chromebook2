@@ -210,15 +210,7 @@ static void v7_dcache_inval_range(u32 start, u32 stop, u32 line_len)
 
 static void v7_dcache_maint_range(u32 start, u32 stop, u32 range_op)
 {
-	u32 line_len, ccsidr;
-
-	ccsidr = get_ccsidr();
-	line_len = ((ccsidr & CCSIDR_LINE_SIZE_MASK) >>
-			CCSIDR_LINE_SIZE_OFFSET) + 2;
-	/* Converting from words to bytes */
-	line_len += 2;
-	/* converting from log2(linelen) to linelen */
-	line_len = 1 << line_len;
+	u32 line_len = dcache_get_line_size();
 
 	switch (range_op) {
 	case ARMV7_DCACHE_CLEAN_INVAL_RANGE:
@@ -246,6 +238,21 @@ static void v7_inval_tlb(void)
 	CP15DSB;
 	/* Full system ISB - make sure the instruction stream sees it */
 	CP15ISB;
+}
+
+ulong dcache_get_line_size(void)
+{
+	u32 line_len, ccsidr;
+
+	ccsidr = get_ccsidr();
+	line_len = ((ccsidr & CCSIDR_LINE_SIZE_MASK) >>
+			CCSIDR_LINE_SIZE_OFFSET) + 2;
+	/* Converting from words to bytes */
+	line_len += 2;
+	/* converting from log2(linelen) to linelen */
+	line_len = 1 << line_len;
+
+	return line_len;
 }
 
 void invalidate_dcache_all(void)
@@ -312,6 +319,11 @@ void  flush_cache(unsigned long start, unsigned long size)
 	flush_dcache_range(start, start + size);
 }
 #else /* #ifndef CONFIG_SYS_DCACHE_OFF */
+ulong dcache_get_line_size(void)
+{
+	return 0;
+}
+
 void invalidate_dcache_all(void)
 {
 }
