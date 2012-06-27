@@ -325,6 +325,8 @@ extern u8 _binary_dt_dtb_start[];	/* embedded device tree blob */
 int set_cpu_clk_info(void);
 int print_cpuinfo(void);
 int update_flash_size(int flash_size);
+void board_i2c_release_bus(int node);
+int board_i2c_claim_bus(int node);
 
 /**
  * Show the DRAM size in a board-specific way
