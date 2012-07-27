@@ -191,6 +191,15 @@ force-bootstage-report
 	Since the console can slow down boot, this permits accurate boot
 	timing using a silent console, while still getting a report.
 
+google,bad-wake-gpios
+	If present, this GPIO will be placed in the machine params for the
+	SPL's use.  When the SPL is waking up from sleep it will check the
+	GPIO.  If the GPIO is not low then this is a "bad wakeup" and we
+	should reboot the machine instead of waking from sleep.
+
+	This is used on Chromebooks with an Exynos CPU in them and is part of
+	the kernel/U-Boot protocol for keeping the TPM in a proper state.
+
 hda-codec-beep-nid
 	Indicates the NID of the HDA audio codec for the current machine.
 	This can save having to search for it and perhaps finding the wrong

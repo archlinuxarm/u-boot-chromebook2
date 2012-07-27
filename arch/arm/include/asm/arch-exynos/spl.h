@@ -67,9 +67,10 @@ struct spl_machine_param {
 	 * R		more board rev GPIO numbers used to read board revision
 	 *			(lower halfword=tit 2, upper=tit 3)
 	 * M		Memory Manufacturer name
+	 * w		Bad Wake GPIO number
 	 * \0		termination
 	 */
-	char		params[12];	/* Length must be word-aligned */
+	char		params[16];	/* Length must be word-aligned */
 	u32		mem_iv_size;	/* Memory channel interleaving size */
 	enum ddr_mode	mem_type;	/* Type of on-board memory */
 	/*
@@ -87,6 +88,7 @@ struct spl_machine_param {
 	u32		i2c_base;	/* i2c base address */
 	u32		board_rev_gpios[2];	/* Board revision GPIOs: r,R */
 	enum mem_manuf	mem_manuf;	/* Memory Manufacturer */
+	u32		bad_wake_gpio;	/* If high at wake time disallow wake */
 } __attribute__((__packed__));
 #endif
 
