@@ -23,6 +23,7 @@
 #include <common.h>
 #include <config.h>
 #include <mmc.h>
+#include <asm/gpio.h>
 #include <asm/arch/clock.h>
 #include <asm/arch/clk.h>
 #include <asm/arch/cpu.h>
@@ -291,6 +292,34 @@ static void setup_global_data(gd_t *gdp)
 	gd->have_console = 1;
 }
 
+/**
+ * Reset the CPU if the wakeup was not permitted.
+ *
+ * On some boards we need to look at a special GPIO to ensure that the wakeup
+ * from sleep was valid.  If the wakeup is not valid we need to go through a
+ * full reset.
+ */
+static void reset_if_invalid_wakeup(void)
+{
+	struct spl_machine_param *param = spl_get_machine_params();
+	const u32 gpio = param->bad_wake_gpio;
+	int is_bad_wake;
+
+	/* We're a bad wakeup if the gpio was defined and was high */
+	is_bad_wake = ((gpio != 0xffffffff) && gpio_get_value(gpio));
+
+	if (is_bad_wake) {
+		power_reset();
+
+		/*
+		 * We don't expect to get here, but it's better to loop
+		 * if some bug in U-Boot makes the reset not happen.
+		 */
+		while (1)
+			;
+	}
+}
+
 void board_init_f(unsigned long bootflag)
 {
 	__attribute__((aligned(8))) gd_t local_gd;
@@ -299,8 +328,10 @@ void board_init_f(unsigned long bootflag)
 	exynos5_set_spl_marker();
 	setup_global_data(&local_gd);
 
-	if (do_lowlevel_init())
+	if (do_lowlevel_init()) {
+		reset_if_invalid_wakeup();
 		power_exit_wakeup();
+	}
 
 	copy_uboot_to_ram();
 
