@@ -43,6 +43,17 @@ void __weak arch_cleanup_before_linux(void){}
 
 int cleanup_before_linux(void)
 {
+#ifdef CONFIG_BOOTSTAGE_FDT
+	if (flag == BOOTM_STATE_OS_FAKE_GO)
+		bootstage_fdt_add_report();
+#endif
+#ifdef CONFIG_BOOTSTAGE_REPORT
+	bootstage_report();
+#endif
+#ifdef CONFIG_BOOTSTAGE_STASH
+	bootstage_stash((void *)CONFIG_BOOTSTAGE_STASH,
+			CONFIG_BOOTSTAGE_STASH_SIZE);
+#endif
 	/*
 	 * this function is called just before we call linux
 	 * it prepares the processor for linux

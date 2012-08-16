@@ -78,13 +78,6 @@ static void announce_and_cleanup(int fake)
 	printf("\nStarting kernel ...%s\n\n", fake ?
 		"(fake run for tracing)" : "");
 	bootstage_mark_name(BOOTSTAGE_ID_BOOTM_HANDOFF, "start_kernel");
-#ifdef CONFIG_BOOTSTAGE_FDT
-	if (flag == BOOTM_STATE_OS_FAKE_GO)
-		bootstage_fdt_add_report();
-#endif
-#ifdef CONFIG_BOOTSTAGE_REPORT
-	bootstage_report();
-#endif
 
 #ifdef CONFIG_USB_DEVICE
 	udc_disconnect();
