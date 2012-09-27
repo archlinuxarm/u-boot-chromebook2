@@ -84,6 +84,24 @@ static const struct winbond_spi_flash_params winbond_spi_flash_table[] = {
 	},
 };
 
+static int winbond_read_sw_wp_status(struct spi_flash *flash, u8 *result)
+{
+	int r;
+	u8 status_reg = 0;
+
+	r = spi_flash_cmd_read_status(flash, &status_reg);
+	if (r)					/* couldn't tell, assume no */
+		return r;
+
+	/* Return true if ANY area is protected (BP[2:0] != 000b) */
+	if (status_reg & 0x1c)
+		*result = 1;
+	else
+		*result = 0;
+
+	return 0;
+}
+
 struct spi_flash *spi_flash_probe_winbond(struct spi_slave *spi, u8 *idcode)
 {
 	const struct winbond_spi_flash_params *params;
@@ -111,6 +129,7 @@ struct spi_flash *spi_flash_probe_winbond(struct spi_slave *spi, u8 *idcode)
 	flash->page_size = 256;
 	flash->sector_size = 4096;
 	flash->size = 4096 * 16 * params->nr_blocks;
+	flash->read_sw_wp_status = winbond_read_sw_wp_status;
 
 	return flash;
 }

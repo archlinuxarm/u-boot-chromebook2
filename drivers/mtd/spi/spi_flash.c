@@ -197,6 +197,27 @@ int spi_flash_cmd_poll_bit(struct spi_flash *flash, unsigned long timeout,
 	return -1;
 }
 
+int spi_flash_cmd_read_status(struct spi_flash *flash, u8 *result)
+{
+	u8 cmd = CMD_READ_STATUS;
+	struct spi_slave *spi = flash->spi;
+	int ret;
+
+	ret = spi_xfer(spi, 8, &cmd, NULL, SPI_XFER_BEGIN);
+	if (ret) {
+		debug("SF: Failed to send command %02x: %d\n", cmd, ret);
+		return ret;
+	}
+
+	ret = spi_xfer(spi, 8, NULL, result, 0);
+	if (ret)
+		return -1;
+
+	spi_xfer(spi, 0, NULL, NULL, SPI_XFER_END);
+
+	return 0;
+}
+
 int spi_flash_cmd_wait_ready(struct spi_flash *flash, unsigned long timeout)
 {
 	return spi_flash_cmd_poll_bit(flash, timeout,

@@ -46,6 +46,8 @@ struct spi_flash {
 				size_t len, const void *buf);
 	int		(*erase)(struct spi_flash *flash, u32 offset,
 				size_t len);
+	int		(*read_sw_wp_status)(struct spi_flash *flash,
+				u8 *result);
 };
 
 /**
@@ -106,6 +108,14 @@ static inline int spi_flash_erase(struct spi_flash *flash, u32 offset,
 		size_t len)
 {
 	return flash->erase(flash, offset, len);
+}
+
+static inline int spi_flash_read_sw_wp_status(struct spi_flash *flash,
+					      u8 *result)
+{
+	if (flash->read_sw_wp_status)
+		return flash->read_sw_wp_status(flash, result);
+	return 1;				/* else not implemented */
 }
 
 void spi_boot(void) __noreturn;
