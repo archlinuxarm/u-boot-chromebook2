@@ -24,6 +24,11 @@
 #include <lzma/LzmaDec.h>
 #include <lzma/LzmaTools.h>
 
+#ifdef CONFIG_EXYNOS_DISPLAYPORT
+/* for exynos_lcd_check_next_stage() */
+#include <asm/arch/s5p-dp.h>
+#endif
+
 #define PRINT_MAX_ROW	20
 #define PRINT_MAX_COL	80
 
@@ -77,6 +82,10 @@ VbError_t VbExDisplayInit(uint32_t *width, uint32_t *height)
 	 * software sync. Read the bmpblk.
 	 */
 	cros_cboot_twostop_read_bmp_block();
+#ifdef CONFIG_EXYNOS_DISPLAYPORT
+	/* Make sure the LCD is up */
+	exynos_lcd_check_next_stage(gd->fdt_blob, 1);
+#endif
 
 #ifdef HAVE_DISPLAY
 	*width = display_callbacks_.dc_get_pixel_width();

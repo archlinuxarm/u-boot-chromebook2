@@ -961,11 +961,7 @@ twostop_main_firmware(struct twostop_fmap *fmap, void *gbb,
 			kparams.kernel_buffer_size);
 
 #ifdef CONFIG_EXYNOS_DISPLAYPORT
-	/*
-	 * Make sure the LCD is up before we load the kernel. Partly this
-	 * is because VbSelectAndLoadKernel may do a software sync.
-	 */
-	exynos_lcd_check_next_stage(gd->fdt_blob, 1);
+	exynos_lcd_check_next_stage(gd->fdt_blob, 0);
 #endif
 
 	if ((err = VbSelectAndLoadKernel(&cparams, &kparams))) {
