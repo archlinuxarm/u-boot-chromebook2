@@ -55,9 +55,11 @@ unsigned int exynos_dwmci_get_clk(int dev_index)
  *		NULL in case od non-FDT.
  * removable - set to True if the device can be removed (like an SD card), to
  *             False if not (like ak eMMC drive)
+ * pre_init -	Kick the mmc on startup so that it is ready sooner when we
+ *		need it
  */
 int exynos_dwmci_add_port(int index, u32 regbase, int bus_width,
-			  u32 clksel, int removable)
+			  u32 clksel, int removable, int pre_init)
 {
 	struct dwmci_host *host = NULL;
 	unsigned int div;
@@ -91,7 +93,8 @@ int exynos_dwmci_add_port(int index, u32 regbase, int bus_width,
 	host->dev_index = index;
 	host->mmc_clk = exynos_dwmci_get_clk;
 	/* Add the mmc channel to be registered with mmc core */
-	if (add_dwmci(host, DWMMC_MAX_FREQ, DWMMC_MIN_FREQ, removable)) {
+	if (add_dwmci(host, DWMMC_MAX_FREQ, DWMMC_MIN_FREQ, removable,
+		      pre_init)) {
 		debug("dwmmc%d registration failed\n", index);
 		return -1;
 	}
@@ -105,6 +108,7 @@ int exynos_dwmmc_init(const void *blob)
 	int node_list[DWMMC_MAX_CH_NUM];
 	int err = 0, dev_id, flag, count, i;
 	u32 clksel_val, base, timing[3];
+	int pre_init;
 
 	count = fdtdec_find_aliases_for_id(blob, "mmc",
 				COMPAT_SAMSUNG_EXYNOS5_DWMMC, node_list,
@@ -154,13 +158,14 @@ int exynos_dwmmc_init(const void *blob)
 		}
 
 		removable = fdtdec_get_int(blob, node, "samsung,removable", 0);
+		pre_init = fdtdec_get_bool(blob, node, "samsung,pre-init");
 
 		clksel_val = (DWMCI_SET_SAMPLE_CLK(timing[0]) |
 				DWMCI_SET_DRV_CLK(timing[1]) |
 				DWMCI_SET_DIV_RATIO(timing[2]));
 		/* Initialise each mmc channel */
 		err = exynos_dwmci_add_port(index, base, bus_width,
-					    clksel_val, removable);
+					    clksel_val, removable, pre_init);
 		if (err)
 			debug("dwmmc Channel-%d init failed\n", index);
 	}

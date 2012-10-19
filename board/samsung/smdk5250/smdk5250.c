@@ -163,7 +163,7 @@ int board_mmc_init(bd_t *bis)
 	index = 0;
 	base =  samsung_get_base_mmc() + (0x10000 * index);
 	bus_width = 8;
-	err = exynos_dwmci_add_port(index, base, bus_width, (u32)NULL);
+	err = exynos_dwmci_add_port(index, base, bus_width, (u32)NULL, 0);
 	if (err)
 		debug("dwmmc Channel-0 init failed\n");
 	ret |= err;
@@ -177,7 +177,7 @@ int board_mmc_init(bd_t *bis)
 	index = 2;
 	base = samsung_get_base_mmc() + (0x10000 * index);
 	bus_width = 4;
-	err = exynos_dwmci_add_port(index, base, bus_width, (u32)NULL);
+	err = exynos_dwmci_add_port(index, base, bus_width, (u32)NULL, 0);
 	if (err)
 		debug("dwmmc Channel-2 init failed\n");
 	ret |= err;
