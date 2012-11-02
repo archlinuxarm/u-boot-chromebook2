@@ -41,6 +41,14 @@
 #define CONFIG_BOOTSTAGE
 #define CONFIG_PHYSMEM
 
+/* TPM */
+#define CONFIG_INFINEON_TPM_I2C
+#define CONFIG_INFINEON_TPM_I2C_BUS 3
+#define CONFIG_INFINEON_TPM_I2C_ADDR 0x20
+#define CONFIG_CMD_TPM
+#define CONFIG_TPM
+#define CONFIG_TPM_TIS_I2C
+
 /* Enable fdt support for Exynos5250 */
 #define CONFIG_ARCH_DEVICE_TREE		exynos5250
 #define CONFIG_OF_CONTROL
