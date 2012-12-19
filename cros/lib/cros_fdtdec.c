@@ -115,7 +115,7 @@ static int process_fmap_node(const void *blob, int node, int depth,
 	struct fmap_firmware_entry *rw = *rwp;
 	enum section_t section;
 	struct fmap_entry entry;
-	const char *name, *subname;
+	const char *name, *subname, *prop;
 	int len;
 
 	/* At depth 2, we are looking for our ecbin subnode */
@@ -209,6 +209,9 @@ static int process_fmap_node(const void *blob, int node, int depth,
 		case SECTION_BOOT:
 			rw->boot = entry;
 			rw->boot_rwbin = entry;
+			prop = fdt_getprop(blob, node, "compress", NULL);
+			rw->compress = prop && (0 == strcmp(prop, "lzo")) ?
+				CROS_COMPRESS_LZO : CROS_COMPRESS_NONE;
 			break;
 		default:
 			return 0;

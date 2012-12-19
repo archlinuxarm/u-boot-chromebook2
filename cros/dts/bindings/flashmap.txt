@@ -45,6 +45,17 @@ Optional properties :
  - type : If present this describes the type of this section of the
       flash. Allowable types are described below.
 
+  - loaded-with-uboot: 1 if this section is loaded as part of U-Boot and
+      therefore does not need to be loaded again from SPI flash. Loading
+      again used to happen with the EC used by software sync, since it is
+      tacked onto the end of the EC binary. This seemingly unimportant
+      optimisation saves around 50ms on link.
+
+  - compress: If present this property indicates that the blob is
+      compressed. It is valid in blob and vblock section types. The only
+      possible value is "lzo" since that is the only supported compression
+      format. The data are compressed in one unit, which means that to
+      get at parts of the data you will need to decompress all of it.
 
 Section Types
 -------------

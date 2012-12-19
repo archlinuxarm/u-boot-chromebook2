@@ -13,6 +13,11 @@
 
 #include <compiler.h>
 
+enum cros_compress_t {
+	CROS_COMPRESS_NONE,
+	CROS_COMPRESS_LZO,
+};
+
 /* Structures to hold Chrome OS specific configuration from the FMAP. */
 
 struct fmap_entry {
@@ -35,6 +40,7 @@ struct fmap_firmware_entry {
 	int ec_hash_size;
 	/* Sub-entry for U-Boot RW binary */
 	struct fmap_entry boot_rwbin;
+	enum cros_compress_t compress;		/* Compression type */
 };
 
 /*

@@ -27,6 +27,7 @@
 #include <cros/nvstorage.h>
 #include <cros/power_management.h>
 #include <cros/vboot_flag.h>
+#include <linux/lzo.h>
 #include <spi.h>
 #ifndef CONFIG_SANDBOX
 #include <usb.h>
@@ -559,7 +560,8 @@ twostop_init_vboot_library(firmware_storage_t *file, void *gbb,
 static uint32_t
 twostop_make_selection(struct twostop_fmap *fmap, firmware_storage_t *file,
 		       VbCommonParams *cparams, void **fw_blob_ptr,
-		       uint32_t *fw_size_ptr)
+		       uint32_t *fw_size_ptr,
+		       struct fmap_firmware_entry **entryp)
 {
 	uint32_t selection = TWOSTOP_SELECT_ERROR;
 #if !defined(CONFIG_SANDBOX)
@@ -569,6 +571,7 @@ twostop_make_selection(struct twostop_fmap *fmap, firmware_storage_t *file,
 	VbSelectFirmwareParams fparams;
 	hasher_state_t s;
 
+	*entryp = NULL;
 	memset(&fparams, '\0', sizeof(fparams));
 
 	vlength = fmap->readwrite_a.vblock.length;
@@ -658,12 +661,14 @@ out:
 			fmap->readwrite_a.boot.offset;
 		*fw_blob_ptr = s.fw[0].cache + offset;
 		*fw_size_ptr = s.fw[0].size - offset;
+		*entryp = &fmap->readwrite_a;
 		FREE_IF_NEEDED(s.fw[1].cache);
 	} else if (selection == VB_SELECT_FIRMWARE_B) {
 		uint32_t offset = fmap->readwrite_b.boot_rwbin.offset -
 			fmap->readwrite_b.boot.offset;
 		*fw_blob_ptr = s.fw[1].cache + offset;
 		*fw_size_ptr = s.fw[1].size - offset;
+		*entryp = &fmap->readwrite_b;
 		FREE_IF_NEEDED(s.fw[0].cache);
 	}
 
@@ -675,11 +680,13 @@ twostop_select_and_set_main_firmware(struct twostop_fmap *fmap,
 				     firmware_storage_t *file, void *gbb,
 				     size_t gbb_size, crossystem_data_t *cdata,
 				     void *vb_shared_data, int *boot_mode,
-				     void **fw_blob_ptr, uint32_t *fw_size_ptr)
+				     void **fw_blob_ptr, uint32_t *fw_size_ptr,
+				     struct fmap_firmware_entry **entryp)
 {
 	uint32_t selection;
 	uint32_t id_offset = 0, id_length = 0;
 	int firmware_type;
+	struct fmap_firmware_entry *entry;
 #ifndef CONFIG_HARDWARE_MAPPED_SPI
 	uint8_t firmware_id[ID_LEN];
 #else
@@ -687,6 +694,7 @@ twostop_select_and_set_main_firmware(struct twostop_fmap *fmap,
 #endif
 	VbCommonParams cparams;
 
+	*entryp = NULL;
 	bootstage_mark_name(BOOTSTAGE_VBOOT_SELECT_AND_SET,
 			"twostop_select_and_set_main_firmware");
 	if (twostop_init_cparams(fmap, gbb, vb_shared_data, &cparams)) {
@@ -701,8 +709,12 @@ twostop_select_and_set_main_firmware(struct twostop_fmap *fmap,
 		return TWOSTOP_SELECT_ERROR;
 	}
 
+	/*
+	 * TODO(sjg@chromium.org): Ick. Should unify readwrte_a/b and
+	 * readonly, and then we can use entry for all purposee.
+	 */
 	selection = twostop_make_selection(fmap, file, &cparams,
-			fw_blob_ptr, fw_size_ptr);
+			fw_blob_ptr, fw_size_ptr, &entry);
 
 	VBDEBUG("selection: %s\n", str_selection(selection));
 
@@ -716,12 +728,9 @@ twostop_select_and_set_main_firmware(struct twostop_fmap *fmap,
 		id_length = fmap->readonly.firmware_id.length;
 		break;
 	case VB_SELECT_FIRMWARE_A:
-		id_offset = fmap->readwrite_a.firmware_id.offset;
-		id_length = fmap->readwrite_a.firmware_id.length;
-		break;
 	case VB_SELECT_FIRMWARE_B:
-		id_offset = fmap->readwrite_b.firmware_id.offset;
-		id_length = fmap->readwrite_b.firmware_id.length;
+		id_offset = entry->firmware_id.offset;
+		id_length = entry->firmware_id.length;
 		break;
 	default:
 		VBDEBUG("impossible selection value: %d\n", selection);
@@ -752,22 +761,49 @@ twostop_select_and_set_main_firmware(struct twostop_fmap *fmap,
 		VBDEBUG("failed to set active main firmware\n");
 		return TWOSTOP_SELECT_ERROR;
 	}
+	*entryp = entry;
 
 	return selection;
 }
 
 #if !defined(CONFIG_SANDBOX)
 static uint32_t
-twostop_jump(crossystem_data_t *cdata, void *fw_blob, uint32_t fw_size)
+twostop_jump(crossystem_data_t *cdata, void *fw_blob, uint32_t fw_size,
+	     struct fmap_firmware_entry *entry)
 {
-	VBDEBUG("jump to readwrite main firmware at %#x, size %#x\n",
-			CONFIG_SYS_TEXT_BASE, fw_size);
+	void *dest = (void *)CONFIG_SYS_TEXT_BASE;
+
+	VBDEBUG("jump to readwrite main firmware at %#x, pos %p, size %#x\n",
+			dest, fw_blob, fw_size);
 
 	/*
 	 * TODO: This version of U-Boot must be loaded at a fixed location. It
 	 * could be problematic if newer version U-Boot changed this address.
 	 */
-	memmove((void *)CONFIG_SYS_TEXT_BASE, fw_blob, fw_size);
+	switch (entry->compress) {
+#ifdef CONFIG_LZO
+	case CROS_COMPRESS_LZO: {
+		uint unc_len;
+		int ret;
+
+		bootstage_start(BOOTSTAGE_ID_ACCUM_DECOMP, "decompress_image");
+		ret = lzop_decompress(fw_blob, fw_size, dest, &unc_len);
+		if (ret < 0) {
+			VBDEBUG("LZO: uncompress or overwrite error %d "
+				"- must RESET board to recover\n", ret);
+			return TWOSTOP_SELECT_ERROR;
+		}
+		bootstage_accum(BOOTSTAGE_ID_ACCUM_DECOMP);
+		break;
+	}
+#endif
+	case CROS_COMPRESS_NONE:
+		memmove(dest, fw_blob, fw_size);
+		break;
+	default:
+		VBDEBUG("Unsupported compression type %d\n", entry->compress);
+		return TWOSTOP_SELECT_ERROR;
+	}
 
 	/*
 	 * TODO We need to reach the Point of Unification here, but I am not
@@ -1041,6 +1077,7 @@ twostop_boot(int stop_at_select)
 	uint32_t fw_size = 0;
 	uint32_t selection;
 	int boot_mode = FIRMWARE_TYPE_NORMAL;
+	struct fmap_firmware_entry *entry;
 
 	if (setup_gbb_and_cdata(&gbb, &gbb_size, &cdata, 0))
 		return TWOSTOP_SELECT_ERROR;
@@ -1055,7 +1092,7 @@ twostop_boot(int stop_at_select)
 
 	selection = twostop_select_and_set_main_firmware(&fmap, &file,
 			gbb, gbb_size, cdata, vb_shared_data,
-			&boot_mode, &fw_blob, &fw_size);
+			&boot_mode, &fw_blob, &fw_size, &entry);
 	VBDEBUG("selection of bootstub: %s\n", str_selection(selection));
 
 	file.close(&file); /* We don't care even if it fails */
@@ -1070,7 +1107,7 @@ twostop_boot(int stop_at_select)
 
 	if (selection == VB_SELECT_FIRMWARE_A ||
 	    selection == VB_SELECT_FIRMWARE_B)
-		return twostop_jump(cdata, fw_blob, fw_size);
+		return twostop_jump(cdata, fw_blob, fw_size, entry);
 
 	assert(selection == VB_SELECT_FIRMWARE_READONLY ||
 	       selection == VB_SELECT_FIRMWARE_RECOVERY);
