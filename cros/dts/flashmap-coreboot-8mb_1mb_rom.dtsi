@@ -84,12 +84,14 @@
 			version = <1>;
 			kernelkey = "kernel_subkey.vbpubk";
 			preamble-flags = <1>;
+			compress = "lzo";
 		};
 		rw-a-boot {
 			/* Alignment: no requirement (yet). */
 			label = "fw-main-a";
 			reg = <0x00210000 0x000dffc0>;
 			type = "blob boot,dtb-rwa";
+			compress = "lzo";
 		};
 		rw-a-firmware-id {
 			/* Alignment: no requirement. */
@@ -118,12 +120,15 @@
 			version = <1>;
 			kernelkey = "kernel_subkey.vbpubk";
 			preamble-flags = <1>;
+			compress = "lzo";
 		};
 		rw-b-boot {
 			label = "fw-main-b";
 			/* Alignment: no requirement (yet). */
 			reg = <0x00300000 0x000dffc0>;
 			type = "blob boot,dtb-rwb";
+			compress = "lzo";
+			loaded-with-uboot = <1>;
 		};
 		rw-b-firmware-id {
 			label = "rw-fwid-b";
