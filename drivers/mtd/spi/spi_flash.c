@@ -137,9 +137,11 @@ int spi_flash_read_common(struct spi_flash *flash, const u8 *cmd,
 	struct spi_slave *spi = flash->spi;
 	int ret;
 
+	bootstage_start(BOOTSTAGE_ID_ACCUM_SPI, "SPI read");
 	spi_claim_bus(spi);
 	ret = spi_flash_cmd_read(spi, cmd, cmd_len, data, data_len);
 	spi_release_bus(spi);
+	bootstage_accum(BOOTSTAGE_ID_ACCUM_SPI);
 
 	return ret;
 }

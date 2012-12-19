@@ -209,6 +209,8 @@ enum bootstage_id {
 	BOOTSTAGE_ID_MAIN_CPU_READY,
 
 	BOOTSTAGE_ID_ACCUM_LCD,
+	BOOTSTAGE_ID_ACCUM_SPI,
+	BOOTSTAGE_ID_ACCUM_DECOMP,
 
 	/* a few spare for the user, from here */
 	BOOTSTAGE_ID_USER,
