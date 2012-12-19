@@ -59,6 +59,11 @@ struct bootstage_hdr {
 	uint32_t magic;		/* Unused */
 };
 
+void bootstage_set_next_id(int id)
+{
+	next_id = id;
+}
+
 int bootstage_relocate(void)
 {
 	int i;

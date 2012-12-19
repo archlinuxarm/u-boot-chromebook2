@@ -340,6 +340,21 @@ int bootstage_stash(void *base, int size);
  */
 int bootstage_unstash(void *base, int size);
 
+/**
+ * Set the next id to be used by bootstage for allocated items
+ *
+ * This is useful when you want to reserve some fixed bootstage IDs for
+ * your own use. These will be numbered from BOOTSTAGE_ID_USER onwards.
+ * Call this function with the first ID that is not used, i,e.
+ * BOOTSTAGE_ID_USER + n where n is the number you need to reserve. Be
+ * careful to call this function before allocated IDs start being used.
+ * All bootstage items in U-Boot itself have fixed IDs, but board code
+ * may use allocated IDs, as will bootstage_unstash().
+ *
+ * @param id	ID to use for next allocated bootstage item
+ */
+void bootstage_set_next_id(int id);
+
 #else
 static inline ulong bootstage_add_record(enum bootstage_id id,
 		const char *name, int flags, ulong mark)
@@ -399,6 +414,11 @@ static inline int bootstage_unstash(void *base, int size)
 {
 	return 0;	/* Pretend to succeed */
 }
+
+static inline void bootstage_set_next_id(int id)
+{
+}
+
 #endif /* CONFIG_BOOTSTAGE */
 
 /* Helper macro for adding a bootstage to a line of code */
