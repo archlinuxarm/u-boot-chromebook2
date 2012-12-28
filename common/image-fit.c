@@ -1528,8 +1528,18 @@ int fit_image_load(bootm_headers_t *images, const char *prop_name, ulong addr,
 		fit_uname_config = fdt_get_name(fit, cfg_noffset, NULL);
 		printf("   Using '%s' configuration\n", fit_uname_config);
 		if (image_type == IH_TYPE_KERNEL) {
-			/* Remember this config */
+			/* Remember (and possibly verify) this config */
 			images->fit_uname_cfg = fit_uname_config;
+			if (IMAGE_ENABLE_VERIFY && images->verify) {
+				puts("   Verifying Hash Integrity ... ");
+				if (!fit_config_verify(fit, cfg_noffset)) {
+					puts("Bad Data Hash\n");
+					bootstage_error(bootstage_id +
+						BOOTSTAGE_SUB_HASH);
+					return -EACCES;
+				}
+				puts("OK\n");
+			}
 			bootstage_mark(BOOTSTAGE_ID_FIT_CONFIG);
 		}
 
