@@ -36,6 +36,7 @@
 #include <lmb.h>
 #include <linux/ctype.h>
 #include <asm/byteorder.h>
+#include <asm/errno.h>
 #include <asm/io.h>
 #include <linux/compiler.h>
 
@@ -226,6 +227,7 @@ static int bootm_start(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[]
 
 		images.os.end = image_get_image_end(os_hdr);
 		images.os.load = image_get_load(os_hdr);
+		images.os.arch = image_get_arch(os_hdr);
 		break;
 #if defined(CONFIG_FIT)
 	case IMAGE_FORMAT_FIT:
@@ -250,6 +252,12 @@ static int bootm_start(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[]
 			return 1;
 		}
 
+		if (fit_image_get_arch(images.fit_hdr_os,
+				images.fit_noffset_os, &images.os.arch)) {
+			puts("Can't get image ARCH!\n");
+			return 1;
+		}
+
 		images.os.end = fit_get_end(images.fit_hdr_os);
 
 		if (fit_image_get_load(images.fit_hdr_os, images.fit_noffset_os,
@@ -265,8 +273,18 @@ static int bootm_start(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[]
 		return 1;
 	}
 
-	/* find kernel entry point */
-	if (images.legacy_hdr_valid) {
+	/* If we have a valid setup.bin, we will use that for entry (x86) */
+	if (images.os.arch == IH_ARCH_I386) {
+		ulong len;
+
+		puts("Looking for setup\n");
+		ret = boot_get_setup(&images, IH_ARCH_I386, &images.ep, &len);
+		if (ret < 0 && ret != -ENOENT) {
+			puts("Could not find a valid setup.bin for x86n");
+			return 1;
+		}
+		/* Kernel entry point is the setup.bin */
+	} else if (images.legacy_hdr_valid) {
 		images.ep = image_get_ep(&images.legacy_hdr_os_copy);
 #if defined(CONFIG_FIT)
 	} else if (images.fit_uname_os) {

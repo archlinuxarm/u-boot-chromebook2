@@ -1614,3 +1614,23 @@ int fit_image_load(bootm_headers_t *images, const char *prop_name, ulong addr,
 
 	return noffset;
 }
+
+int boot_get_setup_fit(bootm_headers_t *images, uint8_t arch,
+			ulong *setup_start, ulong *setup_len)
+{
+	int noffset;
+	ulong addr;
+	ulong len;
+	int ret;
+
+	addr = map_to_sysmem(images->fit_hdr_os);
+	noffset = fit_get_node_from_config(images, FIT_SETUP_PROP, addr);
+	if (noffset < 0)
+		return noffset;
+
+	ret = fit_image_load(images, FIT_SETUP_PROP, addr, NULL, NULL,
+		arch, IH_TYPE_X86_SETUP, BOOTSTAGE_ID_FIT_SETUP_START,
+		FIT_LOAD_REQUIRED, setup_start, &len);
+
+	return ret;
+}

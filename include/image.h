@@ -229,6 +229,7 @@ struct lmb;
 #define IH_TYPE_AISIMAGE	13	/* TI Davinci AIS Image		*/
 #define IH_TYPE_KERNEL_NOLOAD	14	/* OS Kernel Image, can run from any load address */
 #define IH_TYPE_PBLIMAGE	15	/* Freescale PBL Boot Image	*/
+#define IH_TYPE_X86_SETUP	16	/* x86 setup.bin Image		*/
 
 /*
  * Compression Types
@@ -269,6 +270,7 @@ typedef struct image_info {
 	ulong		image_start, image_len; /* start of image within blob, len of image */
 	ulong		load;			/* load addr for the image */
 	uint8_t		comp, type, os;		/* compression, type of image, os type */
+	uint8_t		arch;			/* CPU architecture */
 } image_info_t;
 
 /*
@@ -299,6 +301,10 @@ typedef struct bootm_headers {
 	void		*fit_hdr_fdt;	/* FDT blob FIT image header */
 	const char	*fit_uname_fdt;	/* FDT blob subimage node unit name */
 	int		fit_noffset_fdt;/* FDT blob subimage node offset */
+
+	void		*fit_hdr_setup;	/* x86 setup FIT image header */
+	const char	*fit_uname_setup; /* x86 setup subimage node name */
+	int		fit_noffset_setup;/* x86 setup subimage node offset */
 #endif
 
 #ifndef USE_HOSTCC
@@ -409,6 +415,9 @@ enum fit_load_op {
 	FIT_LOAD_REQUIRED,	/* Must be provided */
 };
 
+int boot_get_setup(bootm_headers_t *images, uint8_t arch, ulong *setup_start,
+		   ulong *setup_len);
+
 #ifndef USE_HOSTCC
 /* Image format types, returned by _get_format() routine */
 #define IMAGE_FORMAT_INVALID	0x00
@@ -421,6 +430,9 @@ ulong genimg_get_image(ulong img_addr);
 
 int boot_get_ramdisk(int argc, char * const argv[], bootm_headers_t *images,
 		uint8_t arch, ulong *rd_start, ulong *rd_end);
+
+int boot_get_setup_fit(bootm_headers_t *images, uint8_t arch,
+		       ulong *setup_start, ulong *setup_len);
 
 /**
  * fit_image_load() - load an image from a FIT
@@ -689,6 +701,7 @@ int image_setup_linux(bootm_headers_t *images);
 #define FIT_RAMDISK_PROP	"ramdisk"
 #define FIT_FDT_PROP		"fdt"
 #define FIT_DEFAULT_PROP	"default"
+#define FIT_SETUP_PROP		"setup"
 
 #define FIT_MAX_HASH_LEN	20	/* max(crc32_len(4), sha1_len(20)) */
 
