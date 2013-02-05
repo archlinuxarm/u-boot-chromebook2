@@ -8,16 +8,16 @@
 	/* Add our EC binary into RW binaries */
 	flash@ff800000 {
 		rw-a-vblock {
-			type = "keyblock boot,dtb-rwa,ecbin";
+			type = "keyblock boot,dtb";
 		};
 		rw-a-boot {
-			type = "blob boot,dtb-rwa,ecbin";
+			type = "blob boot,dtb,ecbin";
 		};
 		rw-b-vblock {
-			type = "keyblock boot,dtb-rwb,ecbin";
+			type = "keyblock boot,dtb";
 		};
 		rw-b-boot {
-			type = "blob boot,dtb-rwb,ecbin";
+			type = "blob boot,dtb,ecbin";
 		};
 	};
 };

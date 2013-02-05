@@ -128,6 +128,8 @@ static int process_fmap_node(const void *blob, int node, int depth,
 		if (rw) {
 			if (0 == strcmp(name, "ecbin") ||
 					0 == strcmp(name, "ecrw")) {
+				rw->ec_hash = fdt_getprop(blob, node, "hash",
+							  &rw->ec_hash_size);
 				entry = &rw->ec_rwbin;
 				offset = rw->boot.offset;
 			} else if (0 == strcmp(name, "boot")) {

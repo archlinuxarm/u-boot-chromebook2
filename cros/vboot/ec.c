@@ -269,6 +269,23 @@ VbError_t VbExEcGetExpectedRW(enum VbSelectFirmware_t select,
 VbError_t VbExEcGetExpectedRWHash(enum VbSelectFirmware_t select,
 		       const uint8_t **hash, int *hash_size)
 {
-	/* TODO(gabeblack): get the precomputed hash */
-	return VBERROR_EC_GET_EXPECTED_HASH_FROM_IMAGE;
+	struct twostop_fmap fmap;
+	*hash = NULL;
+
+	/* TODO: Decode the flashmap once and reuse throughout. */
+	cros_fdtdec_flashmap(gd->fdt_blob, &fmap);
+	switch (select) {
+	case VB_SELECT_FIRMWARE_A:
+		*hash = fmap.readwrite_a.ec_hash;
+		*hash_size = fmap.readwrite_a.ec_hash_size;
+		break;
+	case VB_SELECT_FIRMWARE_B:
+		*hash = fmap.readwrite_b.ec_hash;
+		*hash_size = fmap.readwrite_b.ec_hash_size;
+		break;
+	default:
+		break;
+	}
+
+	return VBERROR_SUCCESS;
 }
