@@ -21,6 +21,7 @@
  */
 
 #include <common.h>
+#include <cros_ec.h>
 #include <fdtdec.h>
 #include <asm/io.h>
 #include <errno.h>
@@ -41,6 +42,13 @@
 #include <power/max77686_pmic.h>
 
 DECLARE_GLOBAL_DATA_PTR;
+
+struct local_info {
+	struct cros_ec_dev *cros_ec_dev;	/* Pointer to cros_ec device */
+	int cros_ec_err;			/* Error for cros_ec, 0 if ok */
+};
+
+static struct local_info local;
 
 #ifdef CONFIG_USB_EHCI_EXYNOS
 int board_usb_vbus_init(void)
@@ -70,6 +78,20 @@ static void  board_enable_audio_codec(void)
 }
 #endif
 
+struct cros_ec_dev *board_get_cros_ec_dev(void)
+{
+	return local.cros_ec_dev;
+}
+
+static int board_init_cros_ec_devices(const void *blob)
+{
+	local.cros_ec_err = cros_ec_init(blob, &local.cros_ec_dev);
+	if (local.cros_ec_err)
+		return -1;  /* Will report in board_late_init() */
+
+	return 0;
+}
+
 int board_init(void)
 {
 	gd->bd->bi_boot_params = (PHYS_SDRAM_1 + 0x100UL);
@@ -77,6 +99,10 @@ int board_init(void)
 #ifdef CONFIG_EXYNOS_SPI
 	spi_init();
 #endif
+
+	if (board_init_cros_ec_devices(gd->fdt_blob))
+		return -1;
+
 #ifdef CONFIG_USB_EHCI_EXYNOS
 	board_usb_vbus_init();
 #endif
@@ -615,3 +641,21 @@ __weak int ft_board_setup(void *blob, bd_t *bd)
 {
 	return ft_system_setup(blob, bd);
 }
+
+#ifdef CONFIG_BOARD_LATE_INIT
+int board_late_init(void)
+{
+	stdio_print_current_devices();
+
+	if (local.cros_ec_err) {
+		/* Force console on */
+		gd->flags &= ~GD_FLG_SILENT;
+
+		printf("cros-ec communications failure %d\n", local.cros_ec_err);
+		puts("\nPlease reset with Power+Refresh\n\n");
+		panic("Cannot init cros-ec device");
+		return -1;
+	}
+	return 0;
+}
+#endif
