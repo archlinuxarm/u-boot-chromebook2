@@ -30,4 +30,31 @@
 #undef CONFIG_DEFAULT_DEVICE_TREE
 #define CONFIG_DEFAULT_DEVICE_TREE	exynos5250-snow
 
+/* Generally verified boot needs more heap space */
+#undef CONFIG_SYS_MALLOC_LEN
+#define CONFIG_SYS_MALLOC_LEN	(32 << 20)
+
+#define CONFIG_INITRD_ADDRESS 0x44000000
+
+#include <configs/chromeos.h>
+
+#define CONFIG_CHROMEOS_USB
+
+/* Support vboot flag reading from GPIO hardwrae */
+#define CONFIG_CHROMEOS_GPIO_FLAG
+
+/* Support vboot flag reading from EC */
+#define CONFIG_CHROMEOS_CROS_EC_FLAG
+
+/* Adjust the display resolution. */
+#undef MAIN_VRESOL_VAL
+#undef MAIN_HRESOL_VAL
+#define MAIN_VRESOL_VAL 0x300
+#define MAIN_HRESOL_VAL 0x556
+#undef LCD_XRES
+#undef LCD_YRES
+#define LCD_XRES 1366
+#define LCD_YRES 768
+#define CONFIG_SYS_WHITE_ON_BLACK
+
 #endif	/* __CONFIG_SMDK_H */
