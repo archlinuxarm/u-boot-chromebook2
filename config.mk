@@ -198,6 +198,12 @@ RELFLAGS= $(PLATFORM_RELFLAGS)
 DBGFLAGS= -g # -DDEBUG
 OPTFLAGS= -Os #-fomit-frame-pointer
 
+ifdef VBOOT_DEBUG
+DBGFLAGS += -DVBOOT_DEBUG
+endif
+ifdef VBOOT_PERFORMANCE
+DBGFLAGS += -DVBOOT_PERFORMANCE
+endif
 OBJCFLAGS += --gap-fill=0xff
 
 gccincdir := $(shell $(CC) -print-file-name=include)
@@ -261,10 +267,26 @@ CPPFLAGS += $(patsubst %, -I%, $(BASE_INCLUDE_DIRS))
 CPPFLAGS += -fno-builtin -ffreestanding -nostdinc	\
 	-isystem $(gccincdir) -pipe $(PLATFORM_CPPFLAGS)
 
-CFLAGS := $(CPPFLAGS) -Wall -Wstrict-prototypes
+ifeq ($(WERROR),y)
+CPPFLAGS += -Werror
+endif
+
+ifneq ($(CONFIG_CHROMEOS),)
+CPPFLAGS += -I$(TOPDIR)/cros/include
+endif
+
+ifdef CONFIG_CHROMEOS
+CPPFLAGS += -I$(if $(VBOOT_SOURCE),$(VBOOT_SOURCE)/firmware/include,\
+		$(VBOOT)/include/vboot) \
+	-I$(if $(VBOOT_SOURCE),$(VBOOT_SOURCE)/firmware/include,\
+		$(VBOOT)/include)
+endif
 
 ifdef BUILD_TAG
-CFLAGS += -DBUILD_TAG='"$(BUILD_TAG)"'
+CFLAGS := $(CPPFLAGS) -Wall -Wstrict-prototypes \
+	-DBUILD_TAG='"$(BUILD_TAG)"'
+else
+CFLAGS := $(CPPFLAGS) -Wall -Wstrict-prototypes
 endif
 
 CFLAGS_SSP := $(call cc-option,-fno-stack-protector)

@@ -246,6 +246,11 @@ OBJS := $(addprefix $(obj),$(OBJS))
 
 HAVE_VENDOR_COMMON_LIB = $(if $(wildcard board/$(VENDOR)/common/Makefile),y,n)
 
+LIBS-$(CONFIG_CHROMEOS) += cros/cmd/libcros_cmd.o
+LIBS-$(CONFIG_CHROMEOS) += cros/lib/libcros.o
+LIBS-$(CONFIG_CHROMEOS) += cros/vboot/libvboot.o
+LIBS-$(CONFIG_CHROMEOS) += cros/$(SOC)/libcros_board.o
+
 LIBS-y += lib/libgeneric.o
 LIBS-y += lib/rsa/librsa.o
 LIBS-y += lib/lzma/liblzma.o
@@ -388,6 +393,56 @@ LDPPFLAGS += \
 
 __OBJS := $(subst $(obj),,$(OBJS))
 __LIBS := $(subst $(obj),,$(LIBS)) $(subst $(obj),,$(LIBBOARD))
+
+ifdef VBOOT_SOURCE
+# Go off and build vboot_reference directory with the same CFLAGS
+# This is a eng convenience, not used by ebuilds
+# set VBOOT_MAKEFLAGS to required make flags, e.g. MOCK_TPM=1 if no TPM
+CFLAGS_VBOOT = $(filter-out -Wstrict-prototypes -nostdinc -I%, $(CFLAGS))
+
+# Always call the vboot Makefile, since we don't have its dependencies
+#
+#  FIRMWARE_ARCH:
+#
+#    This can be either a real hardware architecture for which vboot
+#    can be built, or it can be unset.  When unset, vboot will be
+#    built for the host architecture.  When set, it has to be one of
+#    arm, i386, and x86_64.
+#
+#  ARCH:
+#
+#    ARCH must either be a real hardware architecture for which vboot
+#    can be built, or it must be 'amd64'.  'amd64' is used when
+#    building for the host architecture (which consequently must be
+#    'amd64').
+#
+#  ARCH is an exported variable, and since 'sandbox' is not an
+#  appropriate architecture for vboot, it must be changed on the
+#  command line.  However, since, without 'override', it is not
+#  possible to change the value of Make variables set on the command
+#  line, both FIRMWARE_ARCH and ARCH both must be set correctly before
+#  invoking the sub-make.
+#
+VBOOT_SUBMAKE_FIRMWARE_ARCH=$(filter-out sandbox,$(subst x86,i386,$(ARCH)))
+VBOOT_SUBMAKE_ARCH=$(subst sandbox,amd64,$(ARCH))
+.PHONY : vboot
+vboot:
+	FIRMWARE_ARCH=$(VBOOT_SUBMAKE_FIRMWARE_ARCH) \
+		CFLAGS="$(CFLAGS_VBOOT)" \
+		$(MAKE) -C $(VBOOT_SOURCE) \
+		BUILD=$(OBJTREE)/include/generated/vboot \
+		ARCH=$(VBOOT_SUBMAKE_ARCH)
+
+__LIBS += $(obj)include/generated/vboot/vboot_fw.a
+VBOOT_TARGET := vboot
+endif
+
+# Add vboot_reference lib
+ifdef CONFIG_CHROMEOS
+ifndef VBOOT_SOURCE
+__LIBS += $(VBOOT)/lib/vboot_fw.a
+endif
+endif
 
 #########################################################################
 #########################################################################
@@ -591,7 +646,8 @@ GEN_UBOOT = \
 endif
 
 $(obj)u-boot:	depend \
-		$(SUBDIR_TOOLS) $(OBJS) $(LIBBOARD) $(LIBS) $(LDSCRIPT) $(obj)u-boot.lds
+		$(SUBDIR_TOOLS) $(OBJS) $(LIBBOARD) $(LIBS) $(LDSCRIPT) \
+			$(VBOOT_TARGET) $(obj)u-boot.lds
 		$(GEN_UBOOT)
 ifeq ($(CONFIG_KALLSYMS),y)
 		smap=`$(call SYSTEM_MAP,$(obj)u-boot) | \
