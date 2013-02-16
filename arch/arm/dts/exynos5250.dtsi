@@ -98,6 +98,8 @@
 		reg = <0x12d60000 0x20>;
 	};
 
+	gpio: gpio {};
+
 	spi@12d20000 {
 		#address-cells = <1>;
 		#size-cells = <0>;

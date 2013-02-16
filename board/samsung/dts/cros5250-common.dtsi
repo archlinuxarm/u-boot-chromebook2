@@ -1,5 +1,5 @@
 /*
- * SAMSUNG Snow board device tree source
+ * Common device tree include for all Exynos 5250 boards based off Daisy.
  *
  * Copyright (c) 2012 Samsung Electronics Co., Ltd.
  *		http://www.samsung.com
@@ -9,20 +9,17 @@
  * published by the Free Software Foundation.
 */
 
-/dts-v1/;
-/include/ ARCH_CPU_DTS
-#ifdef CONFIG_CHROMEOS
-/include/ "flashmap-exynos-ro.dtsi"
-/include/ "flashmap-4mb-rw.dtsi"
-/include/ "chromeos-exynos.dtsi"
-/include/ "cros5250-common.dtsi"
-#endif
-
 / {
-	model = "Google Snow";
-	compatible = "google,snow", "samsung,exynos5250";
-
 	aliases {
+		console = "/serial@12C30000";
+		serial0 = "/serial@12C30000";
+		sdmmc0 = "/mshci@12200000";
+		sdmmc1 = "/mshci@12220000";
+		spi0 = "/spi@12d20000";
+		spi1 = "/spi@12d30000";
+		spi2 = "/spi@12d40000";
+		spi3 = "/spi@131a0000";
+		spi4 = "/spi@131b0000";
 		i2c0 = "/i2c@12c60000";
 		i2c1 = "/i2c@12c70000";
 		i2c2 = "/i2c@12c80000";
@@ -31,89 +28,10 @@
 		i2c5 = "/i2c@12cb0000";
 		i2c6 = "/i2c@12cc0000";
 		i2c7 = "/i2c@12cd0000";
-		spi0 = "/spi@12d20000";
-		spi1 = "/spi@12d30000";
-		spi2 = "/spi@12d40000";
-		spi3 = "/spi@131a0000";
-		spi4 = "/spi@131b0000";
-		mmc0 = "/mmc@12200000";
-		mmc1 = "/mmc@12210000";
-		mmc2 = "/mmc@12220000";
-		mmc3 = "/mmc@12230000";
-		serial0 = "/serial@12C30000";
-		console = "/serial@12C30000";
-	};
-
-	i2c4: i2c@12ca0000 {
-		cros-ec@1e {
-			reg = <0x1e>;
-			compatible = "google,cros-ec";
-			i2c-max-frequency = <100000>;
-			ec-interrupt = <&gpio 782 1>;
-		};
-
-		power-regulator@48 {
-			compatible = "ti,tps65090";
-			reg = <0x48>;
-		};
-	};
-
-	spi@131b0000 {
-		spi-max-frequency = <1000000>;
-		spi-deactivate-delay = <100>;
-		cros-ec@0 {
-			reg = <0>;
-			compatible = "google,cros-ec";
-			spi-max-frequency = <5000000>;
-			ec-interrupt = <&gpio 782 1>;
-			optimise-flash-write;
-			status = "disabled";
-		};
-	};
-
-	sound@12d60000 {
-		samsung,codec-type = "max98095";
-	};
-
-	i2c@12cd0000 {
-		soundcodec@22 {
-			reg = <0x22>;
-			compatible = "maxim,max98095-codec";
-		};
-	};
-
-	i2c@12c60000 {
-		pmic@9 {
-			reg = <0x9>;
-			compatible = "maxim,max77686_pmic";
-		};
-	};
-
-	mmc@12200000 {
-		samsung,bus-width = <8>;
-		samsung,timing = <1 3 3>;
-		samsung,removable = <0>;
-	};
-
-	mmc@12210000 {
-		status = "disabled";
-	};
-
-	mmc@12220000 {
-		samsung,bus-width = <4>;
-		samsung,timing = <1 2 3>;
-		samsung,removable = <1>;
-	};
-
-	mmc@12230000 {
-		status = "disabled";
-	};
-
-	spi@12d30000 {
-		spi-max-frequency = <50000000>;
 	};
 
 	tmu@10060000 {
+		samsung,mux		= <6>;
 		samsung,min-temp	= <25>;
 		samsung,max-temp	= <125>;
 		samsung,start-warning	= <95>;
@@ -122,8 +40,126 @@
 		samsung,efuse-min-value	= <40>;
 		samsung,efuse-value	= <55>;
 		samsung,efuse-max-value	= <100>;
-		samsung,slope		= <274761730>;
+		samsung,slope		= <268470274>;
 		samsung,dc-value	= <25>;
+	};
+
+	serial@12C30000 {
+		id = <3>;
+	};
+
+	config {
+		google,bad-wake-gpios = <&gpio 0x70 0>;
+		hwid = "DAISY TEST A-A 9382";
+		machine-arch-id = <3774>;
+	};
+
+	chromeos-config {
+		virtual-dev-switch;
+
+		vboot-flag-write-protect {
+			compatible = "google,gpio-flag";
+			gpio = <&gpio 102 1>;
+		};
+		vboot-flag-recovery {
+			compatible = "google,cros-ec-flag";
+		};
+		vboot-flag-developer {
+			compatible = "google,const-flag";
+			value = <0>;
+		};
+		vboot-flag-lid-open {
+			compatible = "google,gpio-flag";
+			gpio = <&gpio 189 0>;
+		};
+		vboot-flag-power-off {
+			compatible = "google,gpio-flag";
+			gpio = <&gpio 171 1>;
+		};
+		vboot-flag-oprom-loaded {
+			compatible = "google,const-flag";
+			value = <0>;
+		};
+		vboot-flag-ec-in-rw {
+			compatible = "google,gpio-flag";
+			gpio = <&gpio 103 0>;
+		};
+	};
+
+	memory {
+		reg = <0x40000000 0x80000000>;
+	};
+
+	ramoops {
+		reg = <0x41f00000 0x00100000>;
+	};
+
+	sdhci@12200000 {
+		status = "disabled";
+	};
+
+	sdhci@12210000 {
+		status = "disabled";
+	};
+
+	sdhci@12220000 {
+		samsung,sdhci-bus-width = <4>;
+	};
+
+	sdhci@12230000 {
+		status = "disabled";
+	};
+
+	mshci@12200000 {
+		samsung,mshci-bus-width = <8>;
+		enable-gpios = <&gpio 58 0>;
+	};
+
+	mshci@12220000 {
+		samsung,mshci-bus-width = <4>;
+		samsung,removable;
+	};
+
+	dmc@10C00000 {
+		mem-interleave-size = <0x1f>;
+		mem-type = "ddr3";
+		clock-frequency = <800000000>;
+		arm-frequency = <1700000000>;
+	};
+
+	i2c@12cd0000 {
+		display@50 {
+			reg = <0x50>;
+			compatible = "samsung,exynos-lcd";
+		};
+	};
+
+	spi@12d30000 {
+		/*
+		 * 50MHz seems to be unreliable on DVT machines; so fall back
+		 * to 45MHz for now.
+		 */
+		spi-max-frequency = <45000000>;
+		firmware_storage_spi: flash@0 {
+			bus = <1>;
+			spi-max-frequency = <45000000>;
+		};
+	};
+
+	sound@12d60000 {
+		samsung,i2s-epll-clock-frequency = <192000000>;
+		samsung,i2s-sampling-rate = <48000>;
+		samsung,i2s-bits-per-sample = <16>;
+		samsung,i2s-channels = <2>;
+		samsung,i2s-lr-clk-framesize = <256>;
+		samsung,i2s-bit-clk-framesize = <32>;
+
+		codec-enable-gpio = <&gpio 0xaf 0>;
+	};
+
+	ehci@12110000 {
+		compatible = "samsung,exynos-ehci", "usb-ehci";
+		reg = <0x12110000 0x100>;
 	};
 
 	cros-ec-keyb {
@@ -179,9 +215,5 @@
 			0x07060016 0x07070036 0x07080019 0x07090018
 			/* UP      LEFT    */
 			0x070b0067 0x070c0069>;
-	};
-
-	usb@12000000 {
-		usb3-pll-gpio = <&gpio 0x71 0>;	/* Y11 */
 	};
 };
