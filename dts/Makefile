@@ -37,11 +37,29 @@ $(if $(CONFIG_ARCH_DEVICE_TREE),,\
 $(error Your architecture does not have device tree support enabled. \
 Please define CONFIG_ARCH_DEVICE_TREE))
 
+# Provide a list of include directories for dtc
+DTS_INCS-y := -i $(SRCTREE)/arch/$(ARCH)/dts
+
+DTS_INCS-y += -i $(SRCTREE)/board/$(VENDOR)/dts
+
+DTS_INCS-$(CONFIG_CHROMEOS) += -i $(SRCTREE)/cros/dts
+
+# Check if our dtc includes
+DTS_FLAGS := $(shell if ! dtc -i 2>&1 | grep -q "invalid option"; then \
+		echo $(DTS_INCS-y); fi)
+
 # We preprocess the device tree file provide a useful define
-DTS_CPPFLAGS := -x assembler-with-cpp \
+# Undefine 'linux' since it might be used in device tree files
+DTS_CPPFLAGS := -x assembler-with-cpp -Ulinux \
 		-DARCH_CPU_DTS=\"$(SRCTREE)/arch/$(ARCH)/dts/$(CONFIG_ARCH_DEVICE_TREE).dtsi\" \
 		-DBOARD_DTS=\"$(SRCTREE)/board/$(VENDOR)/$(BOARD)/dts/$(DEVICE_TREE).dts\" \
-		-I$(SRCTREE)/board/$(VENDOR)/dts -I$(SRCTREE)/arch/$(ARCH)/dts
+		-D__ASSEMBLY__ -I$(OBJTREE)/include -I$(SRCTREE)/include \
+		-I$(OBJTREE)/include2 \
+		-I$(SRCTREE)/board/$(VENDOR)/dts -I$(SRCTREE)/arch/$(ARCH)/dts \
+		-include $(OBJTREE)/include/config.h
+
+DTS_TMP := $(OBJTREE)/include/generated/$(DEVICE_TREE).dts.in
+DTS_SRC := board/$(VENDOR)/dts/$(DEVICE_TREE).dts
 
 all:	$(obj).depend $(LIB)
 
@@ -50,13 +68,19 @@ all:	$(obj).depend $(LIB)
 # the filename.
 DT_BIN	:= $(obj)dt.dtb
 
-$(DT_BIN): $(TOPDIR)/board/$(VENDOR)/dts/$(DEVICE_TREE).dts
+DTC_CMD := $(DTC) -R 4 -p 0x1000 -O dtb -o ${DT_BIN} $(DTS_FLAGS) $(DTS_TMP)
+
+$(DT_BIN): $(TOPDIR)/$(DTS_SRC)
 	rc=$$( \
-		cat $< | $(CPP) -P $(DTS_CPPFLAGS) - | \
-		{ { $(DTC) -R 4 -p 0x1000 -O dtb -o ${DT_BIN} - 2>&1 ; \
+		cat $< | $(CPP) -P $(DTS_CPPFLAGS) - > $(DTS_TMP); \
+		{ { $(DTC_CMD)  2>&1 ; \
 		    echo $$? >&3 ; } | \
 		  grep -v '^DTC: dts->dtb  on file' ; \
 	        } 3>&1 1>&2 ) ; \
+	if [ $$rc != 0 ]; then \
+		echo "Source file is $(DTS_SRC)"; \
+		echo "Compiler: $(DTC_CMD)"; \
+	fi; \
 	exit $$rc
 
 process_lds = \
