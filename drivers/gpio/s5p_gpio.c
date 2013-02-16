@@ -197,11 +197,22 @@ int gpio_set_value(unsigned gpio, int value)
 	return 0;
 }
 
-int gpio_set_pull(unsigned gpio, int value)
+void gpio_set_pull(int gpio, int value)
 {
 	s5p_gpio_set_pull(s5p_gpio_get_bank(gpio),
 				 s5p_gpio_get_pin(gpio), value);
-	return 0;
+}
+
+void gpio_cfg_pin(int gpio, int cfg)
+{
+	s5p_gpio_set_pull(s5p_gpio_get_bank(gpio),
+				 s5p_gpio_get_pin(gpio), cfg);
+}
+
+void gpio_set_drv(int gpio, int drive)
+{
+	s5p_gpio_set_drv(s5p_gpio_get_bank(gpio),
+				 s5p_gpio_get_pin(gpio), drive);
 }
 
 /*

@@ -21,6 +21,8 @@
 #ifndef __ASM_ARCH_GPIO_H
 #define __ASM_ARCH_GPIO_H
 
+#include <asm-generic/gpio.h>
+
 #ifndef __ASSEMBLY__
 struct s5p_gpio_bank {
 	unsigned int	con;
@@ -354,5 +356,13 @@ static inline unsigned int s5p_gpio_part_max(int nr)
  */
 
 int gpio_decode_number(unsigned gpio_list[], int count);
+
+/**
+ * Set GPIO pull mode.
+ *
+ * @param gpio	GPIO pin
+ * @param mode	Either GPIO_PULL_DOWN or GPIO_PULL_UP
+ */
+void gpio_set_pull(int gpio, int mode);
 
 #endif
