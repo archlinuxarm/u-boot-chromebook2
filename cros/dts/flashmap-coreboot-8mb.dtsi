@@ -1,0 +1,284 @@
+/*
+ * Copyright (c) 2011 The Chromium OS Authors. All rights reserved.
+ * Use of this source code is governed by a BSD-style license that can be
+ * found in the LICENSE file.
+ */
+
+/ {
+	/*
+	 * Names will be capitalized and hyphen converted to underscore by
+	 * cros_bundle_firmware.
+	 */
+	flash@ff800000 {
+		#address-cells = <1>;
+		#size-cells = <1>;
+		compatible = "chromeos,flashmap";
+		reg = <0xff800000 0x00800000>;
+
+		/*
+		 * Non-BIOS section of the Intel Firmware Descriptor image.
+		 * This section covers the all the parts that are not shown
+		 * to the CPU right below 4G.
+		 */
+		si-all {
+			label = "si-all";
+			reg = <0x00000000 0x00180000>;
+			type = "ifd";
+		};
+
+		/*
+		 * Firmware Descriptor section of the Intel Firmware Descriptor
+		 * image.
+		 */
+		si-desc {
+			label = "si-desc";
+			reg = <0x00000000 0x00001000>;
+		};
+
+		/*
+		 * Intel Management Engine section of the Intel Firmware
+		 * Descriptor image.
+		 */
+		si-me {
+			label = "si-me";
+			reg = <0x00001000 0x0017f000>;
+		};
+
+		/*
+		 * "BIOS" section of the Intel Firmware Descriptor image.
+		 * This section covers the complete image as shown to the
+		 * CPU right below 4G.
+		 */
+		si-bios {
+			label ="si-bios";
+			reg = <0x00180000 0x00680000>;
+		};
+
+		/* ---- Section: Rewritable VPD 4 KB ---- */
+		rw-vpd {
+			label = "rw-vpd";
+			/* Alignment: 4k (for updating) */
+			reg = <0x00180000 0x00001000>;
+			type = "wiped";
+			wipe-value = [ff];
+		};
+
+		/*
+		 * This space is currently unused and reserved for future
+		 * extensions. cros_bundle_firmware dislikes holes in the
+		 * FMAP, so we cover all empty space here.
+		 */
+		rw-unused {
+			label = "rw-unused";
+			reg = <0x00181000 0x00067000>;
+			type = "wiped";
+			wipe-value = [ff];
+		};
+
+		/* ---- Section: Rewritable shared 80 KB---- */
+		shared-section {
+			/* Alignment: 4k (for updating).
+			 * Anything in this range may be updated in recovery. */
+			label = "rw-shared";
+			reg = <0x001e8000 0x00018000>;
+		};
+
+		/* ---- Section: Rewritable u-boot environment 16 KB---- */
+		rw-environment {
+			label = "rw-environment";
+			/* Alignment 4k: (for updating) */
+			reg = <0x001e8000 0x00004000>;
+			/*
+			 * We could put the dev environment here, but U-Boot has
+			 * a default built in. Devs can 'saveenv' to set this
+			 * up.
+			 */
+			type = "wiped";
+			wipe-value = [00];
+		};
+
+		/* ---- Section: Rewritable MRC cache 64 KB ---- */
+		rw-mrc-cache {
+			label = "rw-mrc-cache";
+			/* Alignment: 4k (for updating) */
+			reg = <0x001ec000 0x00010000>;
+			type = "wiped";
+			wipe-value = [ff];
+		};
+
+		/* ---- Section: Rewritable private 16 KB---- */
+		dev-cfg {
+			label = "dev-cfg";
+			/* Alignment: 4k (for updating) */
+			reg = <0x001fc000 0x00004000>;
+			type = "wiped";
+			wipe-value = [00];
+		};
+
+		/* ---- Section: Rewritable slot A ---- */
+		rw-a {
+			label = "rw-section-a";
+			/* Alignment: 4k (for updating) */
+			reg = <0x00200000 0x00100000>;
+		};
+		rw-a-vblock {
+			label = "vblock-a";
+			/*
+			 * Alignment: 4k (for updating) and must be in start of
+			 * each RW_SECTION.
+			 */
+			reg = <0x00200000 0x00010000>;
+			type = "keyblock boot,dtb";
+			keyblock = "firmware.keyblock";
+			signprivate = "firmware_data_key.vbprivk";
+			version = <1>;
+			kernelkey = "kernel_subkey.vbpubk";
+			preamble-flags = <1>;
+		};
+		rw-a-boot {
+			/* Alignment: no requirement (yet). */
+			label = "fw-main-a";
+			reg = <0x00210000 0x0007ffc0>;
+			type = "blob boot,dtb";
+		};
+		rw-a-firmware-id {
+			/* Alignment: no requirement. */
+			label = "rw-fwid-a";
+			reg = <0x0028ffc0 0x00000040>;
+			read-only;
+			type = "blobstring fwid";
+		};
+		rw-a-unused {
+			label = "rw-unused-a";
+			reg = <0x00290000 0x00070000>;
+			type = "wiped";
+			wipe-value = [ff];
+		};
+
+		/* ---- Section: Rewritable slot B ---- */
+		rw-b {
+			label = "rw-section-b";
+			/* Alignment: 4k (for updating) */
+			reg = <0x00300000 0x00100000>;
+		};
+		rw-b-vblock {
+			label = "vblock-b";
+			/*
+			 * Alignment: 4k (for updating) and must be in start of
+			 * each RW_SECTION.
+			 */
+			reg = <0x00300000 0x00010000>;
+			type = "keyblock boot,dtb";
+			keyblock = "firmware.keyblock";
+			signprivate = "firmware_data_key.vbprivk";
+			version = <1>;
+			kernelkey = "kernel_subkey.vbpubk";
+			preamble-flags = <1>;
+		};
+		rw-b-boot {
+			label = "fw-main-b";
+			/* Alignment: no requirement (yet). */
+			reg = <0x00310000 0x0007ffc0>;
+			type = "blob boot,dtb";
+		};
+		rw-b-firmware-id {
+			label = "rw-fwid-b";
+			/* Alignment: no requirement. */
+			reg = <0x0038ffc0 0x00000040>;
+			read-only;
+			type = "blobstring fwid";
+		};
+		rw-b-unused {
+			label = "rw-unused-b";
+			reg = <0x00390000 0x00070000>;
+			type = "wiped";
+			wipe-value = [ff];
+		};
+
+		/*
+		 * This space is currently unused and reserved for future
+		 * extensions. cros_bundle_firmware dislikes holes in the
+		 * FMAP, so we cover all empty space here.
+		 */
+		ro-unused-1 {
+			label = "ro-unused-1";
+			reg = <0x00400000 0x00170000>;
+			type = "wiped";
+			wipe-value = [ff];
+		};
+
+		/* ---- Section: Vital-product data (VPD) ---- */
+		ro-vpd {
+			label = "ro-vpd";
+
+			/* VPD offset must be aligned to 4K bytes */
+			reg = <0x00570000 0x00020000>; /* 128 KB */
+			read-only;
+			type = "wiped";
+			wipe-value = [ff];
+		};
+
+		/*
+		 * This space is currently unused and reserved for future
+		 * extensions. cros_bundle_firmware dislikes holes in the
+		 * FMAP, so we cover all empty space here.
+		 */
+		ro-unused-2 {
+			label = "ro-unused-2";
+			reg = <0x00590000 0x000e0000>;
+			type = "wiped";
+			wipe-value = [ff];
+		};
+
+		/* ---- Section: Read-only ---- */
+		ro-section {
+			label = "ro-section";
+			reg = <0x00670000 0x00190000>;
+			read-only;
+		};
+		ro-fmap {
+			label = "fmap";
+
+			/*
+			 * We encourage to align FMAP partition in as large
+			 * block as possible so that flashrom can find it soon.
+			 * For example, aligning to 512KB is better than to
+			 * 256KB.
+			 */
+
+			reg = <0x00670000 0x00000800>;
+			read-only;
+			type = "fmap";
+			ver-major = <1>;
+			ver-minor = <0>;
+		};
+		ro-firmware-id {
+			label = "ro-frid";
+			reg = <0x00670800 0x00000040>;
+			read-only;
+			type = "blobstring fwid";
+		};
+		ro-padding {
+			label = "ro-padding";
+			reg = <0x00670840 0x0000f7c0>;
+			read-only;
+			type = "wiped";
+			wipe-value = [ff];
+		};
+		ro-gbb {
+			label = "gbb";
+
+			/* GBB offset must be aligned to 4K bytes */
+			reg = <0x00680000 0x00080000>; /* 512 KB */
+			read-only;
+			type = "blob gbb";
+		};
+		ro-boot {
+			label = "boot-stub";
+			reg = <0x00700000 0x00100000>; /* 1024 KB */
+			read-only;
+			type = "blob coreboot";
+			required;
+		};
+	};
+};

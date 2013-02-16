@@ -1,0 +1,41 @@
+/*
+ * Copyright (c) 2012 The Chromium OS Authors. All rights reserved.
+ * Use of this source code is governed by a BSD-style license that can be
+ * found in the LICENSE file.
+ */
+
+/*
+ * This file holds Chrome OS-specific options for Exynos, kept within a
+ * chromeos-config node.
+ */
+
+/include/ "factory-friendly.dtsi"
+
+/ {
+	chromeos-config {
+		twostop;		/* Two-stop boot */
+		twostop-optional;       /* One-stop optimization enabled */
+		textbase = <0x43e00000>;/* Address where U-Boot loads */
+		twostop-device = "emmc";/* Place for second stage firmware */
+		boot-device = "emmc";	/* Where SPL loads U-Boot from */
+		flash-method = "exynos";/* How to flash the board */
+		firmware-storage = <&firmware_storage_spi>;
+		nvstorage-media = "mkbp";
+		ec-software-sync;       /* EC firmware in sync with BIOS */
+		ec-slow-update;         /* Display WAIT screen when updating */
+
+		/* Memory addresses for kernel, cros-system and gbb */
+		kernel = <0x42000000 0x00800000>;
+		cros-system-data = <0x42800000 0x8000>;
+		google-binary-block = <0x42808000 0x100000>;
+	};
+
+	config {
+		silent_console = <0>;
+	};
+
+	chosen {
+		bootargs = "";
+	};
+
+};

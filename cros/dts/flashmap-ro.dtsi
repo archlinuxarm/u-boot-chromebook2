@@ -1,0 +1,85 @@
+/*
+ * Copyright (c) 2011 The Chromium OS Authors. All rights reserved.
+ * Use of this source code is governed by a BSD-style license that can be
+ * found in the LICENSE file.
+ */
+
+/*
+ * This is a sub-fmap embedded into twostop fmap. This sub-fmap defines
+ * the layout of the R/O portion.
+ */
+
+/ {
+	/*
+	 * Labels have been selected to be to compatible with existing tools,
+	 * even thought the terminology may be a little different on ARM.
+	 * Names will be capitalized and hyphen converted to underscore by
+	 * cros_bundle_firmware.
+	 */
+	flash@0 {
+		/* ---- Section: Read-only ---- */
+		ro-section {
+			label = "ro-section";
+			reg = <0x00000000 0x001f0000>;
+			read-only;
+		};
+
+		ro-boot {
+			label = "boot-stub";
+			reg = <0x00000000 0x00100000>; /* 1 MB */
+			read-only;
+			type = "blob signed";
+		};
+		ro-recovery {
+			/* Deprecated section */
+			label = "recovery";
+			reg = <0x00100000 0x00000000>;
+			read-only;
+		};
+		ro-fmap {
+			label = "fmap";
+
+			/* We encourage to align FMAP partition in as large
+			 * block as possible so that flashrom can find it soon.
+			 * For example, aligning to 512KB is better than to
+			 * 256KB. */
+
+			reg = <0x00100000 0x00001000>;
+			read-only;
+			type = "fmap";
+			ver-major = <1>;
+			ver-minor = <0>;
+		};
+		ro-firmware-id {
+			label = "ro-frid";
+			reg = <0x00101000 0x00000100>;
+			read-only;
+			type = "blobstring fwid";
+		};
+		ro-gbb {
+			label = "gbb";
+
+			/* GBB offset must be aligned to 4K bytes */
+			reg = <0x00110000 0x00080000>;
+			read-only;
+			type = "blob gbb";
+		};
+		ro-data {
+			/* Currently unused, simply for padding */
+			label = "ro-data";
+			reg = <0x00190000 0x00060000>;
+			read-only;
+		};
+
+		/* ---- Section: Vital-product data (VPD) ---- */
+		ro-vpd {
+			label = "ro-vpd";
+
+			/* VPD offset must be aligned to 4K bytes */
+			reg = <0x001f0000 0x00010000>;
+			read-only;
+			type = "wiped";
+			wipe-value = [ff];
+		};
+	};
+};

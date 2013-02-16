@@ -1,0 +1,61 @@
+/*
+ * Copyright (c) 2012 The Chromium OS Authors. All rights reserved.
+ * Use of this source code is governed by a BSD-style license that can be
+ * found in the LICENSE file.
+ */
+
+/*
+ * This file holds Chrome OS-specific options, kept within a chromeos-config
+ */
+
+/include/ "factory-friendly.dtsi"
+
+/ {
+	chromeos-config {
+		twostop;		/* Two-stop boot */
+		twostop-optional;       /* One-stop optimization enabled */
+
+		/*
+		 * Memory addresses for cros-system, should allow for up to
+		 * 16MB kernel loaded at 0x100000
+		 */
+		cros-system-data = <0x01100000 0x8000>;
+		google-binary-block = <0x01200000 0x100000>;
+
+		firmware-storage = <&firmware_storage_spi>;
+		nvstorage-media = "nvram";
+
+		vboot-flag-write-protect {
+			compatible = "google,sysinfo-flag";
+			google,name = "write protect";
+		};
+		vboot-flag-recovery {
+			compatible = "google,sysinfo-flag";
+			google,name = "recovery";
+		};
+		vboot-flag-developer {
+			compatible = "google,sysinfo-flag";
+			google,name = "developer";
+		};
+		vboot-flag-lid-open {
+			compatible = "google,sysinfo-flag";
+			google,name = "lid";
+		};
+		vboot-flag-power-off {
+			compatible = "google,sysinfo-flag";
+			google,name = "power";
+		};
+		vboot-flag-oprom-loaded {
+			compatible = "google,sysinfo-flag";
+			google,name = "oprom";
+		};
+	};
+
+	config {
+		silent_console = <0>;
+	};
+
+	chosen {
+		bootargs = "";
+	};
+};

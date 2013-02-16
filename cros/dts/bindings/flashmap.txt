@@ -1,0 +1,180 @@
+Chrome OS Flash Map Binding
+===========================
+
+The device tree node which describes the contents of the firmware flash
+memory is as follows:
+
+Required properties :
+- name = "flash" or "flash@<addr>";
+
+(note there is no compatible string required.)
+
+
+Sub-nodes describe each section of the flash. The idea is that the
+sections cover the entire contents of the flash and thus describe its
+entire contents. Gaps are allowed, but will generate warnings. Overlaps
+are not allowed, although sections which contain nothing are ignored
+and so can overlap with others.
+
+Required properties :
+
+ - label : Label for this section (a user readable string)
+
+Optional properties :
+
+ - reg : Two cells :
+            - start offset of this section
+            - size of this section
+
+ - size : Size of this section (the start offset is assumed to be
+      immediately after the previous section.)
+
+(note that only one of 'reg' and 'size' should be specified.)
+
+ - read-only : Boolean property, which if present, indicates that this
+      section is in read-only flash
+
+ - required : Indicates that this section is required for the firmware
+      to boot. If it is not present then there will be a vital piece
+      missing. This is used to mark the minimum sections that must be
+      present. For example, where there is a RO section and two RW
+      sections, only the RO section is marked required. Note that if
+      the firmware is built with only 'required' sections, then it will
+      only operate with non-verified boot.
+
+ - type : If present this describes the type of this section of the
+      flash. Allowable types are described below.
+
+
+Section Types
+-------------
+
+Here are described the section types and the required properties for
+each.
+
+Empty :
+ - no 'type' property
+ - ignored by the flash image creation tool (cros_bundle_firmware)
+
+
+Blob : Contains data read from a list of files
+ - type = "blob <list_of_files>"
+
+  <list_of_files> is a comma-separated list of files to put into the
+    section. For example: type = "blob boot,dtb" means to put the files
+    'boot' and 'dtb' into this section. These files are just a convenient
+    names for files on the disk - they are set up (i.e. hard coded)
+    by the firmware bundler.
+
+ For blobs where there is more than one file, we provide a way to access
+ the content, through a sub-node for each entry. That subnode should have a
+ standard reg property (with offset and size). The name of the subnode is the
+ same as the name of the file. Using the previous example:
+
+   type = "blob boot,dtb";
+   boot {
+      reg = <0 0x12345>;
+   };
+   dtb {
+      reg = <0x12348 0x33dc>;
+   };
+
+ Currently supported files are:
+   - coreboot : A coreboot.rom file
+   - bootstub : An Nvidia Tegra BCT + bootloader
+   - signed : A signed bootstub (signed Nvidia Tegra BCT + bootloader)
+   - exynos-bl1 : A Samsung Exynos BL1 (first stage boot loader)
+   - exynos-bl2 : A Samsung Exynos BL2 (second stage boot loader)
+        This has special handling - please see below.
+   - boot : The U-Boot binary
+   - dtb : The device tree binary
+   - skeleton : The coreboot skeleton file
+   - gbb : Google Binary Block, containing settings and recovery bitmaps
+
+Fmap : Contains a 'flashrom' FMAP which is a description of the flash
+    contents used by the 'flashrom' tool.
+ - type = "fmap"
+ - ver-major : Major version number (normally 1)
+ - ver-minor : Minor version number (normally 0)
+
+Wiped : Contains the same byte value throughout
+ - type = "wiped"
+ - wipe-value : Value to put in section. For example:
+      wipe_value = <0> means that the section will be all zeroes
+      wipe_value = <0xff> means that the section will be all 0xff
+
+Blobstring : Contains a single string
+ - type = "blobstring <name>"
+
+  <name> is the name of the string to include. The name is just a
+    convenient name for the string - the strings are set up (i.e.
+    hard-coded) by the firmware packer.
+
+  Currently supported names are:
+    - fwid : Firmware ID, made from the machine model and the Chrome OS
+        version (e.g. Google_Daisy.2401.0.2012_06_18_2004)
+
+Keyblock : Contains a key block
+ - type = "keyblock <list_of_files>"
+ - keyblock : Filename (within key directory) of the key block to use,
+        e.g. keyblock = "firmware.keyblock"
+ - signprivate : Filename (within key directory) of the private key
+        to use. e.g. signprivate = "firmware_data_key.vbprivk"
+ - version : Version number to pass to vbutil
+ - kernelkey : Filename (within key directory) of the kernel key
+        to use. e.g. kernelkey = "kernel_subkey.vbpubk"
+ - preamble-flags : Value for preamble flags
+
+ <list_of_files> is as for blob.
+
+  The files are joined together and signed with vbutil to produce a
+  key block, and it is this key block which is put into the section.
+
+
+
+Samsung Exynos BL2
+------------------
+
+This file is used to load U-Boot. Within U-Boot this is called SPL,
+Secondary Program Loader. Samsung calls it BL2, boot loader 2, since
+BL1 is the first think loaded by the IROM.
+
+BL2 also contains a machine parameter block, which can be configured
+from the firmware bundler. Each parameter consists of a 32-bit word with a
+character tag. The currently-defined parameters are below. Note that
+many of these come from the device tree, so we show the node and
+property that they come from, and the value for the property where
+relevant.
+
+  Code         Name
+  ====         ========
+  a            ARM clock frequency in MHz (/dmc 'arm-frequency')
+  b            Boot source: Where to load U-Boot from:
+                  4 : emmc: MMC
+                  20 : spi : Serial Flash (SPI)
+                  32 : straps : Load according to the OM pins
+                  33 : usb: USB download
+  f            Memory frequency in MHz (/dmc 'clock-frequency')
+  i            i2c base address for early access (meant for PMIC). This
+                  is the physical register address of the relevant
+                  i2c controller in the Exynos memory map.
+  m            Memory type from /dmc property 'mem-type'
+                  0 : ddr2
+                  1 : ddr3
+                  2 : lpddr2
+                  3 : lpddr3
+  M            Memory Manufacturer name from /dmc property 'mem-manuf'
+                  0 : autodetect : Auto-detect if possible
+                  1 : elpida : Elpida memory
+                  2 : samsung : Samsung memory
+  r            board rev GPIO numbers used to read board revision
+                       (lower halfword=first gpio, upper=second gpio)
+  s            Serial base address (physical register address of UART
+                  in Exynos memory map)
+  u            U-Boot size
+                  Size of data to be loaded by SPL
+                   (calculated by the bundle tool)
+  v            Memory interleave size from /dmc property
+               'mem-interleave-size' (normally 31)
+
+See smdk5250_spl.c and spl.h in the U-Boot source for the C structure.

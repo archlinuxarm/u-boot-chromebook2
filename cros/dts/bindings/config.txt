@@ -1,0 +1,25 @@
+Chrome OS dts config bindings
+=============================
+
+hda_codec_beep - use codec or legacy PC beep source
+ 0 or not present - use legacy PC beep
+ 1 - use a codec beep source
+ ex: hda_codec_beep <1>
+
+hda-codec-beep-nid - Node ID (NID) #
+ -1 or not preset - auto detect NID
+ 0 or any other value - sets the codec beep NID
+ ex: hda-codec-beep-nid <0x01>
+
+faft-key-remap-ascii - Array for simple ascii key remap.
+ You may remap up to three keys if the GBB flag is set.
+ Keys are paired with incoming key and remapped key.
+ example remap '\' to SPACE:
+     faft-key-remap-ascii = <0x5c 0x0D 0 0 0 0>;
+
+faft-key-remap-special - Array for special key remap.
+ You may remap up to three keys if the GBB flag is set.
+ Keys are paired with incoming key and remapped key.
+ Special keys are pre-stripped of ESCAPE and '['.
+ example remap 'F9' to ENTER:
+ faft-key-remap-special = <0x32 0x20 0 0 0 0>;

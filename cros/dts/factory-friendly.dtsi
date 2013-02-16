@@ -1,0 +1,19 @@
+/*
+ * Copyright (c) 2012 The Chromium OS Authors. All rights reserved.
+ * Use of this source code is governed by a BSD-style license that can be
+ * found in the LICENSE file.
+ */
+
+/*
+ * GBB flags to enable factory-friendly features, defined in
+ * vboot_reference/firmware/include/gbb_header.h
+ */
+
+/ {
+	chromeos-config {
+		gbb-flag-dev-screen-short-delay;
+		gbb-flag-force-dev-switch-on;
+		gbb-flag-force-dev-boot-usb;
+		gbb-flag-disable-fw-rollback-check;
+	};
+};

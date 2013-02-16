@@ -1,0 +1,28 @@
+Chrome EC bindings
+==================
+
+The device tree node which describes the Chrome Embedded Controller (EC)
+is as follows:
+
+Required properties :
+- compatible = "google,chrome-ec"
+- model : Manufacturer and part number of EC part
+- flash : Contains address and size of flash memory (in standard reg property)
+
+
+Optional properties within flash node :
+- erase-value : Value that flash erases to, typically 0xff or 0. If -1, or
+   missing, then it means that the value is not known.
+
+
+Example
+=======
+
+	chrome-ec {
+		compatible = "google,chrome-ec";
+		model = "st,stm32f100";
+		flash@8000000 {
+			reg = <0x08000000 0x20000>;
+			erase-value = <0xff>;
+		};
+	};
