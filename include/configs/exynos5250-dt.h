@@ -38,6 +38,9 @@
 #define CONFIG_DISPLAY_CPUINFO
 #define CONFIG_DISPLAY_BOARDINFO
 
+#define CONFIG_BOOTSTAGE
+#define CONFIG_PHYSMEM
+
 /* Enable fdt support for Exynos5250 */
 #define CONFIG_ARCH_DEVICE_TREE		exynos5250
 #define CONFIG_OF_CONTROL
@@ -355,6 +358,7 @@
 #define LCD_XRES			2560
 #define LCD_YRES			1600
 #define LCD_BPP			LCD_COLOR16
+#define CONFIG_CMD_BMP
 #endif
 
 /* Enable Time Command */
