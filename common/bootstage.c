@@ -102,13 +102,13 @@ ulong bootstage_add_record(enum bootstage_id id, const char *name,
 
 ulong bootstage_mark(enum bootstage_id id)
 {
-	return bootstage_add_record(id, NULL, 0, timer_get_boot_us());
+	return bootstage_add_record(id, NULL, 0, timer_get_us());
 }
 
 ulong bootstage_error(enum bootstage_id id)
 {
 	return bootstage_add_record(id, NULL, BOOTSTAGEF_ERROR,
-				    timer_get_boot_us());
+				    timer_get_us());
 }
 
 ulong bootstage_mark_name(enum bootstage_id id, const char *name)
@@ -117,7 +117,7 @@ ulong bootstage_mark_name(enum bootstage_id id, const char *name)
 
 	if (id == BOOTSTAGE_ID_ALLOC)
 		flags = BOOTSTAGEF_ALLOC;
-	return bootstage_add_record(id, name, flags, timer_get_boot_us());
+	return bootstage_add_record(id, name, flags, timer_get_us());
 }
 
 ulong bootstage_mark_code(const char *file, const char *func, int linenum)
@@ -151,7 +151,7 @@ uint32_t bootstage_start(enum bootstage_id id, const char *name)
 {
 	struct bootstage_record *rec = &record[id];
 
-	rec->start_us = timer_get_boot_us();
+	rec->start_us = timer_get_us();
 	rec->name = name;
 	return rec->start_us;
 }
@@ -161,7 +161,7 @@ uint32_t bootstage_accum(enum bootstage_id id)
 	struct bootstage_record *rec = &record[id];
 	uint32_t duration;
 
-	duration = (uint32_t)timer_get_boot_us() - rec->start_us;
+	duration = (uint32_t)timer_get_us() - rec->start_us;
 	rec->time_us += duration;
 	return duration;
 }
@@ -307,24 +307,6 @@ void bootstage_report(void)
 			prev = print_time_record(id, rec, -1);
 	}
 }
-
-ulong __timer_get_boot_us(void)
-{
-	static ulong base_time;
-
-	/*
-	 * We can't implement this properly. Return 0 on the first call and
-	 * larger values after that.
-	 */
-	if (base_time)
-		return get_timer(base_time) * 1000;
-	base_time = get_timer(0);
-	return 0;
-}
-
-ulong timer_get_boot_us(void)
-	__attribute__((weak, alias("__timer_get_boot_us")));
-
 /**
  * Append data to a memory buffer
  *

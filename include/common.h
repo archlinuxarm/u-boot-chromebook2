@@ -764,6 +764,7 @@ unsigned long timer_get_us(void);
 
 void	enable_interrupts  (void);
 int	disable_interrupts (void);
+unsigned long timer_get_us(void);
 
 /* $(CPU)/.../commproc.c */
 int	dpram_init (void);
