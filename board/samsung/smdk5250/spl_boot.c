@@ -252,9 +252,18 @@ void copy_uboot_to_ram(void)
 	}
 }
 
+/* Tell the loaded U-Boot that it was loaded from SPL */
+static void exynos5_set_spl_marker(void)
+{
+	uint32_t *marker = (uint32_t *)CONFIG_SPL_MARKER;
+
+	*marker = EXYNOS5_SPL_MARKER;
+}
+
 void board_init_f(unsigned long bootflag)
 {
 	__attribute__((noreturn)) void (*uboot)(void);
+	exynos5_set_spl_marker();
 	copy_uboot_to_ram();
 
 	/* Jump to U-Boot image */

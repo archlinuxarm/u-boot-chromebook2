@@ -31,4 +31,12 @@
  */
 int board_get_revision(void);
 
+/**
+ * Get whether the processor has reset since running u-boot last. In other
+ * words, return whether we're in first stage or second stage.
+ *
+ * @return 1 if we've reset, 0 if not
+ */
+int board_is_processor_reset(void);
+
 #endif

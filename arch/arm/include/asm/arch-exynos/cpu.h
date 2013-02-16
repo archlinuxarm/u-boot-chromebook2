@@ -27,6 +27,9 @@
 #define EXYNOS_CPU_NAME			"Exynos"
 #define EXYNOS4_ADDR_BASE		0x10000000
 
+/* Marker values stored at the bottom of IRAM stack by SPL */
+#define EXYNOS5_SPL_MARKER	0xb004f1a9	/* hexspeak word: bootflag */
+
 /* EXYNOS4 Common*/
 #define EXYNOS4_I2C_SPACING		0x10000
 
