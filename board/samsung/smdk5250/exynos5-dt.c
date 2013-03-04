@@ -84,7 +84,7 @@ int board_usb_vbus_init(void)
 						samsung_get_base_gpio_part1();
 
 	/* Enable VBUS power switch */
-	s5p_gpio_direction_output(&gpio1->x2, 6, 1);
+	s5p_gpio_direction_output(&gpio1->x1, 1, 1);
 
 	/* VBUS turn ON time */
 	mdelay(3);
