@@ -162,6 +162,7 @@ struct cros_ec_dev *board_get_cros_ec_dev(void)
 	return local.cros_ec_dev;
 }
 
+#ifdef CONFIG_CROS_EC
 static int board_init_cros_ec_devices(const void *blob)
 {
 	local.cros_ec_err = cros_ec_init(blob, &local.cros_ec_dev);
@@ -170,6 +171,7 @@ static int board_init_cros_ec_devices(const void *blob)
 
 	return 0;
 }
+#endif
 
 #if defined(CONFIG_POWER)
 static int pmic_reg_update(struct pmic *p, int reg, uint regval)
@@ -340,7 +342,7 @@ int board_is_processor_reset(void)
 	return is_reset;
 }
 
-
+#ifdef CONFIG_OF_CONTROL
 int board_get_revision(void)
 {
 	struct fdt_gpio_state gpios[CONFIG_BOARD_REV_GPIO_COUNT];
@@ -466,6 +468,7 @@ __weak int ft_board_setup(void *blob, bd_t *bd)
 {
 	return ft_system_setup(blob, bd);
 }
+#endif
 
 int arch_early_init_r(void)
 {

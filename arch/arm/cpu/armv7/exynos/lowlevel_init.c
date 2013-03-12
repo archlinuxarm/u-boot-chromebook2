@@ -59,7 +59,7 @@ int do_lowlevel_init(void)
 		break;
 	default:
 		/* This is a normal boot (not a wake from sleep) */
-		actions = DO_CLOCKS | DO_MEM_RESET | DO_UART;
+		actions = DO_CLOCKS | DO_MEM_RESET;
 	}
 
 	if (actions & DO_CLOCKS) {

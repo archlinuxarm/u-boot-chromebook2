@@ -205,19 +205,149 @@ struct exynos5_dmc {
 	unsigned int pmcnt3_ppc_a;
 };
 
+struct exynos5420_dmc {
+	unsigned int concontrol;	/* 0x0000 */
+	unsigned int memcontrol;
+	unsigned int cgcontrol;
+	unsigned char res100[0x4];
+	unsigned int directcmd;
+	unsigned int prechconfig0;
+	unsigned int phycontrol0;
+	unsigned int prechconfig1;
+	unsigned int timingrfcpb;
+	unsigned int timingzq;
+	unsigned int pwrdnconfig;	/* 0x0028 */
+	unsigned int timingpzq;
+	unsigned int timingaref;
+	unsigned int timingrow0;
+	unsigned int timingdata0;
+	unsigned int timingpower0;
+	unsigned int phystatus;
+	unsigned int etctiming;
+	unsigned int chipstatus;
+	unsigned char res1[0x8];
+	unsigned int mrstatus;
+	unsigned char res2[0x8];
+	unsigned int qoscontrol0;	/* 0x0060 */
+	unsigned char res3[0x4];
+	unsigned int qoscontrol1;
+	unsigned char res4[0x4];
+	unsigned int qoscontrol2;
+	unsigned char res5[0x4];
+	unsigned int qoscontrol3;
+	unsigned char res6[0x4];
+	unsigned int qoscontrol4;
+	unsigned char res7[0x4];
+	unsigned int qoscontrol5;
+	unsigned char res8[0x4];
+	unsigned int qoscontrol6;	/* 0x0090 */
+	unsigned char res9[0x4];
+	unsigned int qoscontrol7;
+	unsigned char res10[0x4];
+	unsigned int qoscontrol8;
+	unsigned char res11[0x4];
+	unsigned int qoscontrol9;
+	unsigned char res12[0x4];
+	unsigned int qoscontrol10;
+	unsigned char res13[0x4];
+	unsigned int qoscontrol11;
+	unsigned char res14[0x4];
+	unsigned int qoscontrol12;
+	unsigned char res15[0x4];
+	unsigned int qoscontrol13;
+	unsigned char res16[0x4];
+	unsigned int qoscontrol14;
+	unsigned char res17[0x4];
+	unsigned int qoscontrol15;
+	unsigned char res18[0x4];
+	unsigned int timing_set_sw;	/* 0x00e0 */
+	unsigned int timingrow1;
+	unsigned int timingdata1;
+	unsigned int timingpower1;
+	unsigned char res19[0x4];
+	unsigned int wrtra_config;
+	unsigned int rdlvl_config;
+	unsigned int perevconfig;
+	unsigned int brbrsvcontrol;
+	unsigned int brbrsvconfig;
+	unsigned int brbqosconfig;
+	unsigned char res20[0x14];
+	unsigned int wrlvl_config0;	/* 0x0120 */
+	unsigned int wrlvl_config1;
+	unsigned int wrlvl_status;
+	unsigned char res21[0x4];
+	unsigned int ppcclkcon;
+	unsigned int perevconfig0;
+	unsigned int perevconfig1;
+	unsigned int perevconfig2;
+	unsigned int perevconfig3;
+	unsigned char res22[0xc];
+	unsigned int ctrl_io_rdata;
+	unsigned char res23[0xc];
+	unsigned int cacal_config0;
+	unsigned int cacal_config1;
+	unsigned int cacal_status;
+	unsigned char res24[0x94];
+	unsigned int emergent_config0;	/* 0x0200 */
+	unsigned int emergent_config1;
+	unsigned char res25[0x8];
+	unsigned int bp_control0;
+	unsigned int bp_control0_r;
+	unsigned int bp_control0_w;
+	unsigned char res26[0x4];
+	unsigned int bp_control1;
+	unsigned int bp_control1_r;
+	unsigned int bp_control1_w;
+	unsigned char res27[0x4];
+	unsigned int bp_control2;
+	unsigned int bp_control2_r;
+	unsigned int bp_control2_w;
+	unsigned char res28[0x4];
+	unsigned int bp_control3;
+	unsigned int bp_control3_r;
+	unsigned int bp_control3_w;
+	unsigned char res29[0xb4];
+	unsigned int winconfig_odt_w;	/* 0x0300 */
+	unsigned char res30[0x4];
+	unsigned int winconfig_ctrl_read;
+	unsigned int winconfig_ctrl_gate;
+	unsigned char res31[0xdcf0];
+	unsigned int pmnc_ppc;
+	unsigned char res32[0xc];
+	unsigned int cntens_ppc;
+	unsigned char res33[0xc];
+	unsigned int cntenc_ppc;
+	unsigned char res34[0xc];
+	unsigned int intens_ppc;
+	unsigned char res35[0xc];
+	unsigned int intenc_ppc;
+	unsigned char res36[0xc];
+	unsigned int flag_ppc;		/* 0xe050 */
+	unsigned char res37[0xac];
+	unsigned int ccnt_ppc;
+	unsigned char res38[0xc];
+	unsigned int pmcnt0_ppc;
+	unsigned char res39[0xc];
+	unsigned int pmcnt1_ppc;
+	unsigned char res40[0xc];
+	unsigned int pmcnt2_ppc;
+	unsigned char res41[0xc];
+	unsigned int pmcnt3_ppc;	/* 0xe140 */
+};
+
 struct exynos5_phy_control {
 	unsigned int phy_con0;
 	unsigned int phy_con1;
 	unsigned int phy_con2;
 	unsigned int phy_con3;
 	unsigned int phy_con4;
-	unsigned char res1[4];
+	unsigned int phy_con5;
 	unsigned int phy_con6;
 	unsigned char res2[4];
 	unsigned int phy_con8;
 	unsigned int phy_con9;
 	unsigned int phy_con10;
-	unsigned char res3[4];
+	unsigned int phy_con11;
 	unsigned int phy_con12;
 	unsigned int phy_con13;
 	unsigned int phy_con14;

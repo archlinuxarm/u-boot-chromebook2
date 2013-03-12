@@ -1,6 +1,8 @@
 #
-# Copyright (C) 2009 Samsung Electronics
-# Minkyu Kang <mk7.kang@samsung.com>
+# Copyright (C) 2012 Samsung Electronics
+#
+# See file CREDITS for list of people who contributed to this
+# project.
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License as
@@ -20,28 +22,20 @@
 
 include $(TOPDIR)/config.mk
 
-LIB	= $(obj)lib$(SOC).o
+LIB	= $(obj)lib$(BOARD).o
 
-COBJS-y	+= clock.o power.o soc.o system.o pinmux.o
+COBJS	+= smdk5420_spl.o
 
-ifdef CONFIG_EXYNOS5
-COBJS-y	+= clock_init.o tzpc_init.o
-SOBJS	+= lowlevel.o
-COBJS-$(CONFIG_SPL_BUILD)	+= spl_boot.o
-COBJS-$(CONFIG_SPL_BUILD)	+= lowlevel_init.o
-ifdef CONFIG_SPL_BUILD
-COBJS-$(CONFIG_SMDK5250)	+= dmc_init_ddr3.o dmc_common.o
-COBJS-$(CONFIG_SNOW)		+= dmc_init_ddr3.o dmc_common.o
-COBJS-$(CONFIG_SMDK5420)	+= dmc_init_lpddr3.o
-endif
+ifndef CONFIG_SPL_BUILD
+COBJS	+= smdk5420.o
 endif
 
-
-COBJS   := $(COBJS-y)
 SRCS	:= $(SOBJS:.o=.S) $(COBJS:.o=.c)
 OBJS	:= $(addprefix $(obj),$(COBJS) $(SOBJS))
 
-all:	 $(obj).depend $(LIB)
+ALL	:=	 $(obj).depend $(LIB)
+
+all:	$(ALL)
 
 $(LIB):	$(OBJS)
 	$(call cmd_link_o_target, $(OBJS))

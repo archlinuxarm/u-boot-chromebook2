@@ -118,7 +118,9 @@ int serial_init_dev(const int dev_index)
 	/* 8N1 */
 	writel(0x3, &uart->ulcon);
 	/* No interrupts, no DMA, pure polling */
-	writel(0x245, &uart->ucon);
+	writel(0x3045, &uart->ucon);
+	/* enable FIFOs */
+	writel(0x111, &uart->ufcon);
 
 	serial_setbrg_dev(dev_index);
 

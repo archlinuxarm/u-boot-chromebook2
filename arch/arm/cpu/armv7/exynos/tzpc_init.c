@@ -28,7 +28,7 @@
 #include"setup.h"
 
 /* Setting TZPC[TrustZone Protection Controller] */
-void tzpc_init(void)
+void exynos5250_tzpc_init(void)
 {
 	struct exynos_tzpc *tzpc;
 	unsigned int addr;
@@ -47,4 +47,30 @@ void tzpc_init(void)
 			writel(DECPROTXSET, &tzpc->decprot3set);
 		}
 	}
+}
+
+void exynos5420_tzpc_init(void)
+{
+	struct exynos_tzpc *tzpc;
+	unsigned int addr;
+
+	for (addr = TZPC10_BASE; addr <= TZPC9_BASE; addr += TZPC_BASE_OFFSET) {
+		tzpc = (struct exynos_tzpc *)addr;
+
+		if (addr == TZPC0_BASE)
+			writel(R0SIZE, &tzpc->r0size);
+
+		writel(DECPROTXSET, &tzpc->decprot0set);
+		writel(DECPROTXSET, &tzpc->decprot1set);
+		writel(DECPROTXSET, &tzpc->decprot2set);
+		writel(DECPROTXSET, &tzpc->decprot3set);
+	}
+}
+
+void tzpc_init(void)
+{
+	if (proid_is_exynos5420())
+		exynos5420_tzpc_init();
+	else
+		exynos5250_tzpc_init();
 }

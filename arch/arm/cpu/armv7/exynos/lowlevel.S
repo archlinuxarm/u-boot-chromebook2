@@ -31,5 +31,5 @@ lowlevel_init:
 	 * Set the stack pointer, although it will be overwritten by the caller
 	 * It seems we will not boot if this function is empty.
 	 */
-	ldr	sp, =CONFIG_IRAM_STACK
+	ldr	sp, =CONFIG_SYS_INIT_SP_ADDR
 	mov	pc, lr
