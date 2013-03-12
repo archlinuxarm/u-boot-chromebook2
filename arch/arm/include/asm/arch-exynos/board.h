@@ -39,4 +39,12 @@ int board_get_revision(void);
  */
 int board_is_processor_reset(void);
 
+/* Enable the audio code ready for use */
+int board_enable_audio_codec(void);
+
+/*
+ * Exynos baord specific changes for
+ * board_init
+ */
+int exynos_init(void);
 #endif

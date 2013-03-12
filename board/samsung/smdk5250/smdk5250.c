@@ -21,7 +21,6 @@
  */
 
 #include <common.h>
-#include <cros_ec.h>
 #include <fdtdec.h>
 #include <asm/io.h>
 #include <errno.h>
@@ -43,13 +42,6 @@
 
 DECLARE_GLOBAL_DATA_PTR;
 
-struct local_info {
-	struct cros_ec_dev *cros_ec_dev;	/* Pointer to cros_ec device */
-	int cros_ec_err;			/* Error for cros_ec, 0 if ok */
-};
-
-static struct local_info local;
-
 #ifdef CONFIG_USB_EHCI_EXYNOS
 int board_usb_vbus_init(void)
 {
@@ -67,7 +59,7 @@ int board_usb_vbus_init(void)
 #endif
 
 #ifdef CONFIG_SOUND_MAX98095
-static void  board_enable_audio_codec(void)
+int board_enable_audio_codec(void)
 {
 	struct exynos5_gpio_part1 *gpio1 = (struct exynos5_gpio_part1 *)
 						samsung_get_base_gpio_part1();
@@ -75,248 +67,19 @@ static void  board_enable_audio_codec(void)
 	/* Enable MAX98095 Codec */
 	s5p_gpio_direction_output(&gpio1->x1, 7, 1);
 	s5p_gpio_set_pull(&gpio1->x1, 7, GPIO_PULL_NONE);
-}
-#endif
-
-struct cros_ec_dev *board_get_cros_ec_dev(void)
-{
-	return local.cros_ec_dev;
-}
-
-static int board_init_cros_ec_devices(const void *blob)
-{
-	local.cros_ec_err = cros_ec_init(blob, &local.cros_ec_dev);
-	if (local.cros_ec_err)
-		return -1;  /* Will report in board_late_init() */
 
 	return 0;
 }
-
-int board_init(void)
-{
-	gd->bd->bi_boot_params = (PHYS_SDRAM_1 + 0x100UL);
-
-#ifdef CONFIG_EXYNOS_SPI
-	spi_init();
 #endif
 
-	if (board_init_cros_ec_devices(gd->fdt_blob))
-		return -1;
+int exynos_init(void)
+{
+	gd->bd->bi_boot_params = (PHYS_SDRAM_1 + 0x100UL);
 
 #ifdef CONFIG_USB_EHCI_EXYNOS
 	board_usb_vbus_init();
 #endif
-#ifdef CONFIG_SOUND_MAX98095
-	board_enable_audio_codec();
-#endif
 	return 0;
-}
-
-int dram_init(void)
-{
-	int i;
-	u32 addr;
-
-	for (i = 0; i < CONFIG_NR_DRAM_BANKS; i++) {
-		addr = CONFIG_SYS_SDRAM_BASE + (i * SDRAM_BANK_SIZE);
-		gd->ram_size += get_ram_size((long *)addr, SDRAM_BANK_SIZE);
-	}
-	return 0;
-}
-
-#if defined(CONFIG_POWER)
-static int pmic_reg_update(struct pmic *p, int reg, uint regval)
-{
-	u32 val;
-	int ret = 0;
-
-	ret = pmic_reg_read(p, reg, &val);
-	if (ret) {
-		debug("%s: PMIC %d register read failed\n", __func__, reg);
-		return -1;
-	}
-	val |= regval;
-	ret = pmic_reg_write(p, reg, val);
-	if (ret) {
-		debug("%s: PMIC %d register write failed\n", __func__, reg);
-		return -1;
-	}
-	return 0;
-}
-
-int power_init_board(void)
-{
-	struct pmic *p;
-
-	set_ps_hold_ctrl();
-
-	i2c_init(CONFIG_SYS_I2C_SPEED, CONFIG_SYS_I2C_SLAVE);
-
-	if (pmic_init(I2C_PMIC))
-		return -1;
-
-	p = pmic_get("MAX77686_PMIC");
-	if (!p)
-		return -ENODEV;
-
-	if (pmic_probe(p))
-		return -1;
-
-	if (pmic_reg_update(p, MAX77686_REG_PMIC_32KHZ, MAX77686_32KHCP_EN))
-		return -1;
-
-	if (pmic_reg_update(p, MAX77686_REG_PMIC_BBAT,
-				MAX77686_BBCHOSTEN | MAX77686_BBCVS_3_5V))
-		return -1;
-
-	/* VDD_MIF */
-	if (pmic_reg_write(p, MAX77686_REG_PMIC_BUCK1OUT,
-						MAX77686_BUCK1OUT_1V)) {
-		debug("%s: PMIC %d register write failed\n", __func__,
-						MAX77686_REG_PMIC_BUCK1OUT);
-		return -1;
-	}
-
-	if (pmic_reg_update(p, MAX77686_REG_PMIC_BUCK1CRTL,
-						MAX77686_BUCK1CTRL_EN))
-		return -1;
-
-	/* VDD_ARM */
-	if (pmic_reg_write(p, MAX77686_REG_PMIC_BUCK2DVS1,
-					MAX77686_BUCK2DVS1_1_3V)) {
-		debug("%s: PMIC %d register write failed\n", __func__,
-						MAX77686_REG_PMIC_BUCK2DVS1);
-		return -1;
-	}
-
-	if (pmic_reg_update(p, MAX77686_REG_PMIC_BUCK2CTRL1,
-					MAX77686_BUCK2CTRL_ON))
-		return -1;
-
-	/* VDD_INT */
-	if (pmic_reg_write(p, MAX77686_REG_PMIC_BUCK3DVS1,
-					MAX77686_BUCK3DVS1_1_0125V)) {
-		debug("%s: PMIC %d register write failed\n", __func__,
-						MAX77686_REG_PMIC_BUCK3DVS1);
-		return -1;
-	}
-
-	if (pmic_reg_update(p, MAX77686_REG_PMIC_BUCK3CTRL,
-					MAX77686_BUCK3CTRL_ON))
-		return -1;
-
-	/* VDD_G3D */
-	if (pmic_reg_write(p, MAX77686_REG_PMIC_BUCK4DVS1,
-					MAX77686_BUCK4DVS1_1_2V)) {
-		debug("%s: PMIC %d register write failed\n", __func__,
-						MAX77686_REG_PMIC_BUCK4DVS1);
-		return -1;
-	}
-
-	if (pmic_reg_update(p, MAX77686_REG_PMIC_BUCK4CTRL1,
-					MAX77686_BUCK3CTRL_ON))
-		return -1;
-
-	/* VDD_LDO2 */
-	if (pmic_reg_update(p, MAX77686_REG_PMIC_LDO2CTRL1,
-				MAX77686_LD02CTRL1_1_5V | EN_LDO))
-		return -1;
-
-	/* VDD_LDO3 */
-	if (pmic_reg_update(p, MAX77686_REG_PMIC_LDO3CTRL1,
-				MAX77686_LD03CTRL1_1_8V | EN_LDO))
-		return -1;
-
-	/* VDD_LDO5 */
-	if (pmic_reg_update(p, MAX77686_REG_PMIC_LDO5CTRL1,
-				MAX77686_LD05CTRL1_1_8V | EN_LDO))
-		return -1;
-
-	/* VDD_LDO10 */
-	if (pmic_reg_update(p, MAX77686_REG_PMIC_LDO10CTRL1,
-				MAX77686_LD10CTRL1_1_8V | EN_LDO))
-		return -1;
-
-	return 0;
-}
-#endif
-
-void dram_init_banksize(void)
-{
-	int i;
-	u32 addr, size;
-	for (i = 0; i < CONFIG_NR_DRAM_BANKS; i++) {
-		addr = CONFIG_SYS_SDRAM_BASE + (i * SDRAM_BANK_SIZE);
-		size = get_ram_size((long *)addr, SDRAM_BANK_SIZE);
-		gd->bd->bi_dram[i].start = addr;
-		gd->bd->bi_dram[i].size = size;
-	}
-}
-
-/**
- * Read and clear the marker value; then return the read value.
- *
- * This marker is set to EXYNOS5_SPL_MARKER when SPL runs. Then in U-Boot
- * we can check (and clear) this marker to see if we were run from SPL.
- * If we were called from another U-Boot, the marker will be clear.
- *
- * @return marker value (EXYNOS5_SPL_MARKER if we were run from SPL, else 0)
- */
-static uint32_t exynos5_read_and_clear_spl_marker(void)
-{
-	uint32_t value, *marker = (uint32_t *)CONFIG_SPL_MARKER;
-
-	value = *marker;
-	*marker = 0;
-
-	return value;
-}
-
-int board_is_processor_reset(void)
-{
-	static uint8_t inited, is_reset;
-	uint32_t marker_value;
-
-	if (!inited) {
-		marker_value = exynos5_read_and_clear_spl_marker();
-		is_reset = marker_value == EXYNOS5_SPL_MARKER;
-		inited = 1;
-	}
-
-	return is_reset;
-}
-
-/**
- * Read and clear the marker value; then return the read value.
- *
- * This marker is set to EXYNOS5_SPL_MARKER when SPL runs. Then in U-Boot
- * we can check (and clear) this marker to see if we were run from SPL.
- * If we were called from another U-Boot, the marker will be clear.
- *
- * @return marker value (EXYNOS5_SPL_MARKER if we were run from SPL, else 0)
- */
-static uint32_t exynos5_read_and_clear_spl_marker(void)
-{
-	uint32_t value, *marker = (uint32_t *)CONFIG_SPL_MARKER;
-
-	value = *marker;
-	*marker = 0;
-
-	return value;
-}
-
-int board_is_processor_reset(void)
-{
-	static uint8_t inited, is_reset;
-	uint32_t marker_value;
-
-	if (!inited) {
-		marker_value = exynos5_read_and_clear_spl_marker();
-		is_reset = marker_value == EXYNOS5_SPL_MARKER;
-		inited = 1;
-	}
-
-	return is_reset;
 }
 
 int board_eth_init(bd_t *bis)
@@ -367,19 +130,7 @@ int board_eth_init(bd_t *bis)
 #ifdef CONFIG_DISPLAY_BOARDINFO
 int checkboard(void)
 {
-#ifdef CONFIG_OF_CONTROL
-	const char *board_name;
-
-	board_name = fdt_getprop(gd->fdt_blob, 0, "model", NULL);
-	if (board_name == NULL) {
-		printf("\nUnknown Board\n");
-	} else {
-		printf("\nBoard: %s, rev %d\n", board_name,
-		       board_get_revision());
-	}
-#else
 	printf("\nBoard: SMDK5250\n");
-#endif
 
 	return 0;
 }
@@ -423,42 +174,11 @@ int board_mmc_init(bd_t *bis)
 }
 #endif
 
-static int board_uart_init(void)
-{
-	int err, uart_id, ret = 0;
-
-	for (uart_id = PERIPH_ID_UART0; uart_id <= PERIPH_ID_UART3; uart_id++) {
-		err = exynos_pinmux_config(uart_id, PINMUX_FLAG_NONE);
-		if (err) {
-			debug("UART%d not configured\n",
-			      (uart_id - PERIPH_ID_UART0));
-			ret |= err;
-		}
-	}
-	return ret;
-}
-
-#ifdef CONFIG_BOARD_EARLY_INIT_F
-int board_early_init_f(void)
-{
-	int err;
-	err = board_uart_init();
-	if (err) {
-		debug("UART init failed\n");
-		return err;
-	}
-#ifdef CONFIG_SYS_I2C_INIT_BOARD
-	board_i2c_init(NULL);
-#endif
-	return err;
-}
-#endif
-
 #ifdef CONFIG_LCD
 void exynos_cfg_lcd_gpio(void)
 {
 	struct exynos5_gpio_part1 *gpio1 =
-		(struct exynos5_gpio_part1 *) samsung_get_base_gpio_part1();
+		(struct exynos5_gpio_part1 *)samsung_get_base_gpio_part1();
 
 	/* For Backlight */
 	s5p_gpio_cfg_pin(&gpio1->b2, 0, GPIO_OUTPUT);
@@ -546,149 +266,5 @@ void init_panel_info(vidinfo_t *vid)
 {
 	vid->rgb_mode   = MODE_RGB_P;
 	exynos_set_dp_platform_data(&dp_platform_data);
-}
-#endif
-
-int board_get_revision(void)
-{
-	struct fdt_gpio_state gpios[CONFIG_BOARD_REV_GPIO_COUNT];
-	unsigned gpio_list[CONFIG_BOARD_REV_GPIO_COUNT];
-	int board_rev = -1;
-	int count = 0;
-	int node;
-
-	node = fdtdec_next_compatible(gd->fdt_blob, 0,
-				      COMPAT_GOOGLE_BOARD_REV);
-	if (node >= 0) {
-		count = fdtdec_decode_gpios(gd->fdt_blob, node,
-				"google,board-rev-gpios", gpios,
-				CONFIG_BOARD_REV_GPIO_COUNT);
-	}
-	if (count > 0) {
-		int i;
-
-		for (i = 0; i < count; i++)
-			gpio_list[i] = gpios[i].gpio;
-		board_rev = gpio_decode_number(gpio_list, count);
-	} else {
-		debug("%s: No board revision information in fdt\n", __func__);
-	}
-
-	return board_rev;
-}
-
-/**
- * Fix-up the kernel device tree so the bridge pd_n and rst_n gpios accurately
- * reflect the current board rev.
- *
- * @param blob		Device tree blob
- * @param bd		Pointer to board information
- * @return 0 if ok, -1 on error (e.g. not enough space in fdt)
- */
-static int ft_board_setup_gpios(void *blob, bd_t *bd)
-{
-	int ret, rev, np, len;
-	const struct fdt_property *prop;
-
-	/* Do nothing for newer boards */
-	rev = board_get_revision();
-	if (rev < 4 || rev == 6)
-		return 0;
-
-	/*
-	 * If this is an older board, replace powerdown-gpio contents with that
-	 * of reset-gpio and delete reset-gpio from the dt.
-	 * Also do nothing if we have a Parade PS8622 bridge.
-	 */
-	np = fdtdec_next_compatible(blob, 0, COMPAT_NXP_PTN3460);
-	if (np < 0) {
-		debug("%s: Could not find COMPAT_NXP_PTN3460\n", __func__);
-		return 0;
-	}
-
-	prop = fdt_get_property(blob, np, "reset-gpio", &len);
-	if (!prop) {
-		debug("%s: Could not get property err=%d\n", __func__, len);
-		return -1;
-	}
-
-	ret = fdt_setprop_inplace(blob, np, "powerdown-gpio", prop->data,
-			len);
-	if (ret) {
-		debug("%s: Could not setprop inplace err=%d\n", __func__, ret);
-		return -1;
-	}
-
-	ret = fdt_delprop(blob, np, "reset-gpio");
-	if (ret) {
-		debug("%s: Could not delprop err=%d\n", __func__, ret);
-		return -1;
-	}
-
-	return 0;
-}
-
-/**
- * Fix-up the kernel device tree so the powered-while-resumed is added to MP
- * device tree.
- *
- * @param blob		Device tree blob
- * @param bd		Pointer to board information
- * @return 0 if ok, -1 on error (e.g. not enough space in fdt)
- */
-static int ft_board_setup_tpm_resume(void *blob, bd_t *bd)
-{
-	const char kernel_tpm_compat[] = "infineon,slb9635tt";
-	const char prop_name[] = "powered-while-suspended";
-	int err, node, rev;
-
-	/* Only apply fixup to MP machine */
-	rev = board_get_revision();
-	if (!(rev == 0 || rev == 3))
-		return 0;
-
-	node = fdt_node_offset_by_compatible(blob, 0, kernel_tpm_compat);
-	if (node < 0) {
-		debug("%s: fail to find %s: %d\n", __func__,
-				kernel_tpm_compat, node);
-		return 0;
-	}
-
-	err = fdt_setprop(blob, node, prop_name, NULL, 0);
-	if (err) {
-		debug("%s: fail to setprop: %d\n", __func__, err);
-		return -1;
-	}
-
-	return 0;
-}
-
-int ft_system_setup(void *blob, bd_t *bd)
-{
-	if (ft_board_setup_gpios(blob, bd))
-		return -1;
-	return ft_board_setup_tpm_resume(blob, bd);
-}
-
-__weak int ft_board_setup(void *blob, bd_t *bd)
-{
-	return ft_system_setup(blob, bd);
-}
-
-#ifdef CONFIG_BOARD_LATE_INIT
-int board_late_init(void)
-{
-	stdio_print_current_devices();
-
-	if (local.cros_ec_err) {
-		/* Force console on */
-		gd->flags &= ~GD_FLG_SILENT;
-
-		printf("cros-ec communications failure %d\n", local.cros_ec_err);
-		puts("\nPlease reset with Power+Refresh\n\n");
-		panic("Cannot init cros-ec device");
-		return -1;
-	}
-	return 0;
 }
 #endif
