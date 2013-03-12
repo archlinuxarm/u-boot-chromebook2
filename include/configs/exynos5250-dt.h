@@ -375,6 +375,8 @@
 #define CONFIG_SHA1
 #define CONFIG_SHA256
 
+#define CONFIG_TPS65090_POWER
+
 /* Display */
 #define CONFIG_LCD
 #ifdef CONFIG_LCD
