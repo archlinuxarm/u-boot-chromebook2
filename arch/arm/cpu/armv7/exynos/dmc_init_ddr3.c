@@ -1,5 +1,5 @@
 /*
- * DDR3 mem setup file for SMDK5250 board based on EXYNOS5
+ * DDR3 mem setup file for EXYNOS5 based board
  *
  * Copyright (C) 2012 Samsung Electronics
  *
@@ -40,7 +40,8 @@ static void reset_phy_ctrl(void)
 	writel(DDR3PHY_CTRL_PHY_RESET, &clk->lpddr3phy_ctrl);
 }
 
-int ddr3_mem_ctrl_init(struct mem_timings *mem, unsigned long mem_iv_size)
+int ddr3_mem_ctrl_init(struct mem_timings *mem, unsigned long mem_iv_size,
+			int reset)
 {
 	unsigned int val;
 	struct exynos5_phy_control *phy0_ctrl, *phy1_ctrl;
@@ -51,7 +52,8 @@ int ddr3_mem_ctrl_init(struct mem_timings *mem, unsigned long mem_iv_size)
 	phy1_ctrl = (struct exynos5_phy_control *)EXYNOS5_DMC_PHY1_BASE;
 	dmc = (struct exynos5_dmc *)EXYNOS5_DMC_CTRL_BASE;
 
-	reset_phy_ctrl();
+	if (reset)
+		reset_phy_ctrl();
 
 	/* Set Impedance Output Driver */
 	val = (mem->impedance << CA_CK_DRVR_DS_OFFSET) |

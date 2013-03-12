@@ -20,20 +20,21 @@
  * MA 02111-1307 USA
  */
 
-#include<common.h>
-#include<config.h>
-#include <spi.h>
-#include <asm/arch/clk.h>
-#include <asm/arch/spi.h>
-#include <asm/arch/pinmux.h>
-#include <asm/arch/periph.h>
-#include <asm/arch/spl.h>
-
-#include <asm/arch-exynos/dmc.h>
+#include <common.h>
+#include <config.h>
 #include <asm/arch/clock.h>
 #include <asm/arch/clk.h>
-
+#include <asm/arch/cpu.h>
+#include <asm/arch/dmc.h>
+#include <asm/arch/pinmux.h>
+#include <asm/arch/periph.h>
+#include <asm/arch/power.h>
+#include <asm/arch/spi.h>
+#include <asm/arch/spl.h>
 #include "clock_init.h"
+#include "setup.h"
+
+DECLARE_GLOBAL_DATA_PTR;
 
 /* Index into irom ptr table */
 enum index {
@@ -260,10 +261,42 @@ static void exynos5_set_spl_marker(void)
 	*marker = EXYNOS5_SPL_MARKER;
 }
 
+void memzero(void *s, size_t n)
+{
+	char *ptr = s;
+	size_t i;
+
+	for (i = 0; i < n; i++)
+		*ptr++ = '\0';
+}
+
+/**
+ * Set up the U-Boot global_data pointer
+ *
+ * This sets the address of the global data, and sets up basic values.
+ *
+ * @param gdp   Value to give to gd
+ */
+static void setup_global_data(gd_t *gdp)
+{
+	gd = gdp;
+	memzero((void *)gd, sizeof(gd_t));
+	gd->flags |= GD_FLG_RELOC;
+	gd->baudrate = CONFIG_BAUDRATE;
+	gd->have_console = 1;
+}
+
 void board_init_f(unsigned long bootflag)
 {
+	__attribute__((aligned(8))) gd_t local_gd;
 	__attribute__((noreturn)) void (*uboot)(void);
+
 	exynos5_set_spl_marker();
+	setup_global_data(&local_gd);
+
+	if (do_lowlevel_init())
+		power_exit_wakeup();
+
 	copy_uboot_to_ram();
 
 	/* Jump to U-Boot image */
@@ -281,3 +314,9 @@ void board_init_r(gd_t *id, ulong dest_addr)
 		;
 }
 void save_boot_params(u32 r0, u32 r1, u32 r2, u32 r3) {}
+
+void hang(void)
+{
+	for (;;)
+		;
+}

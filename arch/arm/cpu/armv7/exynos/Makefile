@@ -22,8 +22,17 @@ include $(TOPDIR)/config.mk
 
 LIB	= $(obj)lib$(SOC).o
 
-COBJS	+= clock.o power.o soc.o system.o pinmux.o
+COBJS-y	+= clock.o power.o soc.o system.o pinmux.o
 
+ifdef CONFIG_EXYNOS5
+COBJS-y	+= clock_init.o tzpc_init.o
+SOBJS	+= lowlevel.o
+COBJS-$(CONFIG_SPL_BUILD)	+= dmc_common.o dmc_init_ddr3.o
+COBJS-$(CONFIG_SPL_BUILD)	+= spl_boot.o
+COBJS-$(CONFIG_SPL_BUILD)	+= lowlevel_init.o
+endif
+
+COBJS   := $(COBJS-y)
 SRCS	:= $(SOBJS:.o=.S) $(COBJS:.o=.c)
 OBJS	:= $(addprefix $(obj),$(COBJS) $(SOBJS))
 

@@ -1,5 +1,5 @@
 /*
- * Lowlevel setup for SMDK5250 board based on S5PC520
+ * TrustZone Protection Controller for EXYNOS based board
  *
  * Copyright (C) 2012 Samsung Electronics
  *

@@ -1,5 +1,5 @@
 /*
- * Machine Specific Values for SMDK5250 board based on EXYNOS5
+ * Machine Specific Values for EXYNOS5 based board
  *
  * Copyright (C) 2012 Samsung Electronics
  *
@@ -534,9 +534,11 @@ enum {
  *			which the DMC uses to decide how to split a memory
  *			chunk into smaller chunks to support concurrent
  *			accesses; may vary across boards.
+ * @param reset		Reset DDR PHY during initialization.
  * @return 0 if ok, SETUP_ERR_... if there is a problem
  */
-int ddr3_mem_ctrl_init(struct mem_timings *mem, unsigned long mem_iv_size);
+int ddr3_mem_ctrl_init(struct mem_timings *mem, unsigned long mem_iv_size,
+			int reset);
 
 /*
  * Configure ZQ I/O interface
@@ -584,8 +586,21 @@ void dmc_config_memory(struct mem_timings *mem, struct exynos5_dmc *dmc);
  */
 void update_reset_dll(struct exynos5_dmc *, enum ddr_mode);
 
+/*
+ * Memory initialization
+ *
+ * @param reset     Reset PHY during initialization.
+ */
+void mem_ctrl_init(int reset);
+
 void sdelay(unsigned long);
-void mem_ctrl_init(void);
 void system_clock_init(void);
 void tzpc_init(void);
+
+/**
+ * Init subsystems according to the reset status
+ *
+ * @return 0 for a normal boot, non-zero for a resume
+ */
+int do_lowlevel_init(void);
 #endif
