@@ -62,6 +62,9 @@
 #define DWMCI_DSCADDR		0x094
 #define DWMCI_BUFADDR		0x098
 #define DWMCI_DATA		0x200
+#define EMMCP_MPSBEGIN0		0x1200
+#define EMMCP_SEND0		0x1204
+#define EMMCP_CTRL0		0x120C
 
 /* Interrupt Mask register */
 #define DWMCI_INTMSK_ALL	0xffffffff
@@ -135,6 +138,15 @@
 #define DWMCI_BMOD_IDMAC_RESET	(1 << 0)
 #define DWMCI_BMOD_IDMAC_FB	(1 << 1)
 #define DWMCI_BMOD_IDMAC_EN	(1 << 7)
+
+#define MPSCTRL_SECURE_READ_BIT		(0x1<<7)
+#define MPSCTRL_SECURE_WRITE_BIT	(0x1<<6)
+#define MPSCTRL_NON_SECURE_READ_BIT	(0x1<<5)
+#define MPSCTRL_NON_SECURE_WRITE_BIT	(0x1<<4)
+#define MPSCTRL_USE_FUSE_KEY		(0x1<<3)
+#define MPSCTRL_ECB_MODE		(0x1<<2)
+#define MPSCTRL_ENCRYPTION		(0x1<<1)
+#define MPSCTRL_VALID			(0x1<<0)
 
 struct dwmci_host {
 	char *name;

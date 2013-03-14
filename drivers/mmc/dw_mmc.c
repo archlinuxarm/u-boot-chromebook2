@@ -314,6 +314,13 @@ static int dwmci_init(struct mmc *mmc)
 	struct dwmci_host *host = (struct dwmci_host *)mmc->priv;
 	u32 fifo_size, fifoth_val;
 
+	dwmci_writel(host, EMMCP_MPSBEGIN0, 0);
+	dwmci_writel(host, EMMCP_SEND0, 0);
+	dwmci_writel(host, EMMCP_CTRL0,
+		MPSCTRL_SECURE_READ_BIT | MPSCTRL_SECURE_WRITE_BIT |
+		MPSCTRL_NON_SECURE_READ_BIT | MPSCTRL_NON_SECURE_WRITE_BIT |
+		MPSCTRL_VALID);
+
 	dwmci_writel(host, DWMCI_PWREN, 1);
 
 	if (!dwmci_wait_reset(host, DWMCI_RESET_ALL)) {
