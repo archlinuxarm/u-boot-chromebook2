@@ -82,6 +82,7 @@ static const char * const compat_names[COMPAT_COUNT] = {
 	COMPAT(GOOGLE_SYSINFO_FLAG, "google,sysinfo-flag"),
 	COMPAT(INTEL_LPC, "intel,lpc"),
 	COMPAT(TI_TPS65090, "ti,tps65090"),
+	COMPAT(SAMSUNG_S2MPS11_PMIC, "samsung,s2mps11-pmic"),
 };
 
 const char *fdtdec_get_compatible(enum fdt_compat_id id)

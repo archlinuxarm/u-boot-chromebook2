@@ -109,6 +109,7 @@ enum fdt_compat_id {
 	COMPAT_GOOGLE_SYSINFO_FLAG,	/* Google Sysinfo Flag-Input */
 	COMPAT_INTEL_LPC,		/* Intel Low Pin Count I/F */
 	COMPAT_TI_TPS65090,		/* Texas Instrument TPS65090 */
+	COMPAT_SAMSUNG_S2MPS11_PMIC,	/* S2MPS11 PMIC */
 
 	COMPAT_COUNT,
 };
