@@ -329,6 +329,60 @@ static void exynos5_i2c_config(int peripheral, int flags)
 	}
 }
 
+static void exynos5420_i2c_config(int peripheral, int flags)
+{
+
+	struct exynos5420_gpio_part1 *gpio1 =
+		(struct exynos5420_gpio_part1 *) samsung_get_base_gpio_part1();
+
+	switch (peripheral) {
+	case PERIPH_ID_I2C0:
+		s5p_gpio_cfg_pin(&gpio1->b3, 0, GPIO_FUNC(0x2));
+		s5p_gpio_cfg_pin(&gpio1->b3, 1, GPIO_FUNC(0x2));
+		break;
+	case PERIPH_ID_I2C1:
+		s5p_gpio_cfg_pin(&gpio1->b3, 2, GPIO_FUNC(0x2));
+		s5p_gpio_cfg_pin(&gpio1->b3, 3, GPIO_FUNC(0x2));
+		break;
+	case PERIPH_ID_I2C2:
+		s5p_gpio_cfg_pin(&gpio1->a0, 6, GPIO_FUNC(0x3));
+		s5p_gpio_cfg_pin(&gpio1->a0, 7, GPIO_FUNC(0x3));
+		break;
+	case PERIPH_ID_I2C3:
+		s5p_gpio_cfg_pin(&gpio1->a1, 2, GPIO_FUNC(0x3));
+		s5p_gpio_cfg_pin(&gpio1->a1, 3, GPIO_FUNC(0x3));
+		break;
+	case PERIPH_ID_I2C4:
+		s5p_gpio_cfg_pin(&gpio1->a2, 0, GPIO_FUNC(0x3));
+		s5p_gpio_cfg_pin(&gpio1->a2, 1, GPIO_FUNC(0x3));
+		break;
+	case PERIPH_ID_I2C5:
+		s5p_gpio_cfg_pin(&gpio1->a2, 2, GPIO_FUNC(0x3));
+		s5p_gpio_cfg_pin(&gpio1->a2, 3, GPIO_FUNC(0x3));
+		break;
+	case PERIPH_ID_I2C6:
+		s5p_gpio_cfg_pin(&gpio1->b1, 3, GPIO_FUNC(0x4));
+		s5p_gpio_cfg_pin(&gpio1->b1, 4, GPIO_FUNC(0x4));
+		break;
+	case PERIPH_ID_I2C7:
+		s5p_gpio_cfg_pin(&gpio1->b2, 2, GPIO_FUNC(0x3));
+		s5p_gpio_cfg_pin(&gpio1->b2, 3, GPIO_FUNC(0x3));
+		break;
+	case PERIPH_ID_I2C8:
+		s5p_gpio_cfg_pin(&gpio1->b3, 4, GPIO_FUNC(0x2));
+		s5p_gpio_cfg_pin(&gpio1->b3, 5, GPIO_FUNC(0x2));
+		break;
+	case PERIPH_ID_I2C9:
+		s5p_gpio_cfg_pin(&gpio1->b3, 6, GPIO_FUNC(0x2));
+		s5p_gpio_cfg_pin(&gpio1->b3, 7, GPIO_FUNC(0x2));
+		break;
+	case PERIPH_ID_I2C10:
+		s5p_gpio_cfg_pin(&gpio1->b4, 0, GPIO_FUNC(0x2));
+		s5p_gpio_cfg_pin(&gpio1->b4, 1, GPIO_FUNC(0x2));
+		break;
+	}
+}
+
 static void exynos5_i2s_config(int peripheral)
 {
 	int i;
@@ -492,6 +546,19 @@ static int exynos5420_pinmux_config(int peripheral, int flags)
 	case PERIPH_ID_SPI3:
 	case PERIPH_ID_SPI4:
 		exynos5420_spi_config(peripheral);
+		break;
+	case PERIPH_ID_I2C0:
+	case PERIPH_ID_I2C1:
+	case PERIPH_ID_I2C2:
+	case PERIPH_ID_I2C3:
+	case PERIPH_ID_I2C4:
+	case PERIPH_ID_I2C5:
+	case PERIPH_ID_I2C6:
+	case PERIPH_ID_I2C7:
+	case PERIPH_ID_I2C8:
+	case PERIPH_ID_I2C9:
+	case PERIPH_ID_I2C10:
+		exynos5420_i2c_config(peripheral, flags);
 		break;
 	default:
 		debug("%s: invalid peripheral %d", __func__, peripheral);
