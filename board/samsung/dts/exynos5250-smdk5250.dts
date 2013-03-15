@@ -10,11 +10,11 @@
 */
 
 /dts-v1/;
-/include/ ARCH_CPU_DTS
+/include/ "exynos5.dtsi"
 
 / {
 	model = "SAMSUNG SMDK5250 board based on EXYNOS5250";
-	compatible = "samsung,smdk5250", "samsung,exynos5250";
+	compatible = "samsung,smdk5250", "samsung,exynos5";
 
 	aliases {
 		i2c0 = "/i2c@12c60000";

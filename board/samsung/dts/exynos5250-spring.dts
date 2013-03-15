@@ -9,7 +9,7 @@
 */
 
 /dts-v1/;
-/include/ "exynos5250.dtsi"
+/include/ "exynos5.dtsi"
 /include/ "flashmap-exynos-ro.dtsi"
 /include/ "flashmap-4mb-rw.dtsi"
 /include/ "chromeos-exynos.dtsi"
@@ -17,8 +17,7 @@
 
 / {
 	model = "Google Spring";
-	compatible = "google,spring", "google,daisy", "samsung,smdk5250",
-		   "samsung,exynos5250";
+	compatible = "google,spring", "samsung,exynos5";
 
 	aliases {
 		sdmmc1 = "/mshci@12210000";

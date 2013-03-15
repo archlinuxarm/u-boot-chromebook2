@@ -1,15 +1,15 @@
 /*
- * SAMSUNG EXYNOS5250 SoC device tree source
+ * SAMSUNG EXYNOS5 SoC device tree source
  *
  * Copyright (c) 2012 Samsung Electronics Co., Ltd.
  *		http://www.samsung.com
  *
- * SAMSUNG EXYNOS5250 SoC device nodes are listed in this file.
- * EXYNOS5250 based board files can include this file and provide
+ * SAMSUNG EXYNOS5 SoC device nodes are listed in this file.
+ * EXYNOS5 based board files can include this file and provide
  * values for board specfic bindings.
  *
  * Note: This file does not include device nodes for all the controllers in
- * EXYNOS5250 SoC. As device tree coverage for EXYNOS5250 increases,
+ * EXYNOS5 SoC. As device tree coverage for EXYNOS5 increases,
  * additional nodes can be added to this file.
  *
  * This program is free software; you can redistribute it and/or modify
@@ -20,7 +20,7 @@
 /include/ "skeleton.dtsi"
 
 / {
-	compatible = "samsung,exynos5250";
+	compatible = "samsung,exynos5";
 
 	sromc@12250000 {
 		compatible = "samsung,exynos-sromc";
