@@ -1,7 +1,7 @@
 /*
  * Copyright (C) 2012 Samsung Electronics
  *
- * Configuration settings for the SAMSUNG EXYNOS5250 board.
+ * Configuration settings for the SAMSUNG EXYNOS5
  *
  * See file CREDITS for list of people who contributed to this
  * project.
@@ -22,14 +22,13 @@
  * MA 02111-1307 USA
  */
 
-#ifndef __CONFIG_H
-#define __CONFIG_H
+#ifndef __CONFIG_EXYNOS5_DT_H
+#define __CONFIG_EXYNOS5_DT_H
 
 /* High Level Configuration Options */
 #define CONFIG_SAMSUNG			/* in a SAMSUNG core */
 #define CONFIG_S5P			/* S5P Family */
 #define CONFIG_EXYNOS5			/* which is in a Exynos5 Family */
-#define CONFIG_SMDK5250			/* which is in a SMDK5250 */
 
 #include <asm/arch/cpu.h>		/* get chip and board defs */
 
@@ -52,7 +51,7 @@
 #define CONFIG_TPM_TIS_I2C
 
 /* Enable fdt support for Exynos5250 */
-#define CONFIG_ARCH_DEVICE_TREE		exynos5250
+#define CONFIG_ARCH_DEVICE_TREE		exynos5
 #define CONFIG_OF_CONTROL
 #define CONFIG_OF_SEPARATE
 
@@ -62,9 +61,6 @@
 /* Enable ACE acceleration for SHA1 and SHA256 */
 #define CONFIG_EXYNOS_ACE_SHA
 #define CONFIG_SHA_HW_ACCEL
-
-#define CONFIG_SYS_SDRAM_BASE		0x40000000
-#define CONFIG_SYS_TEXT_BASE		0x43E00000
 
 /* input clock of PLL: SMDK5250 has 24MHz input clock */
 #define CONFIG_SYS_CLK_FREQ		24000000
@@ -76,10 +72,6 @@
 
 #define CONFIG_BOARD_REV_GPIO_COUNT	2
 
-/* MACH_TYPE_SMDK5250 macro will be removed once added to mach-types */
-#define MACH_TYPE_SMDK5250		3774
-#define CONFIG_MACH_TYPE		MACH_TYPE_SMDK5250
-
 /* Power Down Modes */
 #define S5P_CHECK_SLEEP			0x00000BAD
 #define S5P_CHECK_DIDLE			0xBAD00000
@@ -88,12 +80,12 @@
 /* Offset for inform registers */
 #define INFORM0_OFFSET			0x800
 #define INFORM1_OFFSET			0x804
+#define INFORM2_OFFSET			0x808
+#define INFORM3_OFFSET			0x80c
 
 /* Size of malloc() pool */
 #define CONFIG_SYS_MALLOC_LEN		(CONFIG_ENV_SIZE + (4 << 20))
 
-/* select serial console configuration */
-#define CONFIG_SERIAL3			/* use SERIAL 3 */
 #define CONFIG_BAUDRATE			115200
 #define EXYNOS5_DEFAULT_UART_OFFSET	0x010000
 
@@ -185,7 +177,6 @@
 
 /* specific .lds file */
 #define CONFIG_SPL_LDSCRIPT	"board/samsung/common/exynos-uboot-spl.lds"
-#define CONFIG_SPL_TEXT_BASE	0x02023400
 #define CONFIG_SPL_MAX_FOOTPRINT	(14 * 1024)
 
 #define CONFIG_BOOTCOMMAND	"mmc read 40007000 451 2000; bootm 40007000"
@@ -193,7 +184,6 @@
 /* Miscellaneous configurable options */
 #define CONFIG_SYS_LONGHELP		/* undef to save memory */
 #define CONFIG_SYS_HUSH_PARSER		/* use "hush" command parser	*/
-#define CONFIG_SYS_PROMPT		"SMDK5250 # "
 #define CONFIG_SYS_CBSIZE		256	/* Console I/O Buffer Size */
 #define CONFIG_SYS_PBSIZE		384	/* Print Buffer Size */
 #define CONFIG_SYS_MAXARGS		16	/* max number of command args */
@@ -233,7 +223,6 @@
 /* FLASH and environment organization */
 #define CONFIG_SYS_NO_FLASH
 #undef CONFIG_CMD_IMLS
-#define CONFIG_IDENT_STRING		" for SMDK5250"
 
 #define CONFIG_SYS_MMC_ENV_DEV		0
 
@@ -254,7 +243,7 @@
 
 #define CONFIG_BL1_OFFSET	(CONFIG_RES_BLOCK_SIZE + CONFIG_SEC_FW_SIZE)
 #define CONFIG_BL2_OFFSET	(CONFIG_BL1_OFFSET + CONFIG_BL1_SIZE)
-#define CONFIG_ENV_OFFSET	(CONFIG_BL2_OFFSET + CONFIG_BL2_SIZE)
+#define CONFIG_ENV_OFFSET	(0x00400000 - CONFIG_ENV_SIZE)
 
 /* U-boot copy size from boot Media to DRAM.*/
 #define BL2_START_OFFSET	(CONFIG_BL2_OFFSET/512)
@@ -269,14 +258,14 @@
 #define CONFIG_CMD_PART
 #define CONFIG_PARTITION_UUIDS
 
-
-#define CONFIG_IRAM_TOP		0x02050000
+/*
+ * Put the initial stack pointer 1KB below this to allow room for the
+ * SPL marker. This value is arbitrary, but gd_t is placed starting here.
+ */
+#define CONFIG_SYS_INIT_SP_ADDR	(CONFIG_IRAM_TOP - 0x800)
 
 /* The place where we put our SPL marker */
 #define CONFIG_SPL_MARKER	(CONFIG_IRAM_TOP - 4)
-#define CONFIG_IRAM_STACK		(CONFIG_IRAM_TOP - 8)
-
-#define CONFIG_SYS_INIT_SP_ADDR	(CONFIG_SYS_LOAD_ADDR - 0x1000000)
 
 /* I2C */
 #define CONFIG_SYS_I2C_INIT_BOARD
@@ -285,7 +274,6 @@
 #define CONFIG_SYS_I2C_SPEED	100000		/* 100 Kbps */
 #define CONFIG_DRIVER_S3C24X0_I2C
 #define CONFIG_I2C_MULTI_BUS
-#define CONFIG_MAX_I2C_NUM	8
 #define CONFIG_SYS_I2C_SLAVE    0x0
 #define CONFIG_I2C_EDID
 
@@ -393,4 +381,4 @@
 /* Enable Time Command */
 #define CONFIG_CMD_TIME
 
-#endif	/* __CONFIG_H */
+#endif	/* __CONFIG_EXYNOS5_DT_H */

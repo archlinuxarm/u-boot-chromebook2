@@ -30,9 +30,8 @@ SOBJS	+= lowlevel.o
 COBJS-$(CONFIG_SPL_BUILD)	+= spl_boot.o
 COBJS-$(CONFIG_SPL_BUILD)	+= lowlevel_init.o
 ifdef CONFIG_SPL_BUILD
-COBJS-$(CONFIG_SMDK5250)	+= dmc_init_ddr3.o dmc_common.o
-COBJS-$(CONFIG_SNOW)		+= dmc_init_ddr3.o dmc_common.o
-COBJS-$(CONFIG_SMDK5420)	+= dmc_init_lpddr3.o
+COBJS-$(CONFIG_EXYNOS5250)	+= dmc_init_ddr3.o dmc_common.o
+COBJS-$(CONFIG_EXYNOS5420)	+= dmc_init_lpddr3.o
 endif
 endif
 

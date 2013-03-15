@@ -22,12 +22,28 @@
  * MA 02111-1307 USA
  */
 
-#ifndef __CONFIG_SMDK_H
-#define __CONFIG_SMDK_H
+#ifndef __CONFIG_SMDK5250_H
+#define __CONFIG_SMDK5250_H
 
-#include <configs/exynos5250-dt.h>
+#include <configs/exynos5-dt.h>
+
+/*
+ * For now we have to hard-code some additional settings for Exynos5250.
+ * Eventually these should move to the FDT.
+ */
+#include <configs/exynos5250.h>
 
 #undef CONFIG_DEFAULT_DEVICE_TREE
 #define CONFIG_DEFAULT_DEVICE_TREE	exynos5250-smdk5250
 
-#endif	/* __CONFIG_SMDK_H */
+/* MACH_TYPE_SMDK5250 macro will be removed once added to mach-types */
+#define MACH_TYPE_SMDK5250	3774
+#define CONFIG_MACH_TYPE	MACH_TYPE_SMDK5250
+
+/* select serial console configuration */
+#define CONFIG_SERIAL3		/* use SERIAL 3 */
+
+#define CONFIG_SYS_PROMPT	"SMDK5250 # "
+#define CONFIG_IDENT_STRING	" for SMDK5420"
+
+#endif	/* __CONFIG_SMDK5250_H */

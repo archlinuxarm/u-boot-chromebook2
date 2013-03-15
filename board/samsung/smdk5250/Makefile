@@ -27,9 +27,7 @@ LIB	= $(obj)lib$(BOARD).o
 COBJS  += smdk5250_spl.o
 
 ifndef CONFIG_SPL_BUILD
-ifdef CONFIG_OF_CONTROL
-COBJS	+= exynos5-dt.o
-else
+ifndef CONFIG_OF_CONTROL
 COBJS	+= smdk5250.o
 endif
 endif

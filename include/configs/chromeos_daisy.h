@@ -25,7 +25,8 @@
 #ifndef __CONFIG_SMDK_H
 #define __CONFIG_SMDK_H
 
-#include <configs/exynos5250-dt.h>
+#include <configs/exynos5-dt.h>
+#include <configs/exynos5250.h>
 
 #undef CONFIG_DEFAULT_DEVICE_TREE
 #define CONFIG_DEFAULT_DEVICE_TREE	exynos5250-snow
@@ -56,5 +57,9 @@
 #define LCD_XRES 1366
 #define LCD_YRES 768
 #define CONFIG_SYS_WHITE_ON_BLACK
+
+#define CONFIG_SERIAL3
+
+#define CONFIG_SYS_PROMPT	"SMDK5250 # "
 
 #endif	/* __CONFIG_SMDK_H */

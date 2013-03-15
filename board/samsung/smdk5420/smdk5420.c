@@ -38,68 +38,6 @@
 
 DECLARE_GLOBAL_DATA_PTR;
 
-int exynos_init(void)
-{
-	return 0;
-}
-
-#if defined(CONFIG_POWER)
-int power_init_board(void)
-{
-	if (pmic_init(I2C_PMIC)) {
-		debug("Could not initialise PMIC\n");
-		return -1;
-	} else
-		return 0;
-}
-#endif
-
-
-int board_eth_init(bd_t *bis)
-{
-#ifdef CONFIG_SMC911X
-	u32 smc_bw_conf, smc_bc_conf;
-	struct fdt_sromc config;
-	fdt_addr_t base_addr;
-
-	/* Non-FDT configuration - bank number and timing parameters*/
-	config.bank = CONFIG_ENV_SROM_BANK;
-	config.width = 2;
-
-	config.timing[FDT_SROM_TACS] = 0x01;
-	config.timing[FDT_SROM_TCOS] = 0x01;
-	config.timing[FDT_SROM_TACC] = 0x06;
-	config.timing[FDT_SROM_TCOH] = 0x01;
-	config.timing[FDT_SROM_TAH] = 0x0C;
-	config.timing[FDT_SROM_TACP] = 0x09;
-	config.timing[FDT_SROM_PMC] = 0x01;
-	base_addr = CONFIG_SMC911X_BASE;
-
-	/* Ethernet needs data bus width of 16 bits */
-	if (config.width != 2) {
-		debug("%s: Unsupported bus width %d\n", __func__,
-			config.width);
-		return -1;
-	}
-	smc_bw_conf = SROMC_DATA16_WIDTH(config.bank)
-			| SROMC_BYTE_ENABLE(config.bank);
-
-	smc_bc_conf = SROMC_BC_TACS(config.timing[FDT_SROM_TACS])   |\
-			SROMC_BC_TCOS(config.timing[FDT_SROM_TCOS]) |\
-			SROMC_BC_TACC(config.timing[FDT_SROM_TACC]) |\
-			SROMC_BC_TCOH(config.timing[FDT_SROM_TCOH]) |\
-			SROMC_BC_TAH(config.timing[FDT_SROM_TAH])   |\
-			SROMC_BC_TACP(config.timing[FDT_SROM_TACP]) |\
-			SROMC_BC_PMC(config.timing[FDT_SROM_PMC]);
-
-	/* Select and configure the SROMC bank */
-	exynos_pinmux_config(PERIPH_ID_SROMC, config.bank);
-	s5p_config_sromc(config.bank, smc_bw_conf, smc_bc_conf);
-	return smc911x_initialize(0, base_addr);
-#endif
-	return 0;
-}
-
 #ifdef CONFIG_LCD
 void cfg_lcd_gpio(void)
 {
@@ -118,7 +56,7 @@ void cfg_lcd_gpio(void)
 	s5p_gpio_cfg_pin(&gpio1->x0, 7, GPIO_FUNC(0x3));
 }
 
-vidinfo_t panel_info = {
+vidinfo_t panel_info2 = {
 	.vl_freq	= 60,
 	.vl_col		= 2560,
 	.vl_row		= 1600,
@@ -141,10 +79,6 @@ vidinfo_t panel_info = {
 	.vl_cmd_allow_len = 0xf,
 
 	.win_id		= 3,
-	.cfg_gpio	= cfg_lcd_gpio,
-	.backlight_on	= NULL,
-	.lcd_power_on	= NULL,
-	.reset_lcd	= NULL,
 	.dual_lcd_enabled = 0,
 
 	.init_delay	= 0,
@@ -184,7 +118,6 @@ static struct edp_device_info edp_info = {
 };
 
 static struct exynos_dp_platform_data dp_platform_data = {
-	.phy_enable	= set_dp_phy_ctrl,
 	.edp_dev_info	= &edp_info,
 };
 
@@ -193,19 +126,5 @@ void init_panel_info(vidinfo_t *vid)
 	vid->rgb_mode   = MODE_RGB_P,
 
 	exynos_set_dp_platform_data(&dp_platform_data);
-}
-#endif
-
-int board_get_revision(void)
-{
-	return 0;
-}
-
-#ifdef CONFIG_DISPLAY_BOARDINFO
-int checkboard(void)
-{
-	printf("\nBoard: SMDK5420\n");
-
-	return 0;
 }
 #endif

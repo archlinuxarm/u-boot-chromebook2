@@ -1,7 +1,7 @@
 /*
- * Copyright (C) 2013 Samsung Electronics
+ * Copyright (C) 2012 Samsung Electronics
  *
- * Configuration settings for the SAMSUNG EXYNOS5 Snow board.
+ * Common settings for Exynos5420 boards.
  *
  * See file CREDITS for list of people who contributed to this
  * project.
@@ -22,24 +22,19 @@
  * MA 02111-1307 USA
  */
 
-#ifndef __CONFIG_SNOW_H
-#define __CONFIG_SNOW_H
+#ifndef __CONFIG_EXYNOS5420_H
+#define __CONFIG_EXYNOS5420_H
 
-#include <configs/exynos5-dt.h>
+#define CONFIG_EXYNOS5420
 
-/*
- * For now we have to hard-code some additional settings for Exynos5250.
- * Eventually these should move to the FDT.
- */
-#include <configs/exynos5250.h>
+#define CONFIG_SYS_SDRAM_BASE		0x20000000
+#define CONFIG_SYS_TEXT_BASE		0x23E00000
+#define CONFIG_SPL_TEXT_BASE		0x02024400
+#define CONFIG_IRAM_TOP			0x02074000
 
-#undef CONFIG_DEFAULT_DEVICE_TREE
-#define CONFIG_DEFAULT_DEVICE_TREE	exynos5250-snow
+#define CONFIG_MAX_I2C_NUM      11
 
-/* select serial console configuration */
-#define CONFIG_SERIAL3		/* use SERIAL 3 */
+/* This defines maximum number of channels available for dwmmc */
+#define	DWMMC_MAX_CH_NUM		4
 
-#define CONFIG_SYS_PROMPT	"Snow # "
-#define CONFIG_IDENT_STRING	" for Snow"
-
-#endif	/* __CONFIG_SNOW_H */
+#endif

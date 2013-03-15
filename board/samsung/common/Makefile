@@ -31,6 +31,10 @@ ifeq ($(CONFIG_SPL_BUILD),)
 COBJS-$(CONFIG_BOARD_COMMON)	+= board.o
 endif
 
+ifndef CONFIG_SPL_BUILD
+COBJS-$(CONFIG_OF_CONTROL)	+= exynos5-dt.o
+endif
+
 SRCS    := $(COBJS-y:.o=.c)
 OBJS	:= $(addprefix $(obj),$(COBJS-y))
 
