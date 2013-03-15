@@ -30,6 +30,10 @@ Board(panel specific):
 		CONFIG_SYS_LOW if defined, else CONFIG_SYS_HIGH
 	samsung,vl-vsp: Vertical Sync polarity
 		CONFIG_SYS_LOW if defined, else CONFIG_SYS_HIGH
+	samsung,vl-hsp: Horizontal Sync polarity
+		CONFIG_SYS_LOW if defined, else CONFIG_SYS_HIGH
+	samsung,vl-vsp: Vertical Sync polarity
+		CONFIG_SYS_LOW if defined, else CONFIG_SYS_HIGH
 	samsung,vl-dp: Data polarity
 		CONFIG_SYS_LOW if defined, else CONFIG_SYS_HIGH
 

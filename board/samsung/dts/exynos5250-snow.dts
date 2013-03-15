@@ -195,4 +195,45 @@
 	usb@12000000 {
 		usb3-pll-gpio = <&gpio 0x71 0>;	/* Y11 */
 	};
+
+	fimd@14400000 {
+		samsung,vl-freq = <60>;
+		samsung,vl-col = <1366>;
+		samsung,vl-row = <768>;
+
+		samsung,vl-clkp;
+		samsung,vl-dp;
+		samsung,vl-hsp;				/* Lucas */
+		samsung,vl-vsp;				/* Lucas */
+
+		samsung,vl-bpix = <4>;
+
+		samsung,vl-hspw = <32>;		/* Lucas */
+		samsung,vl-hbpd = <80>;		/* Lucas */
+		samsung,vl-hfpd = <48>;		/* Lucas */
+		samsung,vl-vspw = <5>;		/* <6>; */
+		samsung,vl-vbpd = <14>;		/* <37>; */
+		samsung,vl-vfpd = <3>;		/* Lucas */
+		samsung,vl-cmd-allow-len = <0xf>;
+
+		samsung,winid = <0>;
+		samsung,interface-mode = <1>;
+		samsung,dp-enabled = <1>;
+		samsung,dual-lcd-enabled = <0>;
+	};
+
+	dp@145b0000 {
+		samsung,lt-status = <0>;
+
+		samsung,master-mode = <0>;
+		samsung,bist-mode = <0>;
+		samsung,bist-pattern = <0>;
+		samsung,h-sync-polarity = <0>;
+		samsung,v-sync-polarity = <0>;
+		samsung,interlaced = <0>;
+		samsung,color-space = <0>;
+		samsung,dynamic-range = <0>;
+		samsung,ycbcr-coeff = <0>;
+		samsung,color-depth = <1>;
+	};
 };
