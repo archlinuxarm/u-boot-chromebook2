@@ -3345,6 +3345,10 @@ Configuration Settings:
 	offset _bss_start_ofs from CONFIG_SYS_TEXT_BASE, rather than
 	directly. You should not need to touch this setting.
 
+- CONFIG_USE_STDINT
+	If stdint.h is available with your toolchain you can define this
+	option to enable it. You can provide option 'USE_STDINT=1' when
+	building U-Boot to enable this.
 
 The following definitions that deal with the placement and management
 of environment data (variable area); in general, we support the

@@ -238,6 +238,11 @@ Please undefined CONFIG_SYS_GENERIC_BOARD in your board config file)
 endif
 endif
 
+# Allow use of stdint.h if available
+ifneq ($(USE_STDINT),)
+CPPFLAGS += -DCONFIG_USE_STDINT
+endif
+
 ifneq ($(RESET_VECTOR_ADDRESS),)
 CPPFLAGS += -DRESET_VECTOR_ADDRESS=$(RESET_VECTOR_ADDRESS)
 endif
