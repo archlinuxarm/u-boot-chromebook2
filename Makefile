@@ -398,7 +398,7 @@ ifdef VBOOT_SOURCE
 # Go off and build vboot_reference directory with the same CFLAGS
 # This is a eng convenience, not used by ebuilds
 # set VBOOT_MAKEFLAGS to required make flags, e.g. MOCK_TPM=1 if no TPM
-CFLAGS_VBOOT = $(filter-out -Wstrict-prototypes -nostdinc -I%, $(CFLAGS))
+CFLAGS_VBOOT = $(filter-out -Wstrict-prototypes, $(CFLAGS))
 
 # Always call the vboot Makefile, since we don't have its dependencies
 #

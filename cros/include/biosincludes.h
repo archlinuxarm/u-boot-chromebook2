@@ -13,4 +13,13 @@
 
 #define UINT64_C(v) ((uint64_t) v)
 
+#include <compiler.h>
+#include <inttypes.h>
+
+#define INLINE inline
+#define POSSIBLY_UNUSED
+
+#define UINT64_RSHIFT(v, shiftby) (((uint64_t)(v)) >> (shiftby))
+#define UINT64_MULT32(v, multby)  (((uint64_t)(v)) * ((uint32_t)(multby)))
+
 #endif /* BIOSINCLUDES_H */
