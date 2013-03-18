@@ -35,6 +35,6 @@
 #define CONFIG_MAX_I2C_NUM      11
 
 /* This defines maximum number of channels available for dwmmc */
-#define	DWMMC_MAX_CH_NUM		4
+#define	DWMMC_MAX_CH_NUM		3
 
 #endif

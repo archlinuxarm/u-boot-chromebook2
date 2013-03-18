@@ -27,7 +27,6 @@
 #include <asm/arch/clk.h>
 #include <asm/arch/pinmux.h>
 
-#define	DWMMC_MAX_CH_NUM		4
 #define	DWMMC_MAX_FREQ			52000000
 #define	DWMMC_MIN_FREQ			400000
 #define	DWMMC_MMC0_CLKSEL_VAL		0x03030001
