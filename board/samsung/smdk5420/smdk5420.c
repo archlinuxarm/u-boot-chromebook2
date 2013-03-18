@@ -23,6 +23,7 @@
 #include <common.h>
 #include <fdtdec.h>
 #include <asm/io.h>
+#include <errno.h>
 #include <i2c.h>
 #include <lcd.h>
 #include <netdev.h>
@@ -35,6 +36,7 @@
 #include <asm/arch/sromc.h>
 #include <asm/arch/dp_info.h>
 #include <power/pmic.h>
+#include <power/s2mps11.c_pmic.h>
 
 DECLARE_GLOBAL_DATA_PTR;
 

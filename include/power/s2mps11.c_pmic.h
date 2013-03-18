@@ -118,7 +118,17 @@ enum s2mps11_reg {
 	PMIC_NUM_OF_REGS,
 };
 
-/* I2C device address for pmic max77686 */
-#define MAX77686_I2C_ADDR (0xCC >> 1)
+/* I2C device address for pmic S2MPS11 */
+#define S2MPS11_I2C_ADDR (0xCC >> 1)
+#define S2MPS11_BUS_NUM	4
 
+/* Value to set voltage as 1V */
+#define S2MPS11_BUCK_CTRL2_1V	0x40
+
+/* Buck register addresses */
+#define S2MPS11_BUCK1_CTRL2	0x26
+#define S2MPS11_BUCK2_CTRL2	0x28
+#define S2MPS11_BUCK3_CTRL2	0x2a
+#define S2MPS11_BUCK4_CTRL2	0x2c
+#define S2MPS11_BUCK6_CTRL2	0x34
 #endif /*  __LINUX_MFD_S2MPS11_H */
