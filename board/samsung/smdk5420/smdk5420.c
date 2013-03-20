@@ -35,6 +35,7 @@
 #include <asm/arch/pinmux.h>
 #include <asm/arch/sromc.h>
 #include <asm/arch/dp_info.h>
+#include <asm/arch/power.h>
 #include <power/pmic.h>
 #include <power/s2mps11.c_pmic.h>
 
