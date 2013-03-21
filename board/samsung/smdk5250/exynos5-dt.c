@@ -39,6 +39,7 @@
 #include <power/pmic.h>
 #include <power/max77686_pmic.h>
 #include <tmu.h>
+#include <asm/arch-exynos/board.h>
 
 DECLARE_GLOBAL_DATA_PTR;
 
