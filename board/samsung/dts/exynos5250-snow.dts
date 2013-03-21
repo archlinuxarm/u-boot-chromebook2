@@ -11,6 +11,12 @@
 
 /dts-v1/;
 /include/ ARCH_CPU_DTS
+#ifdef CONFIG_CHROMEOS
+/include/ "flashmap-exynos-ro.dtsi"
+/include/ "flashmap-4mb-rw.dtsi"
+/include/ "chromeos-exynos.dtsi"
+/include/ "cros5250-common.dtsi"
+#endif
 
 / {
 	model = "Google Snow";
