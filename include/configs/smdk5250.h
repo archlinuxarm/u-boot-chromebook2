@@ -44,6 +44,6 @@
 #define CONFIG_SERIAL3		/* use SERIAL 3 */
 
 #define CONFIG_SYS_PROMPT	"SMDK5250 # "
-#define CONFIG_IDENT_STRING	" for SMDK5420"
+#define CONFIG_IDENT_STRING	" for SMDK5250"
 
 #endif	/* __CONFIG_SMDK5250_H */

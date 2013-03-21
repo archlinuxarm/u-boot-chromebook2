@@ -1,0 +1,18 @@
+/*
+ * SAMSUNG Peach board device tree source
+ *
+ * Copyright (c) 2013 The Chromium OS Authors. All rights reserved.
+ * Use of this source code is governed by a BSD-style license that can be
+ * found in the LICENSE file.
+ */
+
+/dts-v1/;
+/include/ "exynos54xx.dtsi"
+/ {
+	model = "SAMSUNG Peach board based on EXYNOS5420";
+	compatible = "samsung,peach", "samsung,exynos5";
+
+	config {
+		hwid = "peach TEST A-A 9382";
+	};
+};

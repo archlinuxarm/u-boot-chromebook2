@@ -1,7 +1,7 @@
 /*
  * Copyright (C) 2012 Samsung Electronics
  *
- * Configuration settings for the SAMSUNG EXYNOS5420 board.
+ * Configuration settings for the SAMSUNG Peach board.
  *
  * See file CREDITS for list of people who contributed to this
  * project.
@@ -22,8 +22,8 @@
  * MA 02111-1307 USA
  */
 
-#ifndef __CONFIG_SMDK5420_H
-#define __CONFIG_SMDK5420_H
+#ifndef __CONFIG_CHROMEOS_PEACH_H
+#define __CONFIG_CHROMEOS_PEACH_H
 
 #include <configs/exynos5-dt.h>
 
@@ -33,17 +33,15 @@
  */
 #include <configs/exynos5420.h>
 
-#undef CONFIG_DEFAULT_DEVICE_TREE
-#define CONFIG_DEFAULT_DEVICE_TREE	exynos5420-smdk5420
+#define CONFIG_CHROMEOS_PEACH
 
-/* MACH_TYPE_SMDK5420 macro will be removed once added to mach-types */
-#define MACH_TYPE_SMDK5420	8002
-#define CONFIG_MACH_TYPE	MACH_TYPE_SMDK5420
+#undef CONFIG_DEFAULT_DEVICE_TREE
+#define CONFIG_DEFAULT_DEVICE_TREE	exynos5420-peach_pit
 
 /* select serial console configuration */
-#define CONFIG_SERIAL2		/* use SERIAL 2 */
+#define CONFIG_SERIAL3		/* use SERIAL 3 */
 
-#define CONFIG_SYS_PROMPT	"SMDK5420 # "
-#define CONFIG_IDENT_STRING	" for SMDK5420"
+#define CONFIG_SYS_PROMPT	"Peach # "
+#define CONFIG_IDENT_STRING	" for Peach"
 
-#endif	/* __CONFIG_SMDK5420_H */
+#endif	/* __CONFIG_CHROMEOS_PEACH_H */
