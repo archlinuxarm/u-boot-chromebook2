@@ -36,6 +36,7 @@
 #include <asm/arch/power.h>
 #include <power/pmic.h>
 #include <power/max77686_pmic.h>
+#include <power/tps65090_pmic.h>
 
 DECLARE_GLOBAL_DATA_PTR;
 
@@ -195,11 +196,9 @@ static int pmic_reg_update(struct pmic *p, int reg, uint regval)
 	return 0;
 }
 
-int power_init_board(void)
+int max77686_init(void)
 {
 	struct pmic *p;
-
-	set_ps_hold_ctrl();
 
 	i2c_init(CONFIG_SYS_I2C_SPEED, CONFIG_SYS_I2C_SLAVE);
 
@@ -289,6 +288,43 @@ int power_init_board(void)
 		return -1;
 
 	return 0;
+}
+
+/* Set up the TPS65090 if present */
+static int board_init_tps65090(void)
+{
+	int ret = 0;
+
+#ifdef CONFIG_POWER_TPS65090
+	/*
+	 * The TPS65090 may not be in the device tree. If so, it is not
+	 * an error.
+	 */
+	ret = tps65090_init();
+	if (ret == -ENODEV)
+		return 0;
+
+	/* Disable backlight and LCD FET, initially */
+	if (!ret)
+		ret = tps65090_fet_disable(1);
+	if (!ret)
+		ret = tps65090_fet_disable(6);
+#endif
+
+	return ret;
+}
+
+int power_init_board(void)
+{
+	int ret;
+
+	set_ps_hold_ctrl();
+
+	ret = max77686_init();
+	if (ret)
+		return ret;
+
+	return board_init_tps65090();
 }
 #endif
 
