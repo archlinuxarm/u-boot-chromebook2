@@ -383,4 +383,11 @@
 /* Enable Time Command */
 #define CONFIG_CMD_TIME
 
+/* Enable booting of fitImage format */
+#define CONFIG_FIT
+#define CONFIG_FIT_BEST_MATCH
+
+/* We might use LZO compression */
+#define CONFIG_LZO
+
 #endif	/* __CONFIG_EXYNOS5_DT_H */
