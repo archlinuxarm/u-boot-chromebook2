@@ -28,9 +28,6 @@
 #include <i2c.h>
 #include <netdev.h>
 #include <spi.h>
-#ifdef CONFIG_TPS65090_POWER
-#include <tps65090.h>
-#endif
 #include <asm/arch/cpu.h>
 #include <asm/arch/dwmmc.h>
 #include <asm/arch/board.h>
@@ -41,8 +38,8 @@
 #include <asm/arch/sromc.h>
 #include <power/pmic.h>
 #include <power/max77686_pmic.h>
+#include <power/tps65090_pmic.h>
 #include <tmu.h>
-#include <asm/arch-exynos/board.h>
 
 DECLARE_GLOBAL_DATA_PTR;
 
@@ -80,13 +77,6 @@ int exynos_init(void)
 {
 #ifdef CONFIG_USB_EHCI_EXYNOS
 	board_usb_vbus_init();
-#endif
-#ifdef CONFIG_TPS65090_POWER
-	tps65090_init();
-
-	/* Disable backlight and LCD FET, initially */
-	tps65090_fet_disable(1);
-	tps65090_fet_disable(6);
 #endif
 	return 0;
 }

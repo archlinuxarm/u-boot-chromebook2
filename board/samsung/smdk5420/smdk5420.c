@@ -28,7 +28,6 @@
 #include <lcd.h>
 #include <netdev.h>
 #include <spi.h>
-#include <tps65090.h>
 #include <asm/arch/board.h>
 #include <asm/arch/cpu.h>
 #include <asm/arch/gpio.h>
@@ -39,6 +38,7 @@
 #include <asm/arch/power.h>
 #include <power/pmic.h>
 #include <power/s2mps11.c_pmic.h>
+#include <power/tps65090_pmic.h>
 
 DECLARE_GLOBAL_DATA_PTR;
 
