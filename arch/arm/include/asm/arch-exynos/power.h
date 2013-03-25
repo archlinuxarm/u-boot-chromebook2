@@ -908,4 +908,12 @@ void power_shutdown(void);
  * Perform a software reset.
  */
 void power_reset(void);
+
+/**
+ * SoC level power init
+ *
+ * @return	Return 0 if ok, else -1
+ */
+int power_init(void);
+
 #endif

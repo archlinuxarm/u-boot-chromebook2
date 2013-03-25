@@ -106,12 +106,17 @@ static void exynos5_set_ps_hold_ctrl(void)
 			EXYNOS_PS_HOLD_CONTROL_DATA_HIGH);
 }
 
+/*
+ * Set ps_hold data driving value high
+ * This enables the machine to stay powered on
+ * after the initial power-on condition goes away
+ * (e.g. power button).
+ */
 void set_ps_hold_ctrl(void)
 {
 	if (cpu_is_exynos5())
 		exynos5_set_ps_hold_ctrl();
 }
-
 
 void exynos5_power_shutdown(void)
 {
@@ -220,4 +225,12 @@ void power_exit_wakeup(void)
 		exynos5_power_exit_wakeup();
 	else
 		exynos4_power_exit_wakeup();
+}
+
+int power_init(void)
+{
+	/* Assert PS_HOLD to indicate that we're up and running */
+	set_ps_hold_ctrl();
+
+	return 0;
 }

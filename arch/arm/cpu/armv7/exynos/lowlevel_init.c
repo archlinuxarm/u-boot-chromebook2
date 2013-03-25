@@ -30,6 +30,7 @@
 #include <asm/arch/tzpc.h>
 #include <asm/arch/periph.h>
 #include <asm/arch/pinmux.h>
+#include <asm/arch/power.h>
 #include "setup.h"
 
 /* These are the things we can do during low-level init */
@@ -38,6 +39,7 @@ enum {
 	DO_CLOCKS	= 1 << 1,
 	DO_MEM_RESET	= 1 << 2,
 	DO_UART		= 1 << 3,
+	DO_POWER	= 1 << 4,
 };
 
 int do_lowlevel_init(void)
@@ -59,9 +61,12 @@ int do_lowlevel_init(void)
 		break;
 	default:
 		/* This is a normal boot (not a wake from sleep) */
-		actions = DO_CLOCKS | DO_MEM_RESET;
+		actions = DO_CLOCKS | DO_MEM_RESET | DO_POWER;
 	}
 
+	if (actions & DO_POWER)
+		power_init();
+		/* TODO: Also call board_power_init()? */
 	if (actions & DO_CLOCKS) {
 		system_clock_init();
 		mem_ctrl_init(actions & DO_MEM_RESET);
