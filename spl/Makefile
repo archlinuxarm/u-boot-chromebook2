@@ -94,6 +94,10 @@ LIBS-y += arch/$(ARCH)/cpu/tegra-common/libcputegra-common.o
 LIBS-y += $(CPUDIR)/tegra-common/libtegra-common.o
 endif
 
+ifneq ($(CONFIG_EXYNOS4)$(CONFIG_EXYNOS5),)
+LIBS-y += $(CPUDIR)/s5p-common/libs5p-common.o
+endif
+
 # Add GCC lib
 ifeq ("$(USE_PRIVATE_LIBGCC)", "yes")
 PLATFORM_LIBGCC = $(SPLTREE)/arch/$(ARCH)/lib/libgcc.o

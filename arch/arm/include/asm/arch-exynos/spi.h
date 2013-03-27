@@ -43,6 +43,8 @@ struct exynos_spi {
 
 #define SPI_TIMEOUT_MS		10
 
+#define SF_READ_DATA_CMD	0x3
+
 /* SPI_CHCFG */
 #define SPI_CH_HS_EN		(1 << 6)
 #define SPI_CH_RST		(1 << 5)
