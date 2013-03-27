@@ -44,6 +44,15 @@
 #define CONFIG_SYS_PROMPT	"Peach # "
 #define CONFIG_IDENT_STRING	" for Peach"
 
-#define ANX1120_I2C_BUS           7
+#define ANX1120_I2C_BUS		7
+
+#define CONFIG_LCD
+#define CONFIG_EXYNOS_FB
+#define CONFIG_EXYNOS_DP
+#undef LCD_XRES
+#undef LCD_YRES
+#define LCD_XRES			1366
+#define LCD_YRES			768
+#define LCD_BPP			LCD_COLOR16
 
 #endif	/* __CONFIG_CHROMEOS_PEACH_H */

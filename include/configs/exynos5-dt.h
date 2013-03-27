@@ -141,8 +141,10 @@
 #define CONFIG_CMD_NET
 #define CONFIG_CMD_HASH
 #define CONFIG_CMD_DHCP
+#define CONFIG_CMD_BMP
 
 #define CONFIG_BOOTDELAY		0
+
 #define CONFIG_ZERO_BOOTDELAY_CHECK
 
 /* Thermal Management Unit */
