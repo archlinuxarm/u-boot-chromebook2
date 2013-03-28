@@ -1,10 +1,17 @@
 /dts-v1/;
 
 /include/ "tegra20.dtsi"
+/include/ "flashmap-tegra-ro.dtsi"
+/include/ "flashmap-tegra-4mb-rw.dtsi"
+/include/ "chromeos-tegra.dtsi"
 
 / {
 	model = "NVIDIA Tegra20 Ventana evaluation board";
 	compatible = "nvidia,ventana", "nvidia,tegra20";
+
+	config {
+	       hwid = "NVIDIA Tegra20 Ventana evaluation board";
+       };
 
 	aliases {
 		usb0 = "/usb@c5008000";

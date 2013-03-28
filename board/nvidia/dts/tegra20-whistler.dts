@@ -1,10 +1,17 @@
 /dts-v1/;
 
 /include/ "tegra20.dtsi"
+/include/ "flashmap-tegra-ro.dtsi"
+/include/ "flashmap-tegra-4mb-rw.dtsi"
+/include/ "chromeos-tegra.dtsi"
 
 / {
 	model = "NVIDIA Tegra20 Whistler evaluation board";
 	compatible = "nvidia,whistler", "nvidia,tegra20";
+
+	config {
+	       hwid = "NVIDIA Tegra20 Whistler evaluation board";
+       };
 
 	aliases {
 		i2c0 = "/i2c@7000d000";

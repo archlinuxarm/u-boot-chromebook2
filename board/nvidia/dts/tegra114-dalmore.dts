@@ -1,10 +1,17 @@
 /dts-v1/;
 
 /include/ "tegra114.dtsi"
+/include/ "flashmap-tegra-ro.dtsi"
+/include/ "flashmap-tegra-4mb-rw.dtsi"
+/include/ "chromeos-tegra.dtsi"
 
 / {
 	model = "NVIDIA Dalmore";
 	compatible = "nvidia,dalmore", "nvidia,tegra114";
+
+	config {
+		hwid = "NVIDIA Dalmore";
+	};
 
 	aliases {
 		i2c0 = "/i2c@7000d000";

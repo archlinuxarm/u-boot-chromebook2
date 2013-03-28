@@ -1,10 +1,17 @@
 /dts-v1/;
 
 /include/ "tegra30.dtsi"
+/include/ "flashmap-tegra-ro.dtsi"
+/include/ "flashmap-tegra-4mb-rw.dtsi"
+/include/ "chromeos-tegra.dtsi"
 
 / {
 	model = "NVIDIA Cardhu";
 	compatible = "nvidia,cardhu", "nvidia,tegra30";
+
+	config {
+	       hwid = "NVIDIA Cardhu";
+       };
 
 	aliases {
 		i2c0 = "/i2c@7000d000";
