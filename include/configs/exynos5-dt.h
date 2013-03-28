@@ -238,16 +238,11 @@
 /* Configuration of BL1, BL2, ENV Blocks on mmc */
 #define CONFIG_RES_BLOCK_SIZE	(512)
 #define CONFIG_BL1_SIZE		(16 << 10) /*16 K reserved for BL1*/
-#define	CONFIG_BL2_SIZE		(512UL << 10UL)	/* 512 KB */
 #define CONFIG_ENV_SIZE		(16 << 10)	/* 16 KB */
 
 #define CONFIG_BL1_OFFSET	(CONFIG_RES_BLOCK_SIZE + CONFIG_SEC_FW_SIZE)
 #define CONFIG_BL2_OFFSET	(CONFIG_BL1_OFFSET + CONFIG_BL1_SIZE)
 #define CONFIG_ENV_OFFSET	(0x00400000 - CONFIG_ENV_SIZE)
-
-/* U-boot copy size from boot Media to DRAM.*/
-#define BL2_START_OFFSET	(CONFIG_BL2_OFFSET/512)
-#define BL2_SIZE_BLOC_COUNT	(CONFIG_BL2_SIZE/512)
 
 #define OM_STAT				(0x1f << 1)
 #define EXYNOS_COPY_SPI_FNPTR_ADDR	0x02020058
