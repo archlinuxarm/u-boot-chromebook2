@@ -39,14 +39,14 @@ static struct spl_machine_param machine_param
 	.mem_type	= DDR_MODE_LPDDR3,
 
 	/*
-	 * Set uboot_size to 0x100000 bytes.
+	 * Set uboot_size to 512KB bytes.
 	 *
 	 * This is an overly conservative value chosen to accommodate all
 	 * possible U-Boot image.  You are advised to set this value to a
 	 * smaller realistic size via scripts that modifies the .machine_param
 	 * section of output U-Boot image.
 	 */
-	.uboot_size	= 0x100000,
+	.uboot_size	= 512 << 10,
 
 	.boot_source	= BOOT_MODE_OM,
 	.frequency_mhz	= 800,

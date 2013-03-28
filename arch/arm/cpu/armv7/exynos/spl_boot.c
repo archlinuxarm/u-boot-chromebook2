@@ -22,6 +22,7 @@
 
 #include <common.h>
 #include <config.h>
+#include <mmc.h>
 #include <asm/arch/clock.h>
 #include <asm/arch/clk.h>
 #include <asm/arch/cpu.h>
@@ -199,10 +200,13 @@ void copy_uboot_to_ram(void)
 	u32 (*spi_copy)(u32 offset, u32 nblock, u32 dst);
 #endif
 	struct spl_machine_param *param = spl_get_machine_params();
+	unsigned int uboot_size;
 	u32 (*copy_bl2)(u32 offset, u32 nblock, u32 dst);
 	u32 (*copy_bl2_from_emmc)(u32 nblock, u32 dst);
 	void (*end_bootop_from_emmc)(void);
 	u32 (*usb_copy)(void);
+
+	uboot_size = param->uboot_size;
 
 	/* Read iRAM location to check for secondary USB boot mode */
 	sec_boot_check = readl(EXYNOS_IRAM_SECONDARY_BASE);
@@ -225,8 +229,8 @@ void copy_uboot_to_ram(void)
 		break;
 	case BOOT_MODE_MMC:
 		copy_bl2 = get_irom_func(MMC_INDEX);
-		copy_bl2(BL2_START_OFFSET, BL2_SIZE_BLOC_COUNT,
-			 CONFIG_SYS_TEXT_BASE);
+		copy_bl2(CONFIG_BL2_OFFSET / MMC_MAX_BLOCK_LEN,
+			 uboot_size / MMC_MAX_BLOCK_LEN, CONFIG_SYS_TEXT_BASE);
 		break;
 	case BOOT_MODE_EMMC:
 		/* Set the FSYS1 clock divisor value for EMMC boot */
@@ -235,7 +239,8 @@ void copy_uboot_to_ram(void)
 		copy_bl2_from_emmc = get_irom_func(EMMC44_INDEX);
 		end_bootop_from_emmc = get_irom_func(EMMC44_END_INDEX);
 
-		copy_bl2_from_emmc(BL2_SIZE_BLOC_COUNT, CONFIG_SYS_TEXT_BASE);
+		copy_bl2_from_emmc(uboot_size / MMC_MAX_BLOCK_LEN,
+				   CONFIG_SYS_TEXT_BASE);
 		end_bootop_from_emmc();
 		break;
 	case BOOT_MODE_USB:
