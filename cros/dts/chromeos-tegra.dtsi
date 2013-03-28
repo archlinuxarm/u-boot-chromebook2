@@ -12,7 +12,7 @@
 	chromeos-config {
 		twostop;		/* Two-stop boot */
 		twostop-optional;       /* One-stop optimization enabled */
-		textbase = <0xe08000>;  /* Address where U-Boot loads */
+		textbase = <0x80108000>;  /* Address where U-Boot loads */
 
 		cros-gpio-input-charging-delay = <10>;
 
