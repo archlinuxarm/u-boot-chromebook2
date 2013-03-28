@@ -385,4 +385,7 @@
 /* We might use LZO compression */
 #define CONFIG_LZO
 
+#define CONFIG_CRC32_VERIFY
+#define CONFIG_CMD_TIME
+
 #endif	/* __CONFIG_EXYNOS5_DT_H */
