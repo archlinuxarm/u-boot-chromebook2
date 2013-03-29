@@ -232,6 +232,9 @@
  */
 #define MMC_NUM_BOOT_PARTITION	2
 
+/* Maximum block size for MMC */
+#define MMC_MAX_BLOCK_LEN	512
+
 struct mmc_cid {
 	unsigned long psn;
 	unsigned short oid;
