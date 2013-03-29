@@ -467,6 +467,9 @@ static int hsi2c_send_stop(struct exynos5_hsi2c *i2c, int result)
 	writel(HSI2C_FUNC_MODE_I2C, &i2c->usi_ctl);
 	writel(0x0, &i2c->usi_int_en);
 
+	/* Clear any interrupt still pending */
+	writel(readl(&i2c->usi_int_stat), &i2c->usi_int_stat);
+
 	return (result == I2C_OK) ? ret : result;
 }
 
