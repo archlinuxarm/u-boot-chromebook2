@@ -68,6 +68,7 @@ struct s3c24x0_i2c_bus {
 	int bus_num;	/* i2c bus number */
 	struct s3c24x0_i2c *regs;
 	struct exynos5_hsi2c *hsregs;
+	int is_highspeed;	/* High speed type, rather than I2C */
 	int id;
 };
 #endif /* _S3C24X0_I2C_H */

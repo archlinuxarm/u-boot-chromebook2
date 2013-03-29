@@ -32,7 +32,6 @@
 #include <asm/arch/clk.h>
 #include <asm/arch/cpu.h>
 #include <asm/arch/pinmux.h>
-#include <asm/arch/clock.h>
 #else
 #include <asm/arch/s3c24x0_cpu.h>
 #endif
@@ -235,24 +234,7 @@ static struct s3c24x0_i2c *get_base_i2c(void)
 #endif
 }
 
-static struct exynos5_hsi2c *get_base_hsi2c(void)
-{
-	struct exynos5_hsi2c *i2c = NULL;
-	int bus = g_current_bus;
-
-	if (proid_is_exynos5420() && bus < 8)
-		i2c = (struct exynos5_hsi2c *)(EXYNOS5420_I2C_BASE +
-					((bus) * EXYNOS5_I2C_SPACING));
-	else if (proid_is_exynos5420() && (bus > 7 && bus < 11))
-		i2c = (struct exynos5_hsi2c *)(EXYNOS5420_I2C_8910_BASE +
-					((bus - 8) * EXYNOS5_I2C_SPACING));
-	else
-		printf("Wrong bus number\n");
-
-	return i2c;
-}
-
-static void i2c_ch_init(struct s3c24x0_i2c *i2c, int speed, int slaveadd)
+static void i2c_ch_init(struct s3c24x0_i2c *regs, int speed, int slaveadd)
 {
 	ulong freq, pres = 16, div;
 #if (defined CONFIG_EXYNOS4 || defined CONFIG_EXYNOS5)
@@ -270,18 +252,17 @@ static void i2c_ch_init(struct s3c24x0_i2c *i2c, int speed, int slaveadd)
 		div++;
 
 	/* set prescaler, divisor according to freq, also set ACKGEN, IRQ */
-	writel((div & 0x0F) | 0xA0 | ((pres == 512) ? 0x40 : 0), &i2c->iiccon);
+	writel((div & 0x0F) | 0xA0 | ((pres == 512) ? 0x40 : 0), &regs->iiccon);
 
 	/* init to SLAVE REVEIVE and set slaveaddr */
-	writel(0, &i2c->iicstat);
-	writel(slaveadd, &i2c->iicadd);
+	writel(0, &regs->iicstat);
+	writel(slaveadd, &regs->iicadd);
 	/* program Master Transmit (and implicit STOP) */
-	writel(I2C_MODE_MT | I2C_TXRX_ENA, &i2c->iicstat);
+	writel(I2C_MODE_MT | I2C_TXRX_ENA, &regs->iicstat);
 }
 
-static void hsi2c_ch_init(struct exynos5_hsi2c *i2c, int speed)
+static void hsi2c_ch_init(struct exynos5_hsi2c *hsregs)
 {
-	u32 i2c_timeout;
 	ulong clkin = get_i2c_clk();
 	u32 i2c_timing_s1;
 	u32 i2c_timing_s2;
@@ -303,7 +284,7 @@ static void hsi2c_ch_init(struct exynos5_hsi2c *i2c, int speed)
 	 * uTemp1 = (TSCLK_L + TSCLK_H + 2)
 	 * uTemp2 = TSCLK_L + TSCLK_H
 	 */
-	t_ftl_cycle = (readl(&i2c->usi_conf) >> 16) & 0x7;
+	t_ftl_cycle = (readl(&hsregs->usi_conf) >> 16) & 0x7;
 	utemp0 = (clkin / op_clk) - 8 - 2 * t_ftl_cycle;
 
 	/* CLK_DIV max is 256 */
@@ -331,20 +312,18 @@ static void hsi2c_ch_init(struct exynos5_hsi2c *i2c, int speed)
 	i2c_timing_s3 = n_clkdiv << 16 | t_sr_release << 0;
 	i2c_timing_sla = t_data_hd << 0;
 
-	writel(HSI2C_TRAILING_COUNT, &i2c->usi_trailing_ctl);
+	writel(HSI2C_TRAILING_COUNT, &hsregs->usi_trailing_ctl);
 
 	/* Clear to enable Timeout */
-	i2c_timeout = readl(&i2c->usi_timeout);
-	i2c_timeout &= ~HSI2C_TIMEOUT_EN;
-	writel(i2c_timeout, &i2c->usi_timeout);
+	clrsetbits_le32(&hsregs->usi_timeout, HSI2C_TIMEOUT_EN, 0);
 
-	writel(readl(&i2c->usi_conf) | HSI2C_AUTO_MODE, &i2c->usi_conf);
+	writel(readl(&hsregs->usi_conf) | HSI2C_AUTO_MODE, &hsregs->usi_conf);
 
 	/* Currently operating in Fast speed mode. */
-	writel(i2c_timing_s1, &i2c->usi_timing_fs1);
-	writel(i2c_timing_s2, &i2c->usi_timing_fs2);
-	writel(i2c_timing_s3, &i2c->usi_timing_fs3);
-	writel(i2c_timing_sla, &i2c->usi_timing_sla);
+	writel(i2c_timing_s1, &hsregs->usi_timing_fs1);
+	writel(i2c_timing_s2, &hsregs->usi_timing_fs2);
+	writel(i2c_timing_s3, &hsregs->usi_timing_fs3);
+	writel(i2c_timing_sla, &hsregs->usi_timing_sla);
 }
 
 /*
@@ -354,17 +333,20 @@ static void hsi2c_ch_init(struct exynos5_hsi2c *i2c, int speed)
 #ifdef CONFIG_I2C_MULTI_BUS
 int i2c_set_bus_num(unsigned int bus)
 {
+	struct s3c24x0_i2c_bus *i2c_bus;
+
 	if ((bus < 0) || (bus >= CONFIG_MAX_I2C_NUM)) {
 		debug("Bad bus: %d\n", bus);
 		return -1;
 	}
 
 	g_current_bus = bus;
-	if (proid_is_exynos5420() && (bus > 3)) {
-		hsi2c_ch_init(get_base_hsi2c(),
-						CONFIG_SYS_I2C_SPEED);
-	} else
-		i2c_ch_init(get_base_i2c(), CONFIG_SYS_I2C_SPEED,
+	i2c_bus = get_bus(i2c_get_bus_num());
+
+	if (i2c_bus->is_highspeed)
+		hsi2c_ch_init(i2c_bus->hsregs);
+	else
+		i2c_ch_init(i2c_bus->regs, CONFIG_SYS_I2C_SPEED,
 						CONFIG_SYS_I2C_SLAVE);
 
 	return 0;
@@ -470,13 +452,13 @@ static int hsi2c_send_stop(struct exynos5_hsi2c *i2c, int result)
 	return (result == I2C_OK) ? ret : result;
 }
 
-static int hsi2c_write(unsigned char chip,
+static int hsi2c_write(struct exynos5_hsi2c *i2c,
+			unsigned char chip,
 			unsigned char addr[],
 			unsigned char alen,
 			unsigned char data[],
 			unsigned short len)
 {
-	struct exynos5_hsi2c *i2c = get_base_hsi2c();
 	int i = 0, result = I2C_OK;
 	u32 i2c_auto_conf;
 	u32 stat;
@@ -542,19 +524,19 @@ static int hsi2c_write(unsigned char chip,
 	return hsi2c_send_stop(i2c, result);
 }
 
-static int hsi2c_read(unsigned char chip,
+static int hsi2c_read(struct exynos5_hsi2c *i2c,
+			unsigned char chip,
 			unsigned char addr[],
 			unsigned char alen,
 			unsigned char data[],
 			unsigned short len,
 			int check)
 {
-	struct exynos5_hsi2c *i2c = get_base_hsi2c();
 	int i, result;
 	u32 i2c_auto_conf;
 
 	if (!check) {
-		result =  hsi2c_write(chip, addr, alen, data, 0);
+		result =  hsi2c_write(i2c, chip, addr, alen, data, 0);
 		if (result != I2C_OK) {
 			debug("write failed Result = %d\n", result);
 			return result;
@@ -778,11 +760,13 @@ int i2c_probe(uchar chip)
 		debug("I2C cannot claim bus %d\n", i2c_bus->bus_num);
 		return -1;
 	}
-	if (proid_is_exynos5420() && (g_current_bus > 3))
-		ret = hsi2c_read(chip, 0, 1, buf, 1, 1);
-	else
-		ret = i2c_transfer
-			(i2c_bus->regs, I2C_READ, chip << 1, 0, 0, buf, 1);
+	if (i2c_bus->is_highspeed) {
+		ret = hsi2c_read(i2c_bus->hsregs,
+				chip, 0, 1, buf, 1, 1);
+	} else {
+		ret = i2c_transfer(i2c_bus->regs,
+				I2C_READ, chip << 1, 0, 0, buf, 1);
+	}
 
 	board_i2c_release_bus(i2c_bus->node);
 
@@ -831,15 +815,15 @@ int i2c_read(uchar chip, uint addr, int alen, uchar *buffer, int len)
 		return -1;
 	}
 
-	if (proid_is_exynos5420() && (g_current_bus > 3))
-		ret = hsi2c_read(chip, &xaddr[4 - alen],
+	if (i2c_bus->is_highspeed)
+		ret = hsi2c_read(i2c_bus->hsregs, chip, &xaddr[4 - alen],
 						alen, buffer, len, 0);
 	else
 		ret = i2c_transfer(i2c_bus->regs, I2C_READ, chip << 1,
 				&xaddr[4 - alen], alen, buffer, len);
 
 	board_i2c_release_bus(i2c_bus->node);
-	if (ret != 0) {
+	if (ret) {
 		debug("I2c read: failed %d\n", ret);
 		return 1;
 	}
@@ -887,8 +871,8 @@ int i2c_write(uchar chip, uint addr, int alen, uchar *buffer, int len)
 		return -1;
 	}
 
-	if (proid_is_exynos5420() && (g_current_bus > 3))
-		ret = hsi2c_write(chip, &xaddr[4 - alen],
+	if (i2c_bus->is_highspeed)
+		ret = hsi2c_write(i2c_bus->hsregs, chip, &xaddr[4 - alen],
 					alen, buffer, len);
 	else
 		ret = i2c_transfer(i2c_bus->regs, I2C_WRITE, chip << 1,
@@ -899,42 +883,59 @@ int i2c_write(uchar chip, uint addr, int alen, uchar *buffer, int len)
 	return ret != 0;
 }
 
-void board_i2c_init(const void *blob)
+static void process_nodes(const void *blob, int node_list[], int count,
+			 int is_highspeed)
 {
+	struct s3c24x0_i2c_bus *bus;
 	int i;
-#ifdef CONFIG_OF_CONTROL
-	int node_list[CONFIG_MAX_I2C_NUM];
-	int count;
-
-	count = fdtdec_find_aliases_for_id(blob, "i2c",
-		COMPAT_SAMSUNG_S3C2440_I2C, node_list,
-		CONFIG_MAX_I2C_NUM);
 
 	for (i = 0; i < count; i++) {
-		struct s3c24x0_i2c_bus *bus;
 		int node = node_list[i];
 
 		if (node <= 0)
 			continue;
+
 		bus = &i2c_bus[i];
-		bus->regs = (struct s3c24x0_i2c *)
-			fdtdec_get_addr(blob, node, "reg");
-		bus->hsregs = (struct exynos5_hsi2c *)
-				fdtdec_get_addr(blob, node, "reg");
+		bus->is_highspeed = is_highspeed;
+
+		if (is_highspeed)
+			bus->hsregs = (struct exynos5_hsi2c *)
+					fdtdec_get_addr(blob, node, "reg");
+		else
+			bus->regs = (struct s3c24x0_i2c *)
+					fdtdec_get_addr(blob, node, "reg");
+
 		bus->id = pinmux_decode_periph_id(blob, node);
 		bus->node = node;
 		bus->bus_num = i2c_busses++;
 		exynos_pinmux_config(bus->id, 0);
+
+		/* Mark position as used */
+		node_list[i] = -1;
 	}
-#else
-	for (i = 0; i < CONFIG_MAX_I2C_NUM; i++) {
-		exynos_pinmux_config((PERIPH_ID_I2C0 + i),
-				     PINMUX_FLAG_NONE);
-	}
-#endif
 }
 
 #ifdef CONFIG_OF_CONTROL
+void board_i2c_init(const void *blob)
+{
+	int node_list[CONFIG_MAX_I2C_NUM];
+	int count;
+
+	/* First get the normal i2c ports */
+	count = fdtdec_find_aliases_for_id(blob, "i2c",
+		COMPAT_SAMSUNG_S3C2440_I2C, node_list,
+		CONFIG_MAX_I2C_NUM);
+	process_nodes(blob, node_list, count, 0);
+
+	/* Now look for high speed i2c ports */
+	count = fdtdec_find_aliases_for_id(blob, "i2c",
+		COMPAT_SAMSUNG_EXYNOS5_I2C, node_list,
+		CONFIG_MAX_I2C_NUM);
+	process_nodes(blob, node_list, count, 1);
+
+	return;
+}
+
 int i2c_get_bus_num_fdt(int node)
 {
 	int i;
@@ -950,7 +951,7 @@ int i2c_get_bus_num_fdt(int node)
 
 int i2c_reset_port_fdt(const void *blob, int node)
 {
-	struct s3c24x0_i2c_bus *i2c;
+	struct s3c24x0_i2c_bus *i2c_bus;
 	int bus;
 
 	bus = i2c_get_bus_num_fdt(node);
@@ -959,16 +960,16 @@ int i2c_reset_port_fdt(const void *blob, int node)
 		return -1;
 	}
 
-	i2c = get_bus(bus);
-	if (!i2c) {
+	i2c_bus = get_bus(bus);
+	if (!i2c_bus) {
 		debug("get_bus() failed for node node %d\n", node);
 		return -1;
 	}
 
-	if (proid_is_exynos5420() && (bus > 3))
-		hsi2c_ch_init(i2c->hsregs, CONFIG_SYS_I2C_SPEED);
+	if (i2c_bus->is_highspeed)
+		hsi2c_ch_init(i2c_bus->hsregs);
 	else
-		i2c_ch_init(i2c->regs, CONFIG_SYS_I2C_SPEED,
+		i2c_ch_init(i2c_bus->regs, CONFIG_SYS_I2C_SPEED,
 						CONFIG_SYS_I2C_SLAVE);
 
 	return 0;
