@@ -56,7 +56,7 @@
 		#address-cells = <1>;
 		#size-cells = <0>;
 		compatible = "samsung,exynos5-hsi2c";
-		reg = <0x1E10000 0x100>;
+		reg = <0x12E10000 0x100>;
 		interrupts = <0 88 0>;
 	};
 
@@ -64,9 +64,10 @@
 		#address-cells = <1>;
 		#size-cells = <0>;
 		compatible = "samsung,exynos5-hsi2c";
-		reg = <0x1E20000 0x100>;
+		reg = <0x12E20000 0x100>;
 		interrupts = <0 203 0>;
 	};
+
 	mmc@12200000 {
 		samsung,bus-width = <8>;
 		samsung,timing = <1 3 3>;
