@@ -59,7 +59,7 @@ static void dwmci_prepare_data(struct dwmci_host *host,
 {
 	unsigned long ctrl;
 	unsigned int i = 0, flags, cnt, blk_cnt;
-	ulong data_start, data_end, start_addr;
+	ulong data_start, data_end, start_addr, stop_addr;
 	ALLOC_CACHE_ALIGN_BUFFER(struct dwmci_idmac, cur_idmac, data->blocks);
 
 
@@ -97,6 +97,9 @@ static void dwmci_prepare_data(struct dwmci_host *host,
 	data_end = (ulong)cur_idmac;
 	flush_dcache_range(data_start, data_end + ARCH_DMA_MINALIGN);
 
+	stop_addr = start_addr + (data->blocks * data->blocksize);
+	flush_dcache_range(start_addr, stop_addr);
+
 	ctrl = dwmci_readl(host, DWMCI_CTRL);
 	ctrl |= DWMCI_IDMAC_EN | DWMCI_DMA_EN;
 	dwmci_writel(host, DWMCI_CTRL, ctrl);
@@ -130,6 +133,7 @@ static int dwmci_send_cmd(struct mmc *mmc, struct mmc_cmd *cmd,
 	u32 retry = 10000;
 	u32 mask, ctrl;
 	ulong start = get_timer(0);
+	ulong data_start, data_end;
 
 	while (dwmci_readl(host, DWMCI_STATUS) & DWMCI_BUSY) {
 		if (get_timer(start) > timeout) {
@@ -204,6 +208,12 @@ static int dwmci_send_cmd(struct mmc *mmc, struct mmc_cmd *cmd,
 	}
 
 	if (data) {
+		if (data->flags & MMC_DATA_READ) {
+			data_start = (ulong)data->dest;
+			data_end = (ulong)data->dest +
+					data->blocks * data->blocksize;
+			invalidate_dcache_range(data_start, data_end);
+		}
 		do {
 			mask = dwmci_readl(host, DWMCI_RINTSTS);
 			if (mask & (DWMCI_DATA_ERR | DWMCI_DATA_TOUT)) {
