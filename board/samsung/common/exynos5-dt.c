@@ -28,7 +28,9 @@
 #include <i2c.h>
 #include <netdev.h>
 #include <spi.h>
+#ifdef CONFIG_TPS65090_POWER
 #include <tps65090.h>
+#endif
 #include <asm/arch/cpu.h>
 #include <asm/arch/dwmmc.h>
 #include <asm/arch/board.h>
