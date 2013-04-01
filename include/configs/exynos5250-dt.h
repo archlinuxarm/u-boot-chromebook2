@@ -90,6 +90,8 @@
 		"stdout=serial,lcd\0" \
 		"stderr=serial,lcd\0"
 
+#define CONFIG_SILENT_CONSOLE
+
 #define CONFIG_EXTRA_ENV_SETTINGS \
 	EXYNOS_DEVICE_SETTINGS
 
