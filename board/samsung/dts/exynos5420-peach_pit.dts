@@ -8,11 +8,22 @@
 
 /dts-v1/;
 /include/ "exynos54xx.dtsi"
+#ifdef CONFIG_CHROMEOS
+/include/ "flashmap-exynos-ro.dtsi"
+/include/ "flashmap-4mb-rw.dtsi"
+/include/ "chromeos-exynos.dtsi"
+#endif
 / {
 	model = "SAMSUNG Peach board based on EXYNOS5420";
 	compatible = "samsung,peach", "samsung,exynos5";
 
 	config {
 		hwid = "peach TEST A-A 9382";
+	};
+	/* override SPL size to match BL1 expectations */
+	flash@0 {
+		spl {
+			size = <0x4000>;
+		};
 	};
 };
