@@ -79,3 +79,64 @@ int pmic_init(unsigned char bus)
 
 	return 0;
 }
+
+int pmic_set_voltage(u32 new_voltage)
+{
+	struct pmic *p;
+	u32 read_data, volt_level, ret;
+
+	p = pmic_get("MAX77686_PMIC");
+	if (!p)
+		return -ENODEV;
+
+	/* Read BUCK2 DVS1 value */
+	ret = pmic_reg_read(p, MAX77686_REG_PMIC_BUCK2DVS1, &read_data);
+	if (ret != 0) {
+		debug("CPUFREQ: max77686 BUCK2 DVS1 register read failed.\n");
+		return -1;
+	}
+
+	/* Calculate voltage level */
+	volt_level = new_voltage - MAX77686_BUCK2_VOL_MIN * 1000;
+
+	if (volt_level < 0) {
+		debug("CPUFREQ: Not a valid voltage level to set\n");
+		return -1;
+	}
+
+	volt_level /= MAX77686_BUCK2_VOL_DIV;
+
+	/* Update voltage level in BUCK2 DVS1 register value */
+	clrsetbits_8(&read_data,
+		     MAX77686_BUCK2_VOL_BITMASK << MAX77686_BUCK2_VOL_BITPOS,
+		     volt_level << MAX77686_BUCK2_VOL_BITPOS);
+
+	/* Write new value in BUCK2 DVS1 */
+	ret = pmic_reg_write(p, MAX77686_REG_PMIC_BUCK2DVS1, read_data);
+	if (ret != 0) {
+		debug("CPUFREQ: max77686 BUCK2 DVS1 register write failed.\n");
+		return -1;
+	}
+
+	/* Set ENABLE BUCK2 register bits */
+	read_data = 0;
+	ret = pmic_reg_read(p, MAX77686_BUCK2_VOL_ENADDR, &read_data);
+	if (ret != 0) {
+		debug("CPUFREQ: max77686 BUCK2 enable address read failed.\n");
+		return -1;
+	}
+
+	clrsetbits_8(&read_data,
+		     (MAX77686_BUCK2_VOL_ENBITMASK
+		     << MAX77686_BUCK2_VOL_ENBITPOS),
+		     (MAX77686_BUCK2_VOL_ENBITON
+		     << MAX77686_BUCK2_VOL_ENBITPOS));
+
+	ret = pmic_reg_write(p, MAX77686_BUCK2_VOL_ENADDR, read_data);
+	if (ret != 0) {
+		debug("CPUFREQ: max77686 BUCK2 enable address write failed.\n");
+		return -1;
+	}
+
+	return 0;
+}
