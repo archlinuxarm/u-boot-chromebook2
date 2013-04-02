@@ -48,8 +48,6 @@
 #define PG_UP_TAG_0_PID_CPU	0x55555555	/* CPU aka "a9" aka "mpcore" */
 #define PG_UP_TAG_0             0x0
 
-#define CORESIGHT_UNLOCK	0xC5ACCE55;
-
 #define EXCEP_VECTOR_CPU_RESET_VECTOR	(NV_PA_EVP_BASE + 0x100)
 #define CSITE_CPU_DBG0_LAR		(NV_PA_CSITE_BASE + 0x10FB0)
 #define CSITE_CPU_DBG1_LAR		(NV_PA_CSITE_BASE + 0x12FB0)
@@ -73,7 +71,7 @@ struct clk_pll_table {
 	u8	cpcon;
 };
 
-void clock_enable_coresight(int enable);
+void clock_enable_coresight(void);
 void enable_cpu_clock(int enable);
 void halt_avp(void)  __attribute__ ((noreturn));
 void init_pllx(void);

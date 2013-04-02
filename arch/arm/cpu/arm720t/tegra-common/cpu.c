@@ -292,43 +292,37 @@ void reset_A9_cpu(int reset)
 	reset_set_enable(PERIPH_ID_CPU, reset);
 }
 
-void clock_enable_coresight(int enable)
+void clock_enable_coresight(void)
 {
-	u32 rst, src = 2;
+	u32 src = 2;		/* Default for a 408MHz ref freq */
 	int soc_type;
 
 	debug("clock_enable_coresight entry\n");
-	clock_set_enable(PERIPH_ID_CORESIGHT, enable);
-	reset_set_enable(PERIPH_ID_CORESIGHT, !enable);
+	/* Assert reset, enable clock while we muck w/divisor & source */
+	reset_set_enable(PERIPH_ID_CORESIGHT, 1);
+	clock_set_enable(PERIPH_ID_CORESIGHT, 1);
 
-	if (enable) {
-		/*
-		 * Put CoreSight on PLLP_OUT0 and divide it down as per
-		 * PLLP base frequency based on SoC type (T20/T30/T114).
-		 * Clock divider request would setup CSITE clock as 144MHz
-		 * for PLLP base 216MHz and 204MHz for PLLP base 408MHz
-		 */
+	/*
+	 * Put CoreSight on PLLP_OUT0 (216 MHz) and divide it down by
+	 *  1.5, giving an effective frequency of 144MHz.
+	 * Set PLLP_OUT0 [bits31:30 = 00], and use a 7.1 divisor
+	 *  (bits 7:0), so 00000001b == 1.5 (n+1 + .5)
+	 *
+	 * Clock divider request for 204MHz would setup CSITE clock as
+	 * 144MHz for PLLP base 216MHz and 204MHz for PLLP base 408MHz
+	 */
+	soc_type = tegra_get_chip();
+	if (soc_type == CHIPID_TEGRA30 || soc_type == CHIPID_TEGRA114)
+		src = CLK_DIVIDER(NVBL_PLLP_KHZ, 204000);
+	else if (soc_type == CHIPID_TEGRA20)
+		src = CLK_DIVIDER(NVBL_PLLP_KHZ, 144000);
+	else
+		printf("%s: Unknown SoC type %X!\n", __func__, soc_type);
+	clock_ll_set_source_divisor(PERIPH_ID_CSI, 0, src);
+	udelay(2);
 
-		soc_type = tegra_get_chip();
-		if (soc_type == CHIPID_TEGRA30 || soc_type == CHIPID_TEGRA114)
-			src = CLK_DIVIDER(NVBL_PLLP_KHZ, 204000);
-		else if (soc_type == CHIPID_TEGRA20)
-			src = CLK_DIVIDER(NVBL_PLLP_KHZ, 144000);
-		else
-			printf("%s: Unknown SoC type %X!\n",
-				 __func__, soc_type);
-
-		clock_ll_set_source_divisor(PERIPH_ID_CSI, 0, src);
-
-		/* Unlock the CPU CoreSight interfaces */
-		rst = CORESIGHT_UNLOCK;
-		writel(rst, CSITE_CPU_DBG0_LAR);
-		writel(rst, CSITE_CPU_DBG1_LAR);
-		if (get_num_cpus() == 4) {
-			writel(rst, CSITE_CPU_DBG2_LAR);
-			writel(rst, CSITE_CPU_DBG3_LAR);
-		}
-	}
+	/* Take CoreSight out of reset */
+	reset_set_enable(PERIPH_ID_CORESIGHT, 0);
 }
 
 void halt_avp(void)

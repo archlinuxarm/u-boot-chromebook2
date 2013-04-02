@@ -16,11 +16,13 @@
 
 #include <common.h>
 #include <asm/io.h>
+#include <asm/arch/ahb.h>
 #include <asm/arch/clock.h>
 #include <asm/arch/flow.h>
 #include <asm/arch/pinmux.h>
 #include <asm/arch/tegra.h>
 #include <asm/arch-tegra/clk_rst.h>
+#include <asm/arch-tegra/ap.h>
 #include <asm/arch-tegra/pmc.h>
 #include "../tegra-common/cpu.h"
 
@@ -76,6 +78,12 @@ static void enable_cpu_clocks(void)
 	writel(CCLK_BURST_POLICY, &clkrst->crc_cclk_brst_pol);
 	writel(SUPER_CCLK_DIVIDER, &clkrst->crc_super_cclk_div);
 
+	/* Enable the clock to all CPUs */
+	reg = readl(&clkrst->crc_clk_cpu_cmplx_clr);
+	reg |= (CLR_CPU3_CLK_STP+CLR_CPU2_CLK_STP);
+	reg |= CLR_CPU1_CLK_STP;
+	writel((reg | CLR_CPU0_CLK_STP), &clkrst->crc_clk_cpu_cmplx_clr);
+
 	/* Always enable the main CPU complex clocks */
 	clock_enable(PERIPH_ID_CPU);
 	clock_enable(PERIPH_ID_CPULP);
@@ -116,15 +124,42 @@ static void remove_cpu_resets(void)
  */
 void t114_init_clocks(void)
 {
+	struct flow_ctlr *flow = (struct flow_ctlr *)NV_PA_FLOW_BASE;
+	struct ahb_ctlr *ahbctlr = (struct ahb_ctlr *)NV_PA_AHB_BASE;
+	struct pmc_ctlr *pmc = (struct pmc_ctlr *)NV_PA_PMC_BASE;
 	struct clk_rst_ctlr *clkrst =
 			(struct clk_rst_ctlr *)NV_PA_CLK_RST_BASE;
-	struct flow_ctlr *flow = (struct flow_ctlr *)NV_PA_FLOW_BASE;
 	u32 val;
 
 	debug("t114_init_clocks entry\n");
 
 	/* Set active CPU cluster to G */
 	clrbits_le32(&flow->cluster_control, 1);
+
+	debug("Setting up PPSB_STOPCLK and XOFS values\n");
+	/*
+	 * Enable the PPSB_STOPCLK feature to allow SCLK to be run
+	 * at higher frequencies.
+	 */
+	val = readl(&clkrst->crc_misc_clk_enb);
+	val |= EN_PPSB_STOPCLK;
+	writel(val, &clkrst->crc_misc_clk_enb);
+
+	val = readl(&ahbctlr->arbitration_xbar_ctrl);
+	val |= PPSB_STOPCLK_ENABLE;
+	writel(val, &ahbctlr->arbitration_xbar_ctrl);
+
+	/* Change the oscillator drive strength */
+	val = readl(&clkrst->crc_osc_ctrl);
+	val &= ~OSC_XOFS_MASK;
+	val |= (OSC_DRIVE_STRENGTH << OSC_XOFS_SHIFT);
+	writel(val, &clkrst->crc_osc_ctrl);
+
+	/* Update same value in PMC_OSC_EDPD_OVER XOFS field for warmboot */
+	val = readl(&pmc->pmc_osc_edpd_over);
+	val &= ~PMC_XOFS_MASK;
+	val |= (OSC_DRIVE_STRENGTH << PMC_XOFS_SHIFT);
+	writel(val, &pmc->pmc_osc_edpd_over);
 
 	/*
 	 * Switch system clock to PLLP_OUT4 (108 MHz), AVP will now run
@@ -281,7 +316,7 @@ void start_cpu(u32 reset_vector)
 	enable_cpu_clocks();
 
 	/* Enable CoreSight */
-	clock_enable_coresight(1);
+	clock_enable_coresight();
 
 	/* Take CPU(s) out of reset */
 	remove_cpu_resets();

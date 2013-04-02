@@ -40,8 +40,6 @@
 #define PG_UP_TAG_0_PID_CPU	0x55555555	/* CPU aka "a9" aka "mpcore" */
 #define PG_UP_TAG_0		0x0
 
-#define CORESIGHT_UNLOCK	0xC5ACCE55;
-
 /* AP base physical address of internal SRAM */
 #define NV_PA_BASE_SRAM		0x40000000
 

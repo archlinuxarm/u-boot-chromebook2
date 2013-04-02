@@ -50,7 +50,7 @@ void start_cpu(u32 reset_vector)
 	enable_cpu_clock(0);
 
 	/* Enable CoreSight */
-	clock_enable_coresight(1);
+	clock_enable_coresight();
 
 	/*
 	 * Set the entry point for CPU execution from reset,

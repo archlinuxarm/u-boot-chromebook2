@@ -238,6 +238,9 @@ enum {
 /* CLK_RST_CONTROLLER_OSC_CTRL_0 */
 #define OSC_XOBP_SHIFT		1
 #define OSC_XOBP_MASK		(1U << OSC_XOBP_SHIFT)
+#define OSC_XOFS_SHIFT		4
+#define OSC_XOFS_MASK		(0x3F << OSC_XOFS_SHIFT)
+#define OSC_DRIVE_STRENGTH	1
 
 /*
  * CLK_RST_CONTROLLER_CLK_SOURCE_x_OUT_0 - the mask here is normally 8 bits
@@ -337,5 +340,14 @@ enum {
 #define CLR_CXRESET2    (1 << 22)
 #define CLR_CXRESET3    (1 << 23)
 #define CLR_NONCPURESET (1 << 29)
+
+/* CLK_RST_CONTROLLER_CLK_CPU_CMPLX_CLR */
+#define CLR_CPU3_CLK_STP	(1 << 11)
+#define CLR_CPU2_CLK_STP	(1 << 10)
+#define CLR_CPU1_CLK_STP	(1 << 9)
+#define CLR_CPU0_CLK_STP	(1 << 8)
+
+/* CLK_RST_CONTROLLER_MISC_CLK_ENB */
+#define EN_PPSB_STOPCLK		(1 << 0)
 
 #endif	/* _TEGRA_CLK_RST_H_ */

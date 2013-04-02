@@ -19,6 +19,7 @@
 
 #define NV_PA_SDRAM_BASE	0x80000000	/* 0x80000000 for real T114 */
 #define NV_PA_TSC_BASE		0x700F0000	/* System Counter TSC regs */
+#define NV_PA_AHB_BASE		0x6000C000	/* System regs (AHB, etc.) */
 
 #include <asm/arch-tegra/tegra.h>
 

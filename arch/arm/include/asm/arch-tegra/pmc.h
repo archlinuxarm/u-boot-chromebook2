@@ -117,8 +117,37 @@ struct pmc_ctlr {
 	uint pmc_bo_mirror1;		/* _BOUNDOUT_MIRROR1_0, offset 14C */
 	uint pmc_bo_mirror2;		/* _BOUNDOUT_MIRROR2_0, offset 150 */
 	uint pmc_sys_33v_en;		/* _SYS_33V_EN_0, offset 154 */
-	uint pmc_bo_mirror_access;	/* _BOUNDOUT_MIRROR_ACCESS_0, off158 */
+	uint pmc_bo_mirror_access;	/* _BOUNDOUT_MIRROR_ACCESS_0, off 158 */
 	uint pmc_gate;			/* _GATE_0, offset 15C */
+	/* T30 registers */
+	uint pmc_wake2_mask;		/* _WAKE2_MASK_0, offset 160 */
+	uint pmc_wake2_lvl;		/* _WAKE2_LVL_0,  offset 164 */
+	uint pmc_wake2_stat;		/* _WAKE2_STATUS_0, offset 168 */
+	uint pmc_sw_wake2_stat;		/* _SW_WAKE2_STATUS_0, offset 16C */
+	uint pmc_auto_wake2_lvl_mask;	/* _AUTO_WAKE2_LVL_MASK_0, offset 170 */
+	uint pmc_pg_mask2;		/* _PG_MASK_2_0, offset 174 */
+	uint pmc_pg_mask_ce1;		/* _PG_MASK_CE1_0, offset 178 */
+	uint pmc_pg_mask_ce2;		/* _PG_MASK_CE2_0, offset 17C */
+	uint pmc_pg_mask_ce3;		/* _PG_MASK_CE3_0, offset 180 */
+	uint pmc_pwrgate_timer_ce0;	/* _PWRGATE_TIMER_CE_0_0, offset 184 */
+	uint pmc_pwrgate_timer_ce1;	/* _PWRGATE_TIMER_CE_1_0, offset 188 */
+	uint pmc_pwrgate_timer_ce2;	/* _PWRGATE_TIMER_CE_2_0, offset 18C */
+	uint pmc_pwrgate_timer_ce3;	/* _PWRGATE_TIMER_CE_3_0, offset 190 */
+	uint pmc_pwrgate_timer_ce4;	/* _PWRGATE_TIMER_CE_4_0, offset 194 */
+	uint pmc_pwrgate_timer_ce5;	/* _PWRGATE_TIMER_CE_5_0, offset 198 */
+	uint pmc_pwrgate_timer_ce6;	/* _PWRGATE_TIMER_CE_6_0, offset 19C */
+	uint pmc_pcx_edpd_cntrl;	/* _PCX_EDPD_CNTRL_0, offset 1A0 */
+	uint pmc_osc_edpd_over;		/* _OSC_EDPD_OVER_0, offset 1A4 */
+	uint pmc_clk_out_cntrl;		/* _CLK_OUT_CNTRL_0, offset 1A8 */
+	uint pmc_sata_pwrgate;		/* _SATA_PWRGT_0, offset 1AC */
+	uint pmc_sensor_ctrl;		/* _SENSOR_CTRL_0, offset 1B0 */
+	uint pmc_reset_status;		/* _RTS_STATUS_0, offset 1B4 */
+	uint pmc_io_dpd_req;		/* _IO_DPD_REQ_0, offset 1B8 */
+	uint pmc_io_dpd_stat;		/* _IO_DPD_STATUS_0, offset 1BC */
+	uint pmc_io_dpd2_req;		/* _IO_DPD2_REQ_0, offset 1C0 */
+	uint pmc_io_dpd2_stat;		/* _IO_DPD2_STATUS_0, offset 1C4 */
+	uint pmc_sel_dpd_tim;		/* _SEL_DPD_TIM_0, offset 1C8 */
+	uint pmc_vddp_sel;		/* _VDDP_SEL_0, offset 1CC */
 };
 
 #define CPU_PWRED	1
@@ -136,5 +165,8 @@ struct pmc_ctlr {
 #define CRAIL		(1 << CRAILID)
 #define CE0		(1 << CE0ID)
 #define C0NC		(1 << C0NCID)
+
+#define PMC_XOFS_SHIFT	1
+#define PMC_XOFS_MASK	(0x3F << PMC_XOFS_SHIFT)
 
 #endif	/* PMC_H */
