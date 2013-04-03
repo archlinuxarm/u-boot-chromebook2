@@ -113,6 +113,25 @@ void set_ps_hold_ctrl(void)
 }
 
 
+void exynos5_power_shutdown(void)
+{
+	struct exynos5_power *power =
+		(struct exynos5_power *)samsung_get_base_power();
+
+	clrbits_le32(&power->ps_hold_control, EXYNOS_PS_HOLD_CONTROL_DATA_HIGH);
+}
+
+void exynos5_power_reset(void)
+{
+	struct exynos5_power *power =
+		(struct exynos5_power *)samsung_get_base_power();
+
+	/* Clear inform1 so there's no change we think we've got a wake reset */
+	power->inform1 = 0;
+
+	setbits_le32(&power->swreset, 1);
+}
+
 static void exynos5_set_xclkout(void)
 {
 	struct exynos5_power *power =
@@ -139,4 +158,16 @@ void set_hw_thermal_trip(void)
 		/* PS_HOLD_CONTROL register ENABLE_HW_TRIP bit*/
 		setbits_le32(&power->ps_hold_control, POWER_ENABLE_HW_TRIP);
 	}
+}
+
+void power_shutdown(void)
+{
+	if (cpu_is_exynos5())
+		exynos5_power_shutdown();
+}
+
+void power_reset(void)
+{
+	if (cpu_is_exynos5())
+		exynos5_power_reset();
 }

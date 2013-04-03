@@ -888,4 +888,14 @@ void set_ps_hold_ctrl(void);
  * source as XXTI
  */
 void set_xclkout(void);
+
+/*
+ * Power off the system; it should never return.
+ */
+void power_shutdown(void);
+
+/*
+ * Perform a software reset.
+ */
+void power_reset(void);
 #endif
