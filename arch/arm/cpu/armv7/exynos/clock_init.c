@@ -728,7 +728,7 @@ void exynos5420_system_clock_init(void)
 	/* Set RPLL */
 	writel(RPLL_CON2_VAL, &clk->rpll_con2);
 	writel(RPLL_CON1_VAL, &clk->rpll_con1);
-	val = set_pll(0x64, 0x2, 0x2);
+	val = set_pll(0x5E, 0x2, 0x4);
 	writel(val, &clk->rpll_con0);
 	while ((readl(&clk->rpll_con0) & PLL_LOCKED) == 0)
 		;
