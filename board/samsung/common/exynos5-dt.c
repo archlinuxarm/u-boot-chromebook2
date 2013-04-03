@@ -28,6 +28,7 @@
 #include <i2c.h>
 #include <netdev.h>
 #include <spi.h>
+#include <tps65090.h>
 #include <asm/arch/cpu.h>
 #include <asm/arch/dwmmc.h>
 #include <asm/arch/board.h>
@@ -77,6 +78,13 @@ int exynos_init(void)
 {
 #ifdef CONFIG_USB_EHCI_EXYNOS
 	board_usb_vbus_init();
+#endif
+#ifdef CONFIG_TPS65090_POWER
+	tps65090_init();
+
+	/* Disable backlight and LCD FET, initially */
+	tps65090_fet_disable(1);
+	tps65090_fet_disable(6);
 #endif
 	return 0;
 }
@@ -187,6 +195,7 @@ int board_mmc_init(bd_t *bis)
 #endif
 
 #ifdef CONFIG_LCD
+#ifdef CONFIG_EXYNOS5250
 void exynos_cfg_lcd_gpio(void)
 {
 	struct exynos5_gpio_part1 *gpio1 =
@@ -203,6 +212,7 @@ void exynos_cfg_lcd_gpio(void)
 	/* Set Hotplug detect for DP */
 	s5p_gpio_cfg_pin(&gpio1->x0, 7, GPIO_FUNC(0x3));
 }
+#endif
 
 void exynos_set_dp_phy(unsigned int onoff)
 {

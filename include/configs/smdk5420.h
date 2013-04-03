@@ -46,4 +46,7 @@
 #define CONFIG_SYS_PROMPT	"SMDK5420 # "
 #define CONFIG_IDENT_STRING	" for SMDK5420"
 
+/* Not present (TODO: Move to device tree) */
+#define ANX1120_I2C_BUS           -1
+
 #endif	/* __CONFIG_SMDK5420_H */
