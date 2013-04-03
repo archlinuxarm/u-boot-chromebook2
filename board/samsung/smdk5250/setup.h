@@ -25,9 +25,6 @@
 #ifndef _SMDK5250_SETUP_H
 #define _SMDK5250_SETUP_H
 
-#include <config.h>
-#include <asm/arch/dmc.h>
-
 /* TZPC : Register Offsets */
 #define TZPC0_BASE		0x10100000
 #define TZPC1_BASE		0x10110000

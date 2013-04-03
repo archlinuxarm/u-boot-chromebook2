@@ -22,6 +22,8 @@
  * MA 02111-1307 USA
  */
 
+#include <config.h>
+#include <asm/arch/dmc.h>
 #include <asm/arch/tzpc.h>
 #include"setup.h"
 
