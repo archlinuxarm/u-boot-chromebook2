@@ -122,8 +122,15 @@ enum s2mps11_reg {
 #define S2MPS11_I2C_ADDR (0xCC >> 1)
 #define S2MPS11_BUS_NUM	4
 
-/* Value to set voltage as 1V */
-#define S2MPS11_BUCK_CTRL2_1V	0x40
+/*
+ * Value to set voltage as 1V: 600mV + 64 * 6.25mV. Note that datasheet
+ * v0.0 states that the range starts at 650mV, but we think that 600mV is
+ * correct.
+ */
+#define S2MPS11_BUCK_CTRL2_1V		0x40
+
+/* Value to set voltage as 1.2V: 600mV + 96 * 6.25mV */
+#define S2MPS11_BUCK_CTRL2_1_2V	0x60
 
 /* Buck register addresses */
 #define S2MPS11_BUCK1_CTRL2	0x26
@@ -131,4 +138,5 @@ enum s2mps11_reg {
 #define S2MPS11_BUCK3_CTRL2	0x2a
 #define S2MPS11_BUCK4_CTRL2	0x2c
 #define S2MPS11_BUCK6_CTRL2	0x34
+#define S2MPS11_LDO22_CTRL	0x52
 #endif /*  __LINUX_MFD_S2MPS11_H */
