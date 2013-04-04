@@ -375,3 +375,11 @@ unsigned long exynos_fimd_calc_fbsize(void)
 {
 	return pvid->vl_col * pvid->vl_row * (NBITS(pvid->vl_bpix) / 8);
 }
+
+void exynos_fimd_lcd_disable(void)
+{
+	int i;
+
+	for (i = 0; i < 4; i++)
+		exynos_fimd_window_off(i);
+}

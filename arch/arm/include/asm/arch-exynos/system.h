@@ -54,4 +54,13 @@ struct exynos5_sysreg {
 void set_usbhost_mode(unsigned int mode);
 void set_system_display_ctrl(void);
 
+#ifdef CONFIG_EXYNOS_FB
+/* Disable the display */
+void exynos_fimd_lcd_disable(void);
+#else
+static inline void exynos_fimd_lcd_disable(void)
+{
+}
+#endif
+
 #endif	/* _EXYNOS4_SYSTEM_H */

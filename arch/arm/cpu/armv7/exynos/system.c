@@ -85,3 +85,12 @@ void set_system_display_ctrl(void)
 	else
 		exynos5_set_system_display();
 }
+
+/*
+ * Cleanup any Exynos specific setting here,
+ * if they can cause problem during kernel boot.
+ */
+void arch_cleanup_before_linux(void)
+{
+	exynos_fimd_lcd_disable();
+}
