@@ -39,6 +39,7 @@
 #include <linux/compiler.h>
 
 void __weak cpu_cache_initialization(void){}
+void __weak arch_cleanup_before_linux(void){}
 
 int cleanup_before_linux(void)
 {
@@ -51,6 +52,11 @@ int cleanup_before_linux(void)
 #ifndef CONFIG_SPL_BUILD
 	disable_interrupts();
 #endif
+	/*
+	 * Cleanup any of those architecture related settings done for u-boot,
+	 * if they can cause problem during kernel boot.
+	 */
+	arch_cleanup_before_linux();
 
 	/*
 	 * Turn off I-cache and invalidate it
