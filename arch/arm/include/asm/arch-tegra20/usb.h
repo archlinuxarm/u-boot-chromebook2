@@ -80,17 +80,17 @@ struct usb_ctlr {
 	uint port_sc1;
 	uint reserved8[6];
 
-	/* 0x1a0 */
+	/* 0x1A0 */
 	uint reserved9;
 	uint otgsc;
 	uint usb_mode;
 	uint endpt_setup_stat;
 
-	/* 0x1b0 */
+	/* 0x1B0 */
 	uint reserved10[20];
 
 	/* 0x200 */
-	uint reserved11[0x80];
+	uint reserved11[128];
 
 	/* 0x400 */
 	uint susp_ctrl;
@@ -100,12 +100,10 @@ struct usb_ctlr {
 
 	/* 0x410 */
 	uint usb1_legacy_ctrl;
-	uint reserved12[4];
+	uint reserved12[3];
 
-	/* 0x424 */
-	uint ulpi_timing_ctrl_0;
-	uint ulpi_timing_ctrl_1;
-	uint reserved13[53];
+	/* 0x420 */
+	uint reserved13[56];
 
 	/* 0x500 */
 	uint reserved14[64 * 3];
@@ -134,7 +132,6 @@ struct usb_ctlr {
 	uint utmip_xcvr_cfg1;
 	uint utmip_bias_cfg1;
 };
-
 
 /* USB1_LEGACY_CTRL */
 #define USB1_NO_LEGACY_MODE		1
@@ -165,6 +162,9 @@ struct usb_ctlr {
 #define USB_PHY_CLK_VALID			(1 << 7)
 #define USB_SUSP_CLR				(1 << 5)
 
+/* USBx_UTMIP_MISC_CFG0 */
+#define UTMIP_SUSPEND_EXIT_ON_EDGE		(1 << 22)
+
 /* USBx_UTMIP_MISC_CFG1 */
 #define UTMIP_PLLU_STABLE_COUNT_SHIFT		6
 #define UTMIP_PLLU_STABLE_COUNT_MASK		\
@@ -181,6 +181,17 @@ struct usb_ctlr {
 #define UTMIP_XTAL_FREQ_COUNT_SHIFT		0
 #define UTMIP_XTAL_FREQ_COUNT_MASK		0xfff
 
+/* USBx_UTMIP_BIAS_CFG0_0 */
+#define UTMIP_HSDISCON_LEVEL_MSB		(1 << 24)
+#define UTMIP_OTGPD				(1 << 11)
+#define UTMIP_BIASPD				(1 << 10)
+#define UTMIP_HSDISCON_LEVEL_SHIFT		2
+#define UTMIP_HSDISCON_LEVEL_MASK		\
+				(0x3 << UTMIP_HSDISCON_LEVEL_SHIFT)
+#define UTMIP_HSSQUELCH_LEVEL_SHIFT		0
+#define UTMIP_HSSQUELCH_LEVEL_MASK		\
+				(0x3 << UTMIP_HSSQUELCH_LEVEL_SHIFT)
+
 /* USBx_UTMIP_BIAS_CFG1_0 */
 #define UTMIP_BIAS_PDTRK_COUNT_SHIFT		3
 #define UTMIP_BIAS_PDTRK_COUNT_MASK		\
@@ -194,9 +205,6 @@ struct usb_ctlr {
 
 /* USBx_UTMIP_BAT_CHRG_CFG0_0 */
 #define UTMIP_PD_CHRG				1
-
-/* USBx_UTMIP_XCVR_CFG0_0 */
-#define UTMIP_XCVR_LSBIAS_SE			(1 << 21)
 
 /* USBx_UTMIP_SPARE_CFG0_0 */
 #define FUSE_SETUP_SEL				(1 << 3)
@@ -216,15 +224,18 @@ struct usb_ctlr {
 /* USBx_CONTROLLER_2_USB2D_ICUSB_CTRL_0 */
 #define IC_ENB1					(1 << 3)
 
-/* SB2_CONTROLLER_2_USB2D_PORTSC1_0 */
-#define PTS_SHIFT				30
-#define PTS_MASK				(3U << PTS_SHIFT)
-#define PTS_UTMI		0
+/* USB2D_HOSTPC1_DEVLC_0 */
+#define PTS_SHIFT				29
+#define PTS_MASK				(0x7U << PTS_SHIFT)
+#define PTS_UTMI	0
 #define PTS_RESERVED	1
-#define PTS_ULPI		2
+#define PTS_ULPI	2
 #define PTS_ICUSB_SER	3
+#define PTS_HSIC	4
 
-#define STS					(1 << 29)
+#define STS					(1 << 28)
+
+/* SB2_CONTROLLER_2_USB2D_PORTSC1_0 */
 #define WKOC				(1 << 22)
 #define WKDS				(1 << 21)
 #define WKCN				(1 << 20)
@@ -233,8 +244,19 @@ struct usb_ctlr {
 #define UTMIP_FORCE_PD_POWERDOWN		(1 << 14)
 #define UTMIP_FORCE_PD2_POWERDOWN		(1 << 16)
 #define UTMIP_FORCE_PDZI_POWERDOWN		(1 << 18)
+#define UTMIP_XCVR_LSBIAS_SE			(1 << 21)
+#define UTMIP_XCVR_HSSLEW_MSB_SHIFT		25
+#define UTMIP_XCVR_HSSLEW_MSB_MASK		\
+			(0x7f << UTMIP_XCVR_HSSLEW_MSB_SHIFT)
+#define UTMIP_XCVR_SETUP_MSB_SHIFT	22
+#define UTMIP_XCVR_SETUP_MSB_MASK	(0x7 << UTMIP_XCVR_SETUP_MSB_SHIFT)
+#define UTMIP_XCVR_SETUP_SHIFT		0
+#define UTMIP_XCVR_SETUP_MASK		(0xf << UTMIP_XCVR_SETUP_SHIFT)
 
 /* USBx_UTMIP_XCVR_CFG1_0 */
+#define UTMIP_XCVR_TERM_RANGE_ADJ_SHIFT		18
+#define UTMIP_XCVR_TERM_RANGE_ADJ_MASK		\
+			(0xf << UTMIP_XCVR_TERM_RANGE_ADJ_SHIFT)
 #define UTMIP_FORCE_PDDISC_POWERDOWN		(1 << 0)
 #define UTMIP_FORCE_PDCHRP_POWERDOWN		(1 << 2)
 #define UTMIP_FORCE_PDDR_POWERDOWN		(1 << 4)

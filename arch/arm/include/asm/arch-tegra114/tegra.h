@@ -22,6 +22,8 @@
 
 #include <asm/arch-tegra/tegra.h>
 
+#define TEGRA_USB1_BASE		0x7D000000
+
 #define BCT_ODMDATA_OFFSET	1752	/* offset to ODMDATA word */
 
 #undef NVBOOTINFOTABLE_BCTSIZE

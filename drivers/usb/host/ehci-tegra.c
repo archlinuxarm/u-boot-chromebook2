@@ -27,13 +27,17 @@
 #include <asm/io.h>
 #include <asm-generic/gpio.h>
 #include <asm/arch/clock.h>
-#include <asm/arch-tegra/usb.h>
+#include <asm/arch-tegra/clk_rst.h>
+#include <asm/arch/usb.h>
 #include <usb.h>
 #include <usb/ulpi.h>
 #include <libfdt.h>
 #include <fdtdec.h>
 
 #include "ehci.h"
+
+#define HOSTPC1_DEVLC	0x84
+#define HOSTPC1_PSPD(x)		(((x) >> 25) & 0x3)
 
 #ifdef CONFIG_USB_ULPI
 	#ifndef CONFIG_USB_ULPI_VIEWPORT
@@ -87,6 +91,9 @@ struct fdt_usb {
 
 static struct fdt_usb port[USB_PORTS_MAX];	/* List of valid USB ports */
 static unsigned port_count;			/* Number of available ports */
+static unsigned is_T30_compatible;
+
+static int process_nodes(const void *blob, int node_list[], int count);
 
 /*
  * This table has USB timing parameters for each Oscillator frequency we
@@ -109,7 +116,7 @@ static unsigned port_count;			/* Number of available ports */
  * ---------------------------------------------------------------------------
  * PLLU_ENABLE_DLY_COUNT   02 (0x02)       03 (03)         02 (02)     04 (04)
  * PLLU_STABLE_COUNT       51 (33)         75 (4B)         47 (2F)    102 (66)
- * PLL_ACTIVE_DLY_COUNT    05 (05)         06 (06)         04 (04)     09 (09)
+ * PLL_ACTIVE_DLY_COUNT     9 (09)         12 (0C)          8 (08)      9 (09)
  * XTAL_FREQ_COUNT        127 (7F)        187 (BB)        118 (76)    254 (FE)
  *
  * 3. Debounce values IdDig, Avalid, Bvalid, VbusValid, VbusWakeUp, and
@@ -131,10 +138,10 @@ static unsigned port_count;			/* Number of available ports */
  */
 static const unsigned usb_pll[CLOCK_OSC_FREQ_COUNT][PARAM_COUNT] = {
 	/* DivN, DivM, DivP, CPCON, LFCON, Delays             Debounce, Bias */
-	{ 0x3C0, 0x0D, 0x00, 0xC,   0,  0x02, 0x33, 0x05, 0x7F, 0x7EF4, 5 },
-	{ 0x0C8, 0x04, 0x00, 0x3,   0,  0x03, 0x4B, 0x06, 0xBB, 0xBB80, 7 },
-	{ 0x3C0, 0x0C, 0x00, 0xC,   0,  0x02, 0x2F, 0x04, 0x76, 0x7530, 5 },
-	{ 0x3C0, 0x1A, 0x00, 0xC,   0,  0x04, 0x66, 0x09, 0xFE, 0xFDE8, 9 }
+	{ 0x3C0, 0x0D, 0x00, 0xC,   0,  0x02, 0x33,  9, 0x7F, 0x7EF4, 5 },
+	{ 0x0C8, 0x04, 0x00, 0x3,   0,  0x03, 0x4B, 12, 0xBB, 0xBB80, 7 },
+	{ 0x3C0, 0x0C, 0x00, 0xC,   0,  0x02, 0x2F,  8, 0x76, 0x7530, 5 },
+	{ 0x3C0, 0x1A, 0x00, 0xC,   0,  0x04, 0x66,  9, 0xFE, 0xFDE8, 9 }
 };
 
 /* UTMIP Idle Wait Delay */
@@ -156,11 +163,52 @@ static const u8 utmip_hs_sync_start_delay = 9;
 void ehci_powerup_fixup(uint32_t *status_reg, uint32_t *reg)
 {
 	mdelay(50);
+	if (is_T30_compatible) {
+		/* Tegra 3 takes about 55 ms to assert Port Enable bit. */
+		udelay(4999);
+		return;
+	}
 	if (((u32) status_reg & TEGRA_USB_ADDR_MASK) != TEGRA_USB1_BASE)
 		return;
 	/* For EHCI_PS_CSC to be cleared in ehci_hcd.c */
 	if (ehci_readl(status_reg) & EHCI_PS_CSC)
 		*reg |= EHCI_PS_CSC;
+}
+
+/*
+ * This ehci_set_usbmode overrides the weak function ehci_set_usbmode
+ * in "ehci-hcd.c".
+ */
+void ehci_set_usbmode(int index)
+{
+	struct fdt_usb *config;
+	struct usb_ctlr *usbctlr;
+	uint32_t tmp;
+
+	config = &port[index];
+	usbctlr = config->reg;
+
+	tmp = ehci_readl(&usbctlr->usb_mode);
+	tmp |= USBMODE_CM_HC;
+	ehci_writel(&usbctlr->usb_mode, tmp);
+}
+
+/*
+ * This ehci_get_port_speed overrides the weak function ehci_get_port_speed
+ * in "ehci-hcd.c".
+ */
+int ehci_get_port_speed(struct ehci_hcor *hcor, uint32_t reg)
+{
+	uint32_t tmp;
+	uint32_t *reg_ptr;
+
+	if (is_T30_compatible) {
+		reg_ptr = (uint32_t *)((u8 *)&hcor->or_usbcmd + HOSTPC1_DEVLC);
+		tmp = ehci_readl(reg_ptr);
+		return (HOSTPC1_PSPD(tmp));
+	}
+	else
+		return PORTSC_PSPD(reg);
 }
 
 /* Put the port into host mode */
@@ -216,6 +264,8 @@ static int init_utmi_usb_controller(struct fdt_usb *config)
 	int loop_count;
 	const unsigned *timing;
 	struct usb_ctlr *usbctlr = config->reg;
+	struct clk_rst_ctlr *clkrst;
+	struct usb_ctlr *usb1ctlr;
 
 	clock_enable(config->periph_id);
 
@@ -232,7 +282,8 @@ static int init_utmi_usb_controller(struct fdt_usb *config)
 	 * To Use the A Session Valid for cable detection logic, VBUS_WAKEUP
 	 * mux must be switched to actually use a_sess_vld threshold.
 	 */
-	if (fdt_gpio_isvalid(&config->vbus_gpio)) {
+	if (config->dr_mode == DR_MODE_OTG &&
+		fdt_gpio_isvalid(&config->vbus_gpio)) {
 		clrsetbits_le32(&usbctlr->usb1_legacy_ctrl,
 			VBUS_SENSE_CTL_MASK,
 			VBUS_SENSE_CTL_A_SESS_VLD << VBUS_SENSE_CTL_SHIFT);
@@ -243,6 +294,8 @@ static int init_utmi_usb_controller(struct fdt_usb *config)
 	 * the bring up of the plls.
 	 */
 	timing = usb_pll[clock_get_osc_freq()];
+	if (is_T30_compatible)
+		goto pll_T30_init;
 
 	val = readl(&usbctlr->utmip_misc_cfg1);
 	clrsetbits_le32(&val, UTMIP_PLLU_STABLE_COUNT_MASK,
@@ -261,6 +314,64 @@ static int init_utmi_usb_controller(struct fdt_usb *config)
 		timing[PARAM_XTAL_FREQ_COUNT] <<
 			UTMIP_XTAL_FREQ_COUNT_SHIFT);
 	writel(val, &usbctlr->utmip_pll_cfg1);
+	goto pll_init_done;
+
+pll_T30_init:
+	clkrst = (struct clk_rst_ctlr *) NV_PA_CLK_RST_BASE;
+
+	val = readl(&clkrst->crc_utmip_pll_cfg2);
+	clrsetbits_le32(&val, UTMIP_PLLU_STABLE_COUNT_MASK,
+		timing[PARAM_STABLE_COUNT] << UTMIP_PLLU_STABLE_COUNT_SHIFT);
+	clrsetbits_le32(&val, UTMIP_PLL_ACTIVE_DLY_COUNT_MASK,
+		timing[PARAM_ACTIVE_DELAY_COUNT] <<
+			UTMIP_PLL_ACTIVE_DLY_COUNT_SHIFT);
+	writel(val, &clkrst->crc_utmip_pll_cfg2);
+
+	/* Set PLL enable delay count and crystal frequency count */
+	val = readl(&clkrst->crc_utmip_pll_cfg1);
+	clrsetbits_le32(&val, UTMIP_PLLU_ENABLE_DLY_COUNT_MASK,
+		timing[PARAM_ENABLE_DELAY_COUNT] <<
+			UTMIP_PLLU_ENABLE_DLY_COUNT_SHIFT);
+	clrsetbits_le32(&val, UTMIP_XTAL_FREQ_COUNT_MASK,
+		timing[PARAM_XTAL_FREQ_COUNT] <<
+			UTMIP_XTAL_FREQ_COUNT_SHIFT);
+	writel(val, &clkrst->crc_utmip_pll_cfg1);
+
+	/* Disable Power Down state for PLL */
+	clrbits_le32(&clkrst->crc_utmip_pll_cfg1,
+		PLLU_POWERDOWN | PLL_ENABLE_POWERDOWN | PLL_ACTIVE_POWERDOWN);
+
+	/* Recommended PHY settings for EYE diagram */
+	val = readl(&usbctlr->utmip_xcvr_cfg0);
+	clrsetbits_le32(&val, UTMIP_XCVR_SETUP_MASK,
+		0x4 << UTMIP_XCVR_SETUP_SHIFT);
+	clrsetbits_le32(&val, UTMIP_XCVR_SETUP_MSB_MASK,
+		0x3 << UTMIP_XCVR_SETUP_MSB_SHIFT);
+	clrsetbits_le32(&val, UTMIP_XCVR_HSSLEW_MSB_MASK,
+		0x8 << UTMIP_XCVR_HSSLEW_MSB_SHIFT);
+	writel(val, &usbctlr->utmip_xcvr_cfg0);
+
+	clrsetbits_le32(&usbctlr->utmip_xcvr_cfg1,
+		UTMIP_XCVR_TERM_RANGE_ADJ_MASK,
+		0x7 << UTMIP_XCVR_TERM_RANGE_ADJ_SHIFT);
+	if (config->periph_id != PERIPH_ID_USBD) {
+		clock_enable(PERIPH_ID_USBD);
+		/* Disable Reset if in Reset state */
+		reset_set_enable(PERIPH_ID_USBD, 0);
+	}
+	val = readl(&usbctlr->utmip_bias_cfg0);
+	setbits_le32(&val, UTMIP_HSDISCON_LEVEL_MSB);
+	clrsetbits_le32(&val, UTMIP_HSDISCON_LEVEL_MASK,
+		0x1 << UTMIP_HSDISCON_LEVEL_SHIFT);
+	clrsetbits_le32(&val, UTMIP_HSSQUELCH_LEVEL_MASK,
+		0x2 << UTMIP_HSSQUELCH_LEVEL_SHIFT);
+	writel(val, &usbctlr->utmip_bias_cfg0);
+	if (config->periph_id != PERIPH_ID_USBD)
+		clock_disable(PERIPH_ID_USBD);
+
+	/* Miscellaneous setting mentioned in Programming Guide */
+	clrbits_le32(&usbctlr->utmip_misc_cfg0, UTMIP_SUSPEND_EXIT_ON_EDGE);
+pll_init_done:
 
 	/* Setting the tracking length time */
 	clrsetbits_le32(&usbctlr->utmip_bias_cfg1,
@@ -307,6 +418,14 @@ static int init_utmi_usb_controller(struct fdt_usb *config)
 
 	/* Resuscitate crystal clock by setting UTMIP_PHY_XTAL_CLOCKEN */
 	setbits_le32(&usbctlr->utmip_misc_cfg1, UTMIP_PHY_XTAL_CLOCKEN);
+	if (is_T30_compatible) {
+		if (config->periph_id == PERIPH_ID_USBD)
+			clrbits_le32(&clkrst->crc_utmip_pll_cfg2,
+				UTMIP_FORCE_PD_SAMP_A_POWERDOWN);
+		if (config->periph_id == PERIPH_ID_USB3)
+			clrbits_le32(&clkrst->crc_utmip_pll_cfg2,
+				UTMIP_FORCE_PD_SAMP_C_POWERDOWN);
+	}
 
 	/* Finished the per-controller init. */
 
@@ -325,10 +444,12 @@ static int init_utmi_usb_controller(struct fdt_usb *config)
 	/* Disable ICUSB FS/LS transceiver */
 	clrbits_le32(&usbctlr->icusb_ctrl, IC_ENB1);
 
-	/* Select UTMI parallel interface */
-	clrsetbits_le32(&usbctlr->port_sc1, PTS_MASK,
+	if (!is_T30_compatible) {
+		/* Select UTMI parallel interface */
+		clrsetbits_le32(&usbctlr->port_sc1, PTS_MASK,
 			PTS_UTMI << PTS_SHIFT);
-	clrbits_le32(&usbctlr->port_sc1, STS);
+		clrbits_le32(&usbctlr->port_sc1, STS);
+	}
 
 	/* Deassert power down state */
 	clrbits_le32(&usbctlr->utmip_xcvr_cfg0, UTMIP_FORCE_PD_POWERDOWN |
@@ -336,6 +457,20 @@ static int init_utmi_usb_controller(struct fdt_usb *config)
 	clrbits_le32(&usbctlr->utmip_xcvr_cfg1, UTMIP_FORCE_PDDISC_POWERDOWN |
 		UTMIP_FORCE_PDCHRP_POWERDOWN | UTMIP_FORCE_PDDR_POWERDOWN);
 
+	if (is_T30_compatible) {
+		/*
+		 * BIAS Pad Power Down is common among all 3 USB
+		 * controllers and can be controlled from USB1 only.
+		 */
+		if (config->periph_id != PERIPH_ID_USBD) {
+			clock_enable(PERIPH_ID_USBD);
+			/* Disable Reset if in Reset state */
+			reset_set_enable(PERIPH_ID_USBD, 0);
+		}
+
+		usb1ctlr = (struct usb_ctlr *)TEGRA_USB1_BASE;
+		clrbits_le32(&usb1ctlr->utmip_bias_cfg0, UTMIP_BIASPD);
+	}
 	return 0;
 }
 
@@ -483,12 +618,14 @@ int fdt_decode_usb(const void *blob, int node, struct fdt_usb *config)
 	return 0;
 }
 
+
 int board_usb_init(const void *blob)
 {
-	struct fdt_usb config;
 	enum clock_osc_freq freq;
 	int node_list[USB_PORTS_MAX];
-	int node, count, i;
+	int count, err;
+
+	is_T30_compatible = 0;
 
 	/* Set up the USB clocks correctly based on our oscillator frequency */
 	freq = clock_get_osc_freq();
@@ -497,26 +634,20 @@ int board_usb_init(const void *blob)
 	/* count may return <0 on error */
 	count = fdtdec_find_aliases_for_id(blob, "usb",
 			COMPAT_NVIDIA_TEGRA20_USB, node_list, USB_PORTS_MAX);
-	for (i = 0; i < count; i++) {
-		if (port_count == USB_PORTS_MAX) {
-			printf("tegrausb: Cannot register more than %d ports\n",
-				USB_PORTS_MAX);
-			return -1;
-		}
+	if (count && (err = process_nodes(blob, node_list, count))) {
+		printf("%s: Error processing T20 compatible USB node(s)!\n",
+			__func__);
+		return err;
+	}
 
-		debug("USB %d: ", i);
-		node = node_list[i];
-		if (!node)
-			continue;
-		if (fdt_decode_usb(blob, node, &config)) {
-			debug("Cannot decode USB node %s\n",
-			      fdt_get_name(blob, node, NULL));
-			return -1;
-		}
-		config.initialized = 0;
-
-		/* add new USB port to the list of available ports */
-		port[port_count++] = config;
+	count = fdtdec_find_aliases_for_id(blob, "usb",
+			COMPAT_NVIDIA_TEGRA30_USB, node_list, USB_PORTS_MAX);
+	if (count)
+		is_T30_compatible = 1;
+	if (count && (err = process_nodes(blob, node_list, count))) {
+		printf("%s: Error processing T30 compatible USB node(s)!\n",
+			__func__);
+		return err;
 	}
 
 	return 0;
@@ -564,6 +695,19 @@ success:
 	usbctlr = config->reg;
 	*hccr = (struct ehci_hccr *)&usbctlr->cap_length;
 	*hcor = (struct ehci_hcor *)&usbctlr->usb_cmd;
+	if (is_T30_compatible) {
+		/* Set to Host mode after Controller Reset was done */
+		clrsetbits_le32(&usbctlr->usb_mode, USBMODE_CM_HC,
+			USBMODE_CM_HC);
+		/* Select UTMI parallel interface after setting host mode */
+		if (config->utmi) {
+			clrsetbits_le32((char *)&usbctlr->usb_cmd + HOSTPC1_DEVLC, PTS_MASK,
+				PTS_UTMI << PTS_SHIFT);
+			clrbits_le32((char *)&usbctlr->usb_cmd + HOSTPC1_DEVLC, STS);
+		}
+	}
+
+
 	return 0;
 }
 
@@ -585,6 +729,45 @@ int ehci_hcd_stop(int index)
 	udelay(1000);
 
 	port[index].initialized = 0;
+
+	return 0;
+}
+
+/*
+ * Process a list of nodes, adding them to our list of SDMMC ports.
+ *
+ * @param blob          fdt blob
+ * @param node_list     list of nodes to process (any <=0 are ignored)
+ * @param count         number of nodes to process
+ * @return 0 if ok, -1 on error
+ */
+static int process_nodes(const void *blob, int node_list[], int count)
+{
+	struct fdt_usb config;
+	int node, i;
+
+	port_count = 0;
+	for (i = 0; i < count; i++) {
+		if (port_count == USB_PORTS_MAX) {
+			printf("tegrausb: Cannot register more than %d ports\n",
+				USB_PORTS_MAX);
+			return -1;
+		}
+
+		debug("USB %d: ", i);
+		node = node_list[i];
+		if (!node)
+			continue;
+		if (fdt_decode_usb(blob, node, &config)) {
+			debug("Cannot decode USB node %s\n",
+			      fdt_get_name(blob, node, NULL));
+			return -1;
+		}
+		config.initialized = 0;
+
+		/* add new USB port to the list of available ports */
+		port[port_count++] = config;
+	}
 
 	return 0;
 }
