@@ -261,22 +261,13 @@ static void i2c_ch_init(struct s3c24x0_i2c *regs, int speed, int slaveadd)
 	writel(I2C_MODE_MT | I2C_TXRX_ENA, &regs->iicstat);
 }
 
-static void hsi2c_ch_init(struct exynos5_hsi2c *hsregs)
+static int hsi2c_get_clk_details(struct s3c24x0_i2c_bus *i2c_bus)
 {
+	struct exynos5_hsi2c *hsregs = i2c_bus->hsregs;
 	ulong clkin = get_i2c_clk();
-	u32 i2c_timing_s1;
-	u32 i2c_timing_s2;
-	u32 i2c_timing_s3;
-	u32 i2c_timing_sla;
 	unsigned int op_clk = HSI2C_FS_TX_CLOCK;
-	unsigned int n_clkdiv;
-	unsigned int t_start_su, t_start_hd;
-	unsigned int t_stop_su;
-	unsigned int t_data_su, t_data_hd;
-	unsigned int t_scl_l, t_scl_h;
-	unsigned int t_sr_release;
+	unsigned int i = 0, utemp0 = 0, utemp1 = 0;
 	unsigned int t_ftl_cycle;
-	unsigned int i = 0, utemp0 = 0, utemp1 = 0, utemp2 = 0;
 
 	/* FPCLK / FI2C =
 	 * (CLK_DIV + 1) * (TSCLK_L + TSCLK_H + 2) + 8 + 2 * FLT_CYCLE
@@ -290,22 +281,38 @@ static void hsi2c_ch_init(struct exynos5_hsi2c *hsregs)
 	/* CLK_DIV max is 256 */
 	for (i = 0; i < 256; i++) {
 		utemp1 = utemp0 / (i + 1);
-		/* SCLK_L/H max is 256 / 2 */
-		if (utemp1 < 128) {
-			utemp2 = utemp1 - 2;
-			break;
+		if ((utemp1 < 512) && (utemp1 > 4)) {
+			i2c_bus->clk_cycle = utemp1 - 2;
+			i2c_bus->clk_div = i;
+			return 0;
 		}
 	}
+	return -1;
+}
 
-	n_clkdiv = i;
-	t_scl_l = utemp2 / 2;
-	t_scl_h = utemp2 / 2;
+static void hsi2c_ch_init(struct s3c24x0_i2c_bus *i2c_bus)
+{
+	struct exynos5_hsi2c *hsregs = i2c_bus->hsregs;
+	unsigned int t_sr_release;
+	unsigned int n_clkdiv;
+	unsigned int t_start_su, t_start_hd;
+	unsigned int t_stop_su;
+	unsigned int t_data_su, t_data_hd;
+	unsigned int t_scl_l, t_scl_h;
+	u32 i2c_timing_s1;
+	u32 i2c_timing_s2;
+	u32 i2c_timing_s3;
+	u32 i2c_timing_sla;
+
+	n_clkdiv = i2c_bus->clk_div;
+	t_scl_l = i2c_bus->clk_cycle / 2;
+	t_scl_h = i2c_bus->clk_cycle / 2;
 	t_start_su = t_scl_l;
 	t_start_hd = t_scl_l;
 	t_stop_su = t_scl_l;
 	t_data_su = t_scl_l / 2;
 	t_data_hd = t_scl_l / 2;
-	t_sr_release = utemp2;
+	t_sr_release = i2c_bus->clk_cycle;
 
 	i2c_timing_s1 = t_start_su << 24 | t_start_hd << 16 | t_stop_su << 8;
 	i2c_timing_s2 = t_data_su << 24 | t_scl_l << 8 | t_scl_h << 0;
@@ -343,11 +350,14 @@ int i2c_set_bus_num(unsigned int bus)
 	g_current_bus = bus;
 	i2c_bus = get_bus(i2c_get_bus_num());
 
-	if (i2c_bus->is_highspeed)
-		hsi2c_ch_init(i2c_bus->hsregs);
-	else
+	if (i2c_bus->is_highspeed) {
+		if (hsi2c_get_clk_details(i2c_bus))
+			return -1;
+		hsi2c_ch_init(i2c_bus);
+	} else {
 		i2c_ch_init(i2c_bus->regs, CONFIG_SYS_I2C_SPEED,
 						CONFIG_SYS_I2C_SLAVE);
+	}
 
 	return 0;
 }
@@ -966,11 +976,14 @@ int i2c_reset_port_fdt(const void *blob, int node)
 		return -1;
 	}
 
-	if (i2c_bus->is_highspeed)
-		hsi2c_ch_init(i2c_bus->hsregs);
-	else
+	if (i2c_bus->is_highspeed) {
+		if (hsi2c_get_clk_details(i2c_bus))
+			return -1;
+		hsi2c_ch_init(i2c_bus);
+	} else {
 		i2c_ch_init(i2c_bus->regs, CONFIG_SYS_I2C_SPEED,
 						CONFIG_SYS_I2C_SLAVE);
+	}
 
 	return 0;
 }
