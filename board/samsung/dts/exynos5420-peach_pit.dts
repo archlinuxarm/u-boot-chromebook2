@@ -28,9 +28,16 @@
 	};
 
 	i2c@12ca0000 {
+		#address-cells = <1>;
+		#size-cells = <0>;
 		power-regulator@48 {
 			compatible = "ti,tps65090";
 			reg = <0x48>;
+		};
+
+		pmic@66 {
+			compatible = "samsung,s2mps11-pmic";
+			reg = <0x66>;
 		};
 	};
 

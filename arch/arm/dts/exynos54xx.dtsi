@@ -37,13 +37,6 @@
 		mmc2 = "/mmc@12220000";
 	};
 
-	i2c@12ca0000 {
-		pmic@66 {
-			reg = <0x66>;
-			compatible = "samsung,s2mps11-pmic";
-		};
-	};
-
 	i2c@12e00000 {
 		#address-cells = <1>;
 		#size-cells = <0>;

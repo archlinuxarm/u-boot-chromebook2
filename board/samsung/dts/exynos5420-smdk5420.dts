@@ -15,4 +15,14 @@
 	config {
 		hwid = "smdk5420 TEST A-A 9382";
 	};
+
+	/* s2mps11 is on i2c bus 4 */
+	i2c@12ca0000 {
+		#address-cells = <1>;
+		#size-cells = <0>;
+		pmic@66 {
+			reg = <0x66>;
+			compatible = "samsung,s2mps11-pmic";
+		};
+	};
 };
