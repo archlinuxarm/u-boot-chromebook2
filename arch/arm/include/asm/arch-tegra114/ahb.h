@@ -86,6 +86,12 @@ struct ahb_ctlr {
 	u32 axicif_fastsync2_mcclk_to_cpuclk;
 };
 
-#define PPSB_STOPCLK_ENABLE	(1 << 2);
+#define PPSB_STOPCLK_ENABLE	(1 << 2)
+
+#define GIZ_ENABLE_SPLIT	(1 << 0)
+#define GIZ_ENB_FAST_REARB	(1 << 2)
+#define GIZ_DONT_SPLIT_AHB_WR	(1 << 7)
+
+#define GIZ_USB_IMMEDIATE	(1 << 18)
 
 #endif	/* _TEGRA114_AHB_H_ */

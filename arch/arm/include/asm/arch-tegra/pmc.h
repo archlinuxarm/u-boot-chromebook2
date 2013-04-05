@@ -148,6 +148,24 @@ struct pmc_ctlr {
 	uint pmc_io_dpd2_stat;		/* _IO_DPD2_STATUS_0, offset 1C4 */
 	uint pmc_sel_dpd_tim;		/* _SEL_DPD_TIM_0, offset 1C8 */
 	uint pmc_vddp_sel;		/* _VDDP_SEL_0, offset 1CC */
+
+	uint pmc_ddr_cfg;		/* _DDR_CFG_0, offset 1D0 */
+	uint pmc_e_no_vttgen;		/* _E_NO_VTTGEN_0, offset 1D4 */
+	uint pmc_reserved0;		/* _RESERVED, offset 1D8 */
+	uint pmc_pllm_wb0_ovrride_frq;	/* _PLLM_WB0_OVERRIDE_FREQ_0, off 1DC */
+	uint pmc_test_pwrgate;		/* _TEST_PWRGATE_0, offset 1E0 */
+	uint pmc_pwrgate_timer_mult;	/* _PWRGATE_TIMER_MULT_0, offset 1E4 */
+	uint pmc_dsi_sel_dpd;		/* _DSI_SEL_DPD_0, offset 1E8 */
+	uint pmc_utmip_uhsic_triggers;	/* _UTMIP_UHSIC_TRIGGERS_0, off 1EC */
+	uint pmc_utmip_uhsic_saved_st;  /* _UTMIP_UHSIC_SAVED_STATE_0, off1F0 */
+	uint pmc_utmip_pad_cfg;		/* _UTMIP_PAD_CFG_0, offset 1F4 */
+	uint pmc_utmip_term_pad_cfg;	/* _UTMIP_TERM_PAD_CFG_0, offset 1F8 */
+	uint pmc_utmip_uhsic_sleep_cfg;	/* _UTMIP_UHSIC_SLEEP_CFG_0, off 1FC */
+	uint pmc_reserved1[47];		/* offset 200-2B8 */
+	uint pmc_glb_amap_cfg;		/* _GLB_AMAP_CFG_0, off 2BC */
+	uint pmc_sticky_bits;		/* _STICKY_BITS_0, offset 2C0 */
+	uint pmc_sec_disable2;		/* _SEC_DISABLE2_0, offset 2C4 */
+	uint pmc_weak_bias;		/* _WEAK_BIAS_0, offset 2C8 */
 };
 
 #define CPU_PWRED	1
@@ -168,5 +186,17 @@ struct pmc_ctlr {
 
 #define PMC_XOFS_SHIFT	1
 #define PMC_XOFS_MASK	(0x3F << PMC_XOFS_SHIFT)
+
+#define TIMER_MULT_SHIFT	0
+#define TIMER_MULT_MASK		(3 << TIMER_MULT_SHIFT)
+#define TIMER_MULT_CPU_SHIFT	2
+#define TIMER_MULT_CPU_MASK	(3 << TIMER_MULT_CPU_SHIFT)
+#define MULT_1			0
+#define MULT_2			1
+#define MULT_4			2
+#define MULT_8			3
+
+#define AMAP_WRITE_SHIFT	20
+#define AMAP_WRITE_ON		(1 << AMAP_WRITE_SHIFT)
 
 #endif	/* PMC_H */

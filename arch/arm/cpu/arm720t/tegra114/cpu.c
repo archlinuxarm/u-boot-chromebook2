@@ -80,7 +80,7 @@ static void enable_cpu_clocks(void)
 
 	/* Enable the clock to all CPUs */
 	reg = readl(&clkrst->crc_clk_cpu_cmplx_clr);
-	reg |= (CLR_CPU3_CLK_STP+CLR_CPU2_CLK_STP);
+	reg |= (CLR_CPU3_CLK_STP + CLR_CPU2_CLK_STP);
 	reg |= CLR_CPU1_CLK_STP;
 	writel((reg | CLR_CPU0_CLK_STP), &clkrst->crc_clk_cpu_cmplx_clr);
 
@@ -96,26 +96,61 @@ static void remove_cpu_resets(void)
 	u32 reg;
 
 	debug("remove_cpu_resets entry\n");
-	/* Take the slow non-CPU partition out of reset */
-	reg = readl(&clkrst->crc_rst_cpulp_cmplx_clr);
-	writel((reg | CLR_NONCPURESET), &clkrst->crc_rst_cpulp_cmplx_clr);
 
-	/* Take the fast non-CPU partition out of reset */
-	reg = readl(&clkrst->crc_rst_cpug_cmplx_clr);
-	writel((reg | CLR_NONCPURESET), &clkrst->crc_rst_cpug_cmplx_clr);
+	/* Take the slow and fast partitions out of reset */
+	reg = CLR_NONCPURESET;
+	writel(reg, &clkrst->crc_rst_cpulp_cmplx_clr);
+	writel(reg, &clkrst->crc_rst_cpug_cmplx_clr);
 
 	/* Clear the SW-controlled reset of the slow cluster */
-	reg = readl(&clkrst->crc_rst_cpulp_cmplx_clr);
-	reg |= (CLR_CPURESET0+CLR_DBGRESET0+CLR_CORERESET0+CLR_CXRESET0);
+	reg = (CLR_CPURESET0 + CLR_DBGRESET0 + CLR_CORERESET0 + CLR_CXRESET0);
 	writel(reg, &clkrst->crc_rst_cpulp_cmplx_clr);
 
 	/* Clear the SW-controlled reset of the fast cluster */
-	reg = readl(&clkrst->crc_rst_cpug_cmplx_clr);
-	reg |= (CLR_CPURESET0+CLR_DBGRESET0+CLR_CORERESET0+CLR_CXRESET0);
-	reg |= (CLR_CPURESET1+CLR_DBGRESET1+CLR_CORERESET1+CLR_CXRESET1);
-	reg |= (CLR_CPURESET2+CLR_DBGRESET2+CLR_CORERESET2+CLR_CXRESET2);
-	reg |= (CLR_CPURESET3+CLR_DBGRESET3+CLR_CORERESET3+CLR_CXRESET3);
+	reg = (CLR_CPURESET0 + CLR_DBGRESET0 + CLR_CORERESET0 + CLR_CXRESET0);
+	reg |= (CLR_CPURESET1 + CLR_DBGRESET1 + CLR_CORERESET1 + CLR_CXRESET1);
+	reg |= (CLR_CPURESET2 + CLR_DBGRESET2 + CLR_CORERESET2 + CLR_CXRESET2);
+	reg |= (CLR_CPURESET3 + CLR_DBGRESET3 + CLR_CORERESET3 + CLR_CXRESET3);
 	writel(reg, &clkrst->crc_rst_cpug_cmplx_clr);
+}
+
+static void t114_init_mem_ctlr(void)
+{
+	struct ahb_ctlr *ahbctlr = (struct ahb_ctlr *)NV_PA_AHB_BASE;
+	struct pmc_ctlr *pmc = (struct pmc_ctlr *)NV_PA_PMC_BASE;
+	u32 reg;
+
+	/*
+	 * Memory Aperture configuration
+	 * --------------------------------------
+	 * IROM_LOVEC, AHB_A1, IROM_HIVEC as MMIO
+	 * PCIE_A1, _A2, _A3 as DRAM
+	 * IRAM_RSVD, NOR_A1, _A2, _A3 as DRAM
+	 * VERIF_RSVD, GFX_HOST_RSVD, GART_GPU as DRAM
+	 * PPSB_RSVD, EXTIO_RSVD, APB_RSVD as DRAM
+	 * AHB_A1_RSVD, AHB_A2_RSVD as DRAM
+	 */
+	reg = 0x0001BFFE;		/* 1 = DRAM, 0 = MMIO */
+	writel(reg, &pmc->pmc_glb_amap_cfg);
+
+	/* Disable any further writes to the address map config register */
+	setbits_le32(&pmc->pmc_sec_disable, AMAP_WRITE_ON);
+
+	/* Memory Controller tuning */
+
+	/* Set up the AHB Mem Gizmo for split writes and fast rearb */
+	clrbits_le32(&ahbctlr->gizmo_ahb_mem, GIZ_DONT_SPLIT_AHB_WR);
+	setbits_le32(&ahbctlr->gizmo_ahb_mem,
+		(GIZ_ENABLE_SPLIT + GIZ_ENB_FAST_REARB));
+
+	/* Start USB AHB write requests immediately */
+	setbits_le32(&ahbctlr->gizmo_usb, GIZ_USB_IMMEDIATE);
+
+	/* Set Weak Bias for XM0, XM1, EMMC */
+	setbits_le32(&pmc->pmc_weak_bias, 0x3FF);
+
+	/* Disable MC early ACK scoreboard, T114 errata 1157520 */
+	clrbits_le32(MCB_EMEM_ARB_OVERRIDE, 2);
 }
 
 /**
@@ -187,18 +222,11 @@ void t114_init_clocks(void)
 	clock_set_enable(PERIPH_ID_CACHE2, 1);
 	clock_set_enable(PERIPH_ID_GPIO, 1);
 	clock_set_enable(PERIPH_ID_TMR, 1);
-	clock_set_enable(PERIPH_ID_RTC, 1);
 	clock_set_enable(PERIPH_ID_CPU, 1);
 	clock_set_enable(PERIPH_ID_EMC, 1);
 	clock_set_enable(PERIPH_ID_I2C5, 1);
-	clock_set_enable(PERIPH_ID_FUSE, 1);
-	clock_set_enable(PERIPH_ID_PMC, 1);
 	clock_set_enable(PERIPH_ID_APBDMA, 1);
 	clock_set_enable(PERIPH_ID_MEM, 1);
-	clock_set_enable(PERIPH_ID_IRAMA, 1);
-	clock_set_enable(PERIPH_ID_IRAMB, 1);
-	clock_set_enable(PERIPH_ID_IRAMC, 1);
-	clock_set_enable(PERIPH_ID_IRAMD, 1);
 	clock_set_enable(PERIPH_ID_CORESIGHT, 1);
 	clock_set_enable(PERIPH_ID_MSELECT, 1);
 	clock_set_enable(PERIPH_ID_EMC1, 1);
@@ -213,11 +241,14 @@ void t114_init_clocks(void)
 	clock_ll_set_source_divisor(PERIPH_ID_MSELECT, 0,
 		CLK_DIVIDER(NVBL_PLLP_KHZ, 102000));
 
+	/* Give clock time to stabilize */
+	udelay(IO_STABILIZATION_DELAY);
+
 	/* I2C5 (DVC) gets CLK_M and a divisor of 17 */
 	clock_ll_set_source_divisor(PERIPH_ID_I2C5, 3, 16);
 
-	/* Give clocks time to stabilize */
-	udelay(1000);
+	/* Give clock time to stabilize */
+	udelay(IO_STABILIZATION_DELAY);
 
 	/* Take required peripherals out of reset */
 	debug("Taking periphs out of reset\n");
@@ -227,7 +258,6 @@ void t114_init_clocks(void)
 	reset_set_enable(PERIPH_ID_COP, 0);
 	reset_set_enable(PERIPH_ID_EMC, 0);
 	reset_set_enable(PERIPH_ID_I2C5, 0);
-	reset_set_enable(PERIPH_ID_FUSE, 0);
 	reset_set_enable(PERIPH_ID_APBDMA, 0);
 	reset_set_enable(PERIPH_ID_MEM, 0);
 	reset_set_enable(PERIPH_ID_CORESIGHT, 0);
@@ -303,11 +333,18 @@ void powerup_cpus(void)
 
 void start_cpu(u32 reset_vector)
 {
+	struct pmc_ctlr *pmc = (struct pmc_ctlr *)NV_PA_PMC_BASE;
 	u32 imme, inst;
 
 	debug("start_cpu entry, reset_vector = %x\n", reset_vector);
 
 	t114_init_clocks();
+
+	t114_init_mem_ctlr();
+
+	/* Set power-gating timer multiplier */
+	clrbits_le32(&pmc->pmc_pwrgate_timer_mult, TIMER_MULT_MASK);
+	setbits_le32(&pmc->pmc_pwrgate_timer_mult, MULT_8);
 
 	/* Enable VDD_CPU */
 	enable_cpu_power_rail();
