@@ -60,7 +60,7 @@ static void boot_temp_check(void)
 	/* Status TRIPPED ans WARNING means corresponding threshold breach */
 	case TMU_STATUS_TRIPPED:
 		puts("EXYNOS_TMU: TRIPPING! Device power going down ...\n");
-		set_ps_hold_ctrl();
+		power_shutdown();
 		hang();
 		break;
 	case TMU_STATUS_WARNING:
@@ -71,6 +71,8 @@ static void boot_temp_check(void)
 	 * and TMU status was changed back from NORMAL to INIT.
 	 */
 	case TMU_STATUS_INIT:
+		debug("EXYNOS_TMU: TMU is in init state\n");
+		break;
 	default:
 		debug("EXYNOS_TMU: Unknown TMU state\n");
 	}
