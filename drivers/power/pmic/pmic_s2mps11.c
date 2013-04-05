@@ -30,9 +30,14 @@
 
 DECLARE_GLOBAL_DATA_PTR;
 
+/* Only three clocks are supported, bits d0..d2 */
+#define S2MPS11_CLOCK_MASK 7
+/* Jitter control bit in the RTC control register */
+#define S2MPS11_RTC_CTRL_JIT (1 << 4)
+
 int s2mps11_pmic_init(unsigned char bus)
 {
-	static const char name[] = "S2MPS11_PMIC";
+	static const char name[] = S2MPS11_DEVICE_NAME;
 	struct pmic *p = pmic_alloc();
 
 	if (!p) {
@@ -63,6 +68,7 @@ int s2mps11_pmic_init(unsigned char bus)
 		return -1;
 	}
 	p->hw.i2c.addr = fdtdec_get_int(blob, node, "reg", 66);
+	p->node = node;
 #else
 	p->bus = bus;
 	p->hw.i2c.addr = S2MPS11_I2C_ADDR;
@@ -77,3 +83,35 @@ int s2mps11_pmic_init(unsigned char bus)
 
 	return 0;
 }
+
+#ifdef CONFIG_OF_CONTROL
+int pmic_enable_clocks(struct pmic *ppmic)
+{
+	u32 reg;
+	int clocks = fdtdec_get_int
+		(gd->fdt_blob, ppmic->node, "u-boot-clocks", -1);
+
+	if (clocks == -1)
+		/* Not defined, leave at default. */
+		return 0;
+
+	/* Set clocks as required. */
+	I2C_SET_BUS(ppmic->bus);
+	if (pmic_reg_read(ppmic, S2MPS11_REG_RTC_CTRL, &reg)) {
+		printf("%s: Failed to read rtc_ctrl!\n", __func__);
+		return -1;
+	}
+
+	reg = (reg & ~S2MPS11_CLOCK_MASK) | (clocks & S2MPS11_CLOCK_MASK);
+
+	/* Let's enable Jitter control unconditionally. */
+	reg |= S2MPS11_RTC_CTRL_JIT;
+
+	if (pmic_reg_write(ppmic, S2MPS11_REG_RTC_CTRL, reg)) {
+		printf("%s: Failed to write rtc_ctrl!\n", __func__);
+		return -1;
+	}
+
+	return 0;
+}
+#endif
