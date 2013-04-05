@@ -96,8 +96,9 @@ static unsigned int exynos_dp_read_edid(void)
 	 */
 
 	/* Read Extension Flag, Number of 128-byte EDID extension blocks */
-	exynos_dp_read_byte_from_i2c(I2C_EDID_DEVICE_ADDR, EDID_EXTENSION_FLAG,
-			&extend_block);
+	if (exynos_dp_read_byte_from_i2c
+	    (I2C_EDID_DEVICE_ADDR, EDID_EXTENSION_FLAG, &extend_block))
+		return -1;
 
 	if (extend_block > 0) {
 		printf("DP EDID data includes a single extension!\n");

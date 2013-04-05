@@ -736,7 +736,7 @@ int exynos_dp_select_i2c_device(unsigned int device_addr,
 	/* Start AUX transaction */
 	retval = exynos_dp_start_aux_transaction();
 	if (retval != 0)
-		printf("%s: DP Aux Transaction fail!\n", __func__);
+		debug("%s: DP Aux Transaction fail!\n", __func__);
 
 	return retval;
 }
@@ -757,7 +757,7 @@ int exynos_dp_read_byte_from_i2c(unsigned int device_addr,
 		/* Select EDID device */
 		retval = exynos_dp_select_i2c_device(device_addr, reg_addr);
 		if (retval != 0) {
-			printf("DP Select EDID device fail. retry !\n");
+			debug("DP Select EDID device fail. retry !\n");
 			continue;
 		}
 
@@ -773,7 +773,7 @@ int exynos_dp_read_byte_from_i2c(unsigned int device_addr,
 		/* Start AUX transaction */
 		retval = exynos_dp_start_aux_transaction();
 		if (retval != EXYNOS_DP_SUCCESS)
-			printf("%s: DP Aux Transaction fail!\n", __func__);
+			debug("%s: DP Aux Transaction fail!\n", __func__);
 	}
 
 	/* Read data */
