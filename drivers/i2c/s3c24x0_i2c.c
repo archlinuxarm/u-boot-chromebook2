@@ -333,6 +333,25 @@ static void hsi2c_ch_init(struct s3c24x0_i2c_bus *i2c_bus)
 	writel(i2c_timing_sla, &hsregs->usi_timing_sla);
 }
 
+/* SW reset for the high speed bus */
+static void exynos5_i2c_reset(struct s3c24x0_i2c_bus *i2c_bus)
+{
+	struct exynos5_hsi2c *i2c = i2c_bus->hsregs;
+	u32 i2c_ctl;
+
+	/* Set and clear the bit for reset */
+	i2c_ctl = readl(&i2c->usi_ctl);
+	i2c_ctl |= HSI2C_SW_RST;
+	writel(i2c_ctl, &i2c->usi_ctl);
+
+	i2c_ctl = readl(&i2c->usi_ctl);
+	i2c_ctl &= ~HSI2C_SW_RST;
+	writel(i2c_ctl, &i2c->usi_ctl);
+
+	/* Initialize the configure registers */
+	hsi2c_ch_init(i2c_bus);
+}
+
 /*
  * MULTI BUS I2C support
  */
@@ -834,6 +853,7 @@ int i2c_read(uchar chip, uint addr, int alen, uchar *buffer, int len)
 
 	board_i2c_release_bus(i2c_bus->node);
 	if (ret) {
+		exynos5_i2c_reset(i2c_bus);
 		debug("I2c read: failed %d\n", ret);
 		return 1;
 	}
@@ -890,7 +910,12 @@ int i2c_write(uchar chip, uint addr, int alen, uchar *buffer, int len)
 
 	board_i2c_release_bus(i2c_bus->node);
 
-	return ret != 0;
+	if (ret != 0) {
+		exynos5_i2c_reset(i2c_bus);
+		return 1;
+	} else {
+		return 0;
+	}
 }
 
 static void process_nodes(const void *blob, int node_list[], int count,
