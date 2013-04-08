@@ -35,6 +35,12 @@ enum clock_osc_freq {
 	CLOCK_OSC_FREQ_COUNT,
 };
 
+enum {
+	MASK_BITS_31_30 = 2,	/* num of bits used to specify clock source */
+	MASK_BITS_31_29,
+	MASK_BITS_29_28,
+};
+
 #include <asm/arch/clock-tables.h>
 /* PLL stabilization delay in usec */
 #define CLOCK_PLL_STABLE_DELAY_US 300
@@ -319,5 +325,16 @@ int clock_set_rate(enum clock_id clkid, u32 n, u32 m, u32 p, u32 cpcon);
 
 /* SoC-specific TSC init */
 void arch_timer_init(void);
+
+/**
+ * Enable a peripheral clock with a certain clock source/divisor
+ *
+ * @param periph_id     peripheral to enable/change
+ * @param src           PLL id of required parent clock
+ * @param divisor       required integer divisor (not 7.1)
+ * @return 0 if ok
+ *        -1 on error (bad divisor, etc.).
+ */
+int clock_periph_enable(enum periph_id pid, int src, int divisor);
 
 #endif  /* _TEGRA_CLOCK_H_ */

@@ -304,13 +304,24 @@ static int adjust_periph_pll(enum periph_id periph_id, int source,
 	/* work out the source clock and set it */
 	if (source < 0)
 		return -1;
-	if (mux_bits == 4) {
-		clrsetbits_le32(reg, OUT_CLK_SOURCE4_MASK,
-			source << OUT_CLK_SOURCE4_SHIFT);
-	} else {
+
+	switch (mux_bits) {
+	case MASK_BITS_31_30:
 		clrsetbits_le32(reg, OUT_CLK_SOURCE_MASK,
 			source << OUT_CLK_SOURCE_SHIFT);
+		break;
+
+	case MASK_BITS_31_29:
+		clrsetbits_le32(reg, OUT_CLK_SOURCE3_MASK,
+			source << OUT_CLK_SOURCE3_SHIFT);
+		break;
+
+	case MASK_BITS_29_28:
+		clrsetbits_le32(reg, OUT_CLK_SOURCE4_MASK,
+			source << OUT_CLK_SOURCE4_SHIFT);
+		break;
 	}
+
 	udelay(2);
 	return 0;
 }
@@ -560,4 +571,37 @@ void clock_init(void)
 
 	/* Do any special system timer/TSC setup */
 	arch_timer_init();
+}
+
+int clock_periph_enable(enum periph_id periph_id, enum clock_id parent,
+		int divisor)
+{
+	int mux_bits, divider_bits, source;
+
+	/* Assert reset and enable clock */
+	reset_set_enable(periph_id, 1);
+	clock_enable(periph_id);
+
+	/* work out the source clock and set it */
+	source = get_periph_clock_source(periph_id, parent, &mux_bits,
+					 &divider_bits);
+
+	assert(divisor >= 0);
+	divisor = (divisor - 1) << 1;
+	debug("%s: source %d, mux_bits %d, divider_bits %d, raw divisor = %x\n",
+		__func__, source, mux_bits, divider_bits, divisor);
+
+	if (adjust_periph_pll(periph_id, source, mux_bits, divisor))
+		return -1;
+
+	debug("%s: periph %d, parent=%d, reg=%p = %x\n", __func__,
+		periph_id, parent, get_periph_source_reg(periph_id),
+		readl(get_periph_source_reg(periph_id)));
+
+	/* wait for 2us */
+	udelay(2);
+
+	/* De-assert reset */
+	reset_set_enable(periph_id, 0);
+	return 0;
 }
