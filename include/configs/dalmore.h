@@ -75,6 +75,9 @@
 #define CONFIG_CMD_SF
 #define CONFIG_SPI_FLASH_SIZE          (4 << 20)
 
+/* Backlight enable GPIO. TBD - move to DT when LCD driver added */
+#define DSI_PANEL_BL_EN_GPIO		GPIO_PH2
+
 #include "tegra-common-post.h"
 
 #endif /* __CONFIG_H */

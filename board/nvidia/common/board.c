@@ -149,7 +149,6 @@ int board_init(void)
 	gd->bd->bi_boot_params = (NV_PA_SDRAM_BASE + 0x100);
 
 	power_det_init();
-
 #ifdef CONFIG_TEGRA_I2C
 #ifndef CONFIG_SYS_I2C_INIT_BOARD
 #error "You must define CONFIG_SYS_I2C_INIT_BOARD to use i2c on Nvidia boards"
@@ -166,6 +165,10 @@ int board_init(void)
 # endif /* CONFIG_TEGRA_PMU */
 #endif /* CONFIG_TEGRA_I2C */
 
+#ifdef CONFIG_TEGRA114
+	/* Enable needed power rails. TBD: Move to kernel or driver init. */
+	board_vreg_init();
+#endif
 #ifdef CONFIG_USB_EHCI_TEGRA
 	pin_mux_usb();
 	board_usb_init(gd->fdt_blob);
