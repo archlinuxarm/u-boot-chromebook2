@@ -43,6 +43,8 @@
 DECLARE_GLOBAL_DATA_PTR;
 
 #ifdef CONFIG_LCD
+/* TODO: Move these LCD initialization settings out of board file */
+#ifdef CONFIG_CHROMEOS_PEACH
 int anx1120_initialize(unsigned int i2c_bus)
 {
 	static const struct {
@@ -127,13 +129,33 @@ void exynos_lcd_power_on(void)
 	tps65090_fet_enable(6);
 }
 
-void exynos_cfg_lcd_gpio(void)
+void exynos_backlight_on(unsigned int onoff)
 {
+	struct exynos5420_gpio_part1 *gpio1 =
+		(struct exynos5420_gpio_part1 *) samsung_get_base_gpio_part1();
+
 	struct exynos5420_gpio_part2 *gpio2 =
 		(struct exynos5420_gpio_part2 *) samsung_get_base_gpio_part2();
 
-	/* Set Hotplug detect for DP */
-	s5p_gpio_cfg_pin(&gpio2->x0, 7, GPIO_FUNC(0x3));
+	/* For PWM */
+	s5p_gpio_cfg_pin(&gpio1->b2, 0, GPIO_OUTPUT);
+	s5p_gpio_set_value(&gpio1->b2, 0, onoff);
+
+	tps65090_fet_enable(1);
+
+	/* LED backlight reset */
+	s5p_gpio_cfg_pin(&gpio2->x3, 0, GPIO_OUTPUT);
+	s5p_gpio_set_value(&gpio2->x3, 0, onoff);
+}
+#else
+void exynos_lcd_power_on(void)
+{
+	struct exynos5420_gpio_part1 *gpio1 =
+		(struct exynos5420_gpio_part1 *) samsung_get_base_gpio_part1();
+
+	/* LCD_EN */
+	s5p_gpio_cfg_pin(&gpio1->h0, 7, GPIO_OUTPUT);
+	s5p_gpio_set_value(&gpio1->h0, 7, 1);
 }
 
 void exynos_backlight_on(unsigned int onoff)
@@ -144,15 +166,23 @@ void exynos_backlight_on(unsigned int onoff)
 	struct exynos5420_gpio_part2 *gpio2 =
 		(struct exynos5420_gpio_part2 *) samsung_get_base_gpio_part2();
 
-	/* For Backlight */
+	/* For PWM */
 	s5p_gpio_cfg_pin(&gpio1->b2, 0, GPIO_OUTPUT);
 	s5p_gpio_set_value(&gpio1->b2, 0, onoff);
 
-	tps65090_fet_enable(1);
+	/* BL_EN */
+	s5p_gpio_cfg_pin(&gpio2->x1, 5, GPIO_OUTPUT);
+	s5p_gpio_set_value(&gpio2->x1, 5, 1);
+}
+#endif
 
-	/* LED backlight reset */
-	s5p_gpio_cfg_pin(&gpio2->x3, 0, GPIO_OUTPUT);
-	s5p_gpio_set_value(&gpio2->x3, 0, onoff);
+void exynos_cfg_lcd_gpio(void)
+{
+	struct exynos5420_gpio_part2 *gpio2 =
+		(struct exynos5420_gpio_part2 *) samsung_get_base_gpio_part2();
+
+	/* Set Hotplug detect for DP */
+	s5p_gpio_cfg_pin(&gpio2->x0, 7, GPIO_FUNC(0x3));
 }
 
 void init_panel_info(vidinfo_t *vid)
