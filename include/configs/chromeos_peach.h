@@ -52,10 +52,6 @@
 #define RPLL_SDIV		0x4
 #define CONFIG_EXYNOS_FB
 #define CONFIG_EXYNOS_DP
-#undef LCD_XRES
-#undef LCD_YRES
-#define LCD_XRES			1366
-#define LCD_YRES			768
 #define LCD_BPP			LCD_COLOR16
 
 #endif	/* __CONFIG_CHROMEOS_PEACH_H */
