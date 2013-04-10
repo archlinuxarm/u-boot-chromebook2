@@ -105,7 +105,13 @@ int tegra_get_chip_sku(void)
 static void enable_scu(void)
 {
 	struct scu_ctlr *scu = (struct scu_ctlr *)NV_PA_ARM_PERIPHBASE;
+	int soc;
 	u32 reg;
+
+	/* Only enable the SCU on T20/T25 */
+	soc = tegra_get_chip_sku();
+	if (soc != TEGRA_SOC_T20 && soc != TEGRA_SOC_T25)
+		return;
 
 	/* If SCU already setup/enabled, return */
 	if (readl(&scu->scu_ctrl) & SCU_CTRL_ENABLE)
