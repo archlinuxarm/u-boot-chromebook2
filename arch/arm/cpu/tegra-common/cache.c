@@ -27,10 +27,23 @@ void config_cache(void)
 		(struct apb_misc_gp_ctlr *)NV_PA_APB_MISC_GP_BASE;
 	u32 reg = 0;
 
-	/* enable SMP mode and FW for CPU0, by writing to Auxiliary Ctl reg */
+	/* Get the number of architectural cache levels */
 	asm volatile(
+		"mrc p15, 1, r0, c0, c0, 0\n"	/* get CLIDR */
+		"lsr r0, r0, #24\n"		/* levels = CLIDR bits 26:24 */
+		"and r1, r0, #0x7\n"		/* save to r1 */
+
+		/* enable SMP mode in Aux Ctl reg for all chips */
 		"mrc p15, 0, r0, c1, c0, 1\n"
-		"orr r0, r0, #0x41\n"
+		"orr r0, r0, #0x40\n"		/* ACTLR.SMP, bit 6 */
+		"cmp r1, #0x1\n"		/* check number of levels */
+
+		/*
+		 * if levels == 1, enable maintenance operation
+		 * broadcast (FW) on systems with only a single level
+		 * of architectural cache.
+		 */
+		"orreq r0, r0, #1\n"		/* ACTLR.FW, bit 0 */
 		"mcr p15, 0, r0, c1, c0, 1\n");
 
 	/* Currently, only T114 needs this L2 cache change to boot Linux */
@@ -41,8 +54,9 @@ void config_cache(void)
 	 * Systems with an architectural L2 cache must not use the PL310.
 	 * Config L2CTLR here for a data RAM latency of 3 cycles.
 	 */
-	asm("mrc p15, 1, %0, c9, c0, 2" : : "r" (reg));
-	reg &= ~7;
-	reg |= 2;
-	asm("mcr p15, 1, %0, c9, c0, 2" : : "r" (reg));
+	asm volatile(
+		"mrc p15, 1, r1, c9, c0, 2\n"
+		"and r1, r1, #0xFFFFFFF8\n"
+		"orr r1, r1, #2\n"
+		"mcr p15, 1, r1, c9, c0, 2\n");
 }
