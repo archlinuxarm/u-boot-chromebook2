@@ -29,38 +29,31 @@
 
 static void exynos5_uart_config(int peripheral)
 {
-	struct exynos5_gpio_part1 *gpio1 =
-		(struct exynos5_gpio_part1 *) samsung_get_base_gpio_part1();
-	struct s5p_gpio_bank *bank;
 	int i, start, count;
 
 	switch (peripheral) {
 	case PERIPH_ID_UART0:
-		bank = &gpio1->a0;
-		start = 0;
+		start = EXYNOS5_GPIO_A00;
 		count = 4;
 		break;
 	case PERIPH_ID_UART1:
-		bank = &gpio1->d0;
-		start = 0;
+		start = EXYNOS5_GPIO_D00;
 		count = 4;
 		break;
 	case PERIPH_ID_UART2:
-		bank = &gpio1->a1;
-		start = 0;
+		start = EXYNOS5_GPIO_A10;
 		count = 4;
 		break;
 	case PERIPH_ID_UART3:
-		bank = &gpio1->a1;
-		start = 4;
+		start = EXYNOS5_GPIO_A14;
 		count = 2;
 		break;
 	default:
 		return;
 	}
 	for (i = start; i < start + count; i++) {
-		s5p_gpio_set_pull(bank, i, GPIO_PULL_NONE);
-		s5p_gpio_cfg_pin(bank, i, GPIO_FUNC(0x2));
+		gpio_set_pull(i, GPIO_PULL_NONE);
+		gpio_cfg_pin(i, GPIO_FUNC(0x2));
 	}
 }
 
@@ -101,56 +94,51 @@ static void exynos5420_uart_config(int peripheral)
 
 static int exynos5_mmc_config(int peripheral, int flags)
 {
-	struct exynos5_gpio_part1 *gpio1 =
-		(struct exynos5_gpio_part1 *) samsung_get_base_gpio_part1();
-	struct s5p_gpio_bank *bank, *bank_ext;
-	int i, start = 0, gpio_func = 0;
+	int i, start, start_ext, gpio_func = 0;
 
 	switch (peripheral) {
 	case PERIPH_ID_SDMMC0:
-		bank = &gpio1->c0;
-		bank_ext = &gpio1->c1;
-		start = 0;
+		start = EXYNOS5_GPIO_C00;
+		start_ext = EXYNOS5_GPIO_C10;
 		gpio_func = GPIO_FUNC(0x2);
 		break;
 	case PERIPH_ID_SDMMC1:
-		bank = &gpio1->c2;
-		bank_ext = NULL;
+		start = EXYNOS5_GPIO_C20;
+		start_ext = 0;
 		break;
 	case PERIPH_ID_SDMMC2:
-		bank = &gpio1->c3;
-		bank_ext = &gpio1->c4;
-		start = 3;
+		start = EXYNOS5_GPIO_C30;
+		start_ext = EXYNOS5_GPIO_C43;
 		gpio_func = GPIO_FUNC(0x3);
 		break;
 	case PERIPH_ID_SDMMC3:
-		bank = &gpio1->c4;
-		bank_ext = NULL;
+		start = EXYNOS5_GPIO_C40;
+		start_ext = 0;
 		break;
 	default:
 		return -1;
 	}
-	if ((flags & PINMUX_FLAG_8BIT_MODE) && !bank_ext) {
+	if ((flags & PINMUX_FLAG_8BIT_MODE) && !start_ext) {
 		debug("SDMMC device %d does not support 8bit mode",
 				peripheral);
 		return -1;
 	}
 	if (flags & PINMUX_FLAG_8BIT_MODE) {
-		for (i = start; i <= (start + 3); i++) {
-			s5p_gpio_cfg_pin(bank_ext, i, gpio_func);
-			s5p_gpio_set_pull(bank_ext, i, GPIO_PULL_UP);
-			s5p_gpio_set_drv(bank_ext, i, GPIO_DRV_4X);
+		for (i = start_ext; i <= (start_ext + 3); i++) {
+			gpio_cfg_pin(i, gpio_func);
+			gpio_set_pull(i, GPIO_PULL_UP);
+			gpio_set_drv(i, GPIO_DRV_4X);
 		}
 	}
 	for (i = 0; i < 2; i++) {
-		s5p_gpio_cfg_pin(bank, i, GPIO_FUNC(0x2));
-		s5p_gpio_set_pull(bank, i, GPIO_PULL_NONE);
-		s5p_gpio_set_drv(bank, i, GPIO_DRV_4X);
+		gpio_cfg_pin(start + i, GPIO_FUNC(0x2));
+		gpio_set_pull(start + i, GPIO_PULL_NONE);
+		gpio_set_drv(start + i, GPIO_DRV_4X);
 	}
 	for (i = 3; i <= 6; i++) {
-		s5p_gpio_cfg_pin(bank, i, GPIO_FUNC(0x2));
-		s5p_gpio_set_pull(bank, i, GPIO_PULL_UP);
-		s5p_gpio_set_drv(bank, i, GPIO_DRV_4X);
+		gpio_cfg_pin(start + i, GPIO_FUNC(0x2));
+		gpio_set_pull(start + i, GPIO_PULL_UP);
+		gpio_set_drv(start + i, GPIO_DRV_4X);
 	}
 
 	return 0;
@@ -214,8 +202,6 @@ static int exynos5420_mmc_config(int peripheral, int flags)
 
 static void exynos5_sromc_config(int flags)
 {
-	struct exynos5_gpio_part1 *gpio1 =
-		(struct exynos5_gpio_part1 *) samsung_get_base_gpio_part1();
 	int i;
 
 	/*
@@ -233,13 +219,13 @@ static void exynos5_sromc_config(int flags)
 	 * GPY1[2]	SROM_WAIT(2)
 	 * GPY1[3]	EBI_DATA_RDn(2)
 	 */
-	s5p_gpio_cfg_pin(&gpio1->y0, (flags & PINMUX_FLAG_BANK),
-				GPIO_FUNC(2));
-	s5p_gpio_cfg_pin(&gpio1->y0, 4, GPIO_FUNC(2));
-	s5p_gpio_cfg_pin(&gpio1->y0, 5, GPIO_FUNC(2));
+	gpio_cfg_pin(EXYNOS5_GPIO_Y00 + (flags & PINMUX_FLAG_BANK),
+		     GPIO_FUNC(2));
+	gpio_cfg_pin(EXYNOS5_GPIO_Y04, GPIO_FUNC(2));
+	gpio_cfg_pin(EXYNOS5_GPIO_Y05, GPIO_FUNC(2));
 
 	for (i = 0; i < 4; i++)
-		s5p_gpio_cfg_pin(&gpio1->y1, i, GPIO_FUNC(2));
+		gpio_cfg_pin(EXYNOS5_GPIO_Y10 + i, GPIO_FUNC(2));
 
 	/*
 	 * EBI: 8 Addrss Lines
@@ -274,55 +260,52 @@ static void exynos5_sromc_config(int flags)
 	 * GPY6[7]	EBI_DATA[15](2)
 	 */
 	for (i = 0; i < 8; i++) {
-		s5p_gpio_cfg_pin(&gpio1->y3, i, GPIO_FUNC(2));
-		s5p_gpio_set_pull(&gpio1->y3, i, GPIO_PULL_UP);
+		gpio_cfg_pin(EXYNOS5_GPIO_Y30 + i, GPIO_FUNC(2));
+		gpio_set_pull(EXYNOS5_GPIO_Y30 + i, GPIO_PULL_UP);
 
-		s5p_gpio_cfg_pin(&gpio1->y5, i, GPIO_FUNC(2));
-		s5p_gpio_set_pull(&gpio1->y5, i, GPIO_PULL_UP);
+		gpio_cfg_pin(EXYNOS5_GPIO_Y50 + i, GPIO_FUNC(2));
+		gpio_set_pull(EXYNOS5_GPIO_Y50 + i, GPIO_PULL_UP);
 
-		s5p_gpio_cfg_pin(&gpio1->y6, i, GPIO_FUNC(2));
-		s5p_gpio_set_pull(&gpio1->y6, i, GPIO_PULL_UP);
+		gpio_cfg_pin(EXYNOS5_GPIO_Y60 + i, GPIO_FUNC(2));
+		gpio_set_pull(EXYNOS5_GPIO_Y60 + i, GPIO_PULL_UP);
 	}
 }
 
 static void exynos5_i2c_config(int peripheral, int flags)
 {
 
-	struct exynos5_gpio_part1 *gpio1 =
-		(struct exynos5_gpio_part1 *) samsung_get_base_gpio_part1();
-
 	switch (peripheral) {
 	case PERIPH_ID_I2C0:
-		s5p_gpio_cfg_pin(&gpio1->b3, 0, GPIO_FUNC(0x2));
-		s5p_gpio_cfg_pin(&gpio1->b3, 1, GPIO_FUNC(0x2));
+		gpio_cfg_pin(EXYNOS5_GPIO_B30, GPIO_FUNC(0x2));
+		gpio_cfg_pin(EXYNOS5_GPIO_B31, GPIO_FUNC(0x2));
 		break;
 	case PERIPH_ID_I2C1:
-		s5p_gpio_cfg_pin(&gpio1->b3, 2, GPIO_FUNC(0x2));
-		s5p_gpio_cfg_pin(&gpio1->b3, 3, GPIO_FUNC(0x2));
+		gpio_cfg_pin(EXYNOS5_GPIO_B32, GPIO_FUNC(0x2));
+		gpio_cfg_pin(EXYNOS5_GPIO_B33, GPIO_FUNC(0x2));
 		break;
 	case PERIPH_ID_I2C2:
-		s5p_gpio_cfg_pin(&gpio1->a0, 6, GPIO_FUNC(0x3));
-		s5p_gpio_cfg_pin(&gpio1->a0, 7, GPIO_FUNC(0x3));
+		gpio_cfg_pin(EXYNOS5_GPIO_A06, GPIO_FUNC(0x3));
+		gpio_cfg_pin(EXYNOS5_GPIO_A07, GPIO_FUNC(0x3));
 		break;
 	case PERIPH_ID_I2C3:
-		s5p_gpio_cfg_pin(&gpio1->a1, 2, GPIO_FUNC(0x3));
-		s5p_gpio_cfg_pin(&gpio1->a1, 3, GPIO_FUNC(0x3));
+		gpio_cfg_pin(EXYNOS5_GPIO_A12, GPIO_FUNC(0x3));
+		gpio_cfg_pin(EXYNOS5_GPIO_A13, GPIO_FUNC(0x3));
 		break;
 	case PERIPH_ID_I2C4:
-		s5p_gpio_cfg_pin(&gpio1->a2, 0, GPIO_FUNC(0x3));
-		s5p_gpio_cfg_pin(&gpio1->a2, 1, GPIO_FUNC(0x3));
+		gpio_cfg_pin(EXYNOS5_GPIO_A20, GPIO_FUNC(0x3));
+		gpio_cfg_pin(EXYNOS5_GPIO_A21, GPIO_FUNC(0x3));
 		break;
 	case PERIPH_ID_I2C5:
-		s5p_gpio_cfg_pin(&gpio1->a2, 2, GPIO_FUNC(0x3));
-		s5p_gpio_cfg_pin(&gpio1->a2, 3, GPIO_FUNC(0x3));
+		gpio_cfg_pin(EXYNOS5_GPIO_A22, GPIO_FUNC(0x3));
+		gpio_cfg_pin(EXYNOS5_GPIO_A23, GPIO_FUNC(0x3));
 		break;
 	case PERIPH_ID_I2C6:
-		s5p_gpio_cfg_pin(&gpio1->b1, 3, GPIO_FUNC(0x4));
-		s5p_gpio_cfg_pin(&gpio1->b1, 4, GPIO_FUNC(0x4));
+		gpio_cfg_pin(EXYNOS5_GPIO_B13, GPIO_FUNC(0x4));
+		gpio_cfg_pin(EXYNOS5_GPIO_B14, GPIO_FUNC(0x4));
 		break;
 	case PERIPH_ID_I2C7:
-		s5p_gpio_cfg_pin(&gpio1->b2, 2, GPIO_FUNC(0x3));
-		s5p_gpio_cfg_pin(&gpio1->b2, 3, GPIO_FUNC(0x3));
+		gpio_cfg_pin(EXYNOS5_GPIO_B22, GPIO_FUNC(0x3));
+		gpio_cfg_pin(EXYNOS5_GPIO_B23, GPIO_FUNC(0x3));
 		break;
 	default:
 		return;
@@ -386,47 +369,36 @@ static void exynos5420_i2c_config(int peripheral, int flags)
 static void exynos5_i2s_config(int peripheral)
 {
 	int i;
-	struct exynos5_gpio_part1 *gpio1 =
-		(struct exynos5_gpio_part1 *) samsung_get_base_gpio_part1();
 
 	for (i = 0; i < 5; i++)
-		s5p_gpio_cfg_pin(&gpio1->b0, i, GPIO_FUNC(0x02));
+		gpio_cfg_pin(EXYNOS5_GPIO_B00+i, GPIO_FUNC(0x02));
 }
 
 void exynos5_spi_config(int peripheral)
 {
 	int cfg = 0, pin = 0, i;
-	struct s5p_gpio_bank *bank = NULL;
-	struct exynos5_gpio_part1 *gpio1 =
-		(struct exynos5_gpio_part1 *) samsung_get_base_gpio_part1();
-	struct exynos5_gpio_part2 *gpio2 =
-		(struct exynos5_gpio_part2 *) samsung_get_base_gpio_part2();
 
 	switch (peripheral) {
 	case PERIPH_ID_SPI0:
-		bank = &gpio1->a2;
 		cfg = GPIO_FUNC(0x2);
-		pin = 0;
+		pin = EXYNOS5_GPIO_A20;
 		break;
 	case PERIPH_ID_SPI1:
-		bank = &gpio1->a2;
 		cfg = GPIO_FUNC(0x2);
-		pin = 4;
+		pin = EXYNOS5_GPIO_A24;
 		break;
 	case PERIPH_ID_SPI2:
-		bank = &gpio1->b1;
 		cfg = GPIO_FUNC(0x5);
-		pin = 1;
+		pin = EXYNOS5_GPIO_B11;
 		break;
 	case PERIPH_ID_SPI3:
-		bank = &gpio2->f1;
 		cfg = GPIO_FUNC(0x2);
-		pin = 0;
+		pin = EXYNOS5_GPIO_F10;
 		break;
 	case PERIPH_ID_SPI4:
 		for (i = 0; i < 2; i++) {
-			s5p_gpio_cfg_pin(&gpio2->f0, i + 2, GPIO_FUNC(0x4));
-			s5p_gpio_cfg_pin(&gpio2->e0, i + 4, GPIO_FUNC(0x4));
+			gpio_cfg_pin(EXYNOS5_GPIO_F02 + i, GPIO_FUNC(0x4));
+			gpio_cfg_pin(EXYNOS5_GPIO_E04 + i, GPIO_FUNC(0x4));
 		}
 		break;
 	default:
@@ -434,7 +406,7 @@ void exynos5_spi_config(int peripheral)
 	}
 	if (peripheral != PERIPH_ID_SPI4) {
 		for (i = pin; i < pin + 4; i++)
-			s5p_gpio_cfg_pin(bank, i, cfg);
+			gpio_cfg_pin(i, cfg);
 	}
 }
 

@@ -46,11 +46,8 @@ DECLARE_GLOBAL_DATA_PTR;
 #ifdef CONFIG_USB_EHCI_EXYNOS
 int board_usb_vbus_init(void)
 {
-	struct exynos5_gpio_part1 *gpio1 = (struct exynos5_gpio_part1 *)
-						samsung_get_base_gpio_part1();
-
 	/* Enable VBUS power switch */
-	s5p_gpio_direction_output(&gpio1->x1, 1, 1);
+	gpio_direction_output(EXYNOS5_GPIO_X26, 1);
 
 	/* VBUS turn ON time */
 	mdelay(3);
@@ -62,12 +59,9 @@ int board_usb_vbus_init(void)
 #ifdef CONFIG_SOUND_MAX98095
 int board_enable_audio_codec(void)
 {
-	struct exynos5_gpio_part1 *gpio1 = (struct exynos5_gpio_part1 *)
-						samsung_get_base_gpio_part1();
-
 	/* Enable MAX98095 Codec */
-	s5p_gpio_direction_output(&gpio1->x1, 7, 1);
-	s5p_gpio_set_pull(&gpio1->x1, 7, GPIO_PULL_NONE);
+	gpio_direction_output(EXYNOS5_GPIO_X17, 1);
+	gpio_set_pull(EXYNOS5_GPIO_X17, GPIO_PULL_NONE);
 
 	return 0;
 }
@@ -190,19 +184,16 @@ int board_mmc_init(bd_t *bis)
 #ifdef CONFIG_EXYNOS5250
 void exynos_cfg_lcd_gpio(void)
 {
-	struct exynos5_gpio_part1 *gpio1 =
-		(struct exynos5_gpio_part1 *)samsung_get_base_gpio_part1();
-
 	/* For Backlight */
-	s5p_gpio_cfg_pin(&gpio1->b2, 0, GPIO_OUTPUT);
-	s5p_gpio_set_value(&gpio1->b2, 0, 1);
+	gpio_cfg_pin(EXYNOS5_GPIO_B20, GPIO_OUTPUT);
+	gpio_set_value(EXYNOS5_GPIO_B20, 1);
 
 	/* LCD power on */
-	s5p_gpio_cfg_pin(&gpio1->x1, 5, GPIO_OUTPUT);
-	s5p_gpio_set_value(&gpio1->x1, 5, 1);
+	gpio_cfg_pin(EXYNOS5_GPIO_X15, GPIO_OUTPUT);
+	gpio_set_value(EXYNOS5_GPIO_X15, 1);
 
 	/* Set Hotplug detect for DP */
-	s5p_gpio_cfg_pin(&gpio1->x0, 7, GPIO_FUNC(0x3));
+	gpio_cfg_pin(EXYNOS5_GPIO_X07, GPIO_FUNC(0x3));
 }
 #endif
 

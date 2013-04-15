@@ -142,14 +142,26 @@ void s5p_gpio_set_rate(struct s5p_gpio_bank *bank, int gpio, int mode)
 	writel(value, &bank->drv);
 }
 
-struct s5p_gpio_bank *s5p_gpio_get_bank(unsigned gpio)
+static struct s5p_gpio_bank *s5p_gpio_get_bank(unsigned int gpio)
 {
-	int bank;
-	unsigned g = gpio - s5p_gpio_part_max(gpio);
+	const struct gpio_info *data;
+	unsigned int upto;
+	int i, count;
 
-	bank = g / GPIO_PER_BANK;
-	bank *= sizeof(struct s5p_gpio_bank);
-	return (struct s5p_gpio_bank *) (s5p_gpio_base(gpio) + bank);
+	data = get_gpio_data();
+	count = get_bank_num();
+	for (i = upto = 0; i < count;
+			i++, upto = data->max_gpio, data++) {
+		debug("i=%d, upto=%d\n", i, upto);
+		if (gpio < data->max_gpio) {
+			struct s5p_gpio_bank *bank;
+			bank = (struct s5p_gpio_bank *)data->reg_addr;
+			bank += (gpio - upto) / GPIO_PER_BANK;
+			debug("gpio=%d, bank=%p\n", gpio, bank);
+			return bank;
+		}
+	}
+	return NULL;
 }
 
 int s5p_gpio_get_pin(unsigned gpio)
@@ -200,19 +212,19 @@ int gpio_set_value(unsigned gpio, int value)
 void gpio_set_pull(int gpio, int value)
 {
 	s5p_gpio_set_pull(s5p_gpio_get_bank(gpio),
-				 s5p_gpio_get_pin(gpio), value);
+			  s5p_gpio_get_pin(gpio), value);
 }
 
 void gpio_cfg_pin(int gpio, int cfg)
 {
-	s5p_gpio_set_pull(s5p_gpio_get_bank(gpio),
-				 s5p_gpio_get_pin(gpio), cfg);
+	s5p_gpio_cfg_pin(s5p_gpio_get_bank(gpio),
+			 s5p_gpio_get_pin(gpio), cfg);
 }
 
-void gpio_set_drv(int gpio, int drive)
+void gpio_set_drv(int gpio, int drv)
 {
 	s5p_gpio_set_drv(s5p_gpio_get_bank(gpio),
-				 s5p_gpio_get_pin(gpio), drive);
+			 s5p_gpio_get_pin(gpio), drv);
 }
 
 /*
