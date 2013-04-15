@@ -36,6 +36,21 @@
 #define RATE_MASK(x)		(0x1 << (x + 16))
 #define RATE_SET(x)		(0x1 << (x + 16))
 
+struct gpio_name_num_table exynos5_gpio_table[] = {
+	{ 'a', EXYNOS5_GPIO_A00 },
+	{ 'b', EXYNOS5_GPIO_B00 },
+	{ 'c', EXYNOS5_GPIO_C00 },
+	{ 'd', EXYNOS5_GPIO_D00 },
+	{ 'y', EXYNOS5_GPIO_Y00 },
+	{ 'x', EXYNOS5_GPIO_X00 },
+	{ 'e', EXYNOS5_GPIO_E00 },
+	{ 'f', EXYNOS5_GPIO_F00 },
+	{ 'g', EXYNOS5_GPIO_G00 },
+	{ 'h', EXYNOS5_GPIO_H00 },
+	{ 'v', EXYNOS5_GPIO_V00 },
+	{ 'z', EXYNOS5_GPIO_Z0 },
+};
+
 void s5p_gpio_cfg_pin(struct s5p_gpio_bank *bank, int gpio, int cfg)
 {
 	unsigned int value;
@@ -268,4 +283,38 @@ int gpio_decode_number(unsigned gpio_list[], int count)
 	}
 
 	return result;
+}
+
+int s5p_name_to_gpio(const char *name)
+{
+	unsigned int num, i;
+
+	name++;
+
+	if (*name == 'p')
+		++name;
+
+	for (i = 0; i < ARRAY_SIZE(exynos5_gpio_table); i++) {
+		if (*name == exynos5_gpio_table[i].bank) {
+			if (*name == 'c') {
+				name++;
+				num = simple_strtoul(name, NULL, 10);
+				if (num >= 40) {
+					num = EXYNOS5_GPIO_C40 + (num - 40);
+				} else {
+					num = simple_strtoul(name, NULL, 8);
+					num = exynos5_gpio_table[i].base + num;
+				}
+			} else {
+				name++;
+				num = simple_strtoul(name, NULL, 8);
+				num = exynos5_gpio_table[i].base + num;
+			}
+			break;
+		}
+	}
+
+	if (i == ARRAY_SIZE(exynos5_gpio_table))
+		return -1;
+	return num;
 }

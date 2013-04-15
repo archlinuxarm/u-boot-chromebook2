@@ -714,6 +714,14 @@ static inline unsigned int get_bank_num(void)
 		return 0;
 }
 
+struct gpio_name_num_table {
+	char bank;
+	unsigned int base;
+};
+
+int s5p_name_to_gpio(const char *name);
+#define name_to_gpio(n) s5p_name_to_gpio(n)
+
 void gpio_cfg_pin(int gpio, int cfg);
 void gpio_set_pull(int gpio, int value);
 void gpio_set_drv(int gpio, int drv);

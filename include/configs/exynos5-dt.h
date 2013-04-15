@@ -142,6 +142,7 @@
 #define CONFIG_CMD_HASH
 #define CONFIG_CMD_DHCP
 #define CONFIG_CMD_BMP
+#define CONFIG_CMD_GPIO
 
 #define CONFIG_BOOTDELAY		0
 
