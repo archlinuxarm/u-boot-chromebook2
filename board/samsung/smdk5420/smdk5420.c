@@ -92,8 +92,6 @@ int anx1120_initialize(unsigned int i2c_bus)
 
 void exynos_lcd_power_on(void)
 {
-	struct exynos5420_gpio_part2 *gpio2 =
-		(struct exynos5420_gpio_part2 *) samsung_get_base_gpio_part2();
 	struct pmic *p;
 
 	p = pmic_get("S2MPS11_PMIC");
@@ -117,8 +115,8 @@ void exynos_lcd_power_on(void)
 	mdelay(15);	/* TODO: Use state machine to remove delay */
 
 	/* eDP-LVDS ANX chip RESET_L */
-	s5p_gpio_cfg_pin(&gpio2->x1, 5, S5P_GPIO_OUTPUT);
-	s5p_gpio_set_value(&gpio2->x1, 5, 1);
+	gpio_cfg_pin(EXYNOS5420_GPIO_X15, S5P_GPIO_OUTPUT);
+	gpio_set_value(EXYNOS5420_GPIO_X15, 1);
 
 	/* Initialize the eDP-LVDS ANX chip */
 	if (anx1120_initialize(ANX1120_I2C_BUS)) {
@@ -131,58 +129,40 @@ void exynos_lcd_power_on(void)
 
 void exynos_backlight_on(unsigned int onoff)
 {
-	struct exynos5420_gpio_part1 *gpio1 =
-		(struct exynos5420_gpio_part1 *) samsung_get_base_gpio_part1();
-
-	struct exynos5420_gpio_part2 *gpio2 =
-		(struct exynos5420_gpio_part2 *) samsung_get_base_gpio_part2();
-
 	/* For PWM */
-	s5p_gpio_cfg_pin(&gpio1->b2, 0, S5P_GPIO_OUTPUT);
-	s5p_gpio_set_value(&gpio1->b2, 0, onoff);
+	gpio_cfg_pin(EXYNOS5420_GPIO_B20, S5P_GPIO_OUTPUT);
+	gpio_set_value(EXYNOS5420_GPIO_B20, onoff);
 
 	tps65090_fet_enable(1);
 
 	/* LED backlight reset */
-	s5p_gpio_cfg_pin(&gpio2->x3, 0, S5P_GPIO_OUTPUT);
-	s5p_gpio_set_value(&gpio2->x3, 0, onoff);
+	gpio_cfg_pin(EXYNOS5420_GPIO_X30, S5P_GPIO_OUTPUT);
+	gpio_set_value(EXYNOS5420_GPIO_X30, onoff);
 }
 #else
 void exynos_lcd_power_on(void)
 {
-	struct exynos5420_gpio_part1 *gpio1 =
-		(struct exynos5420_gpio_part1 *) samsung_get_base_gpio_part1();
-
 	/* LCD_EN */
-	s5p_gpio_cfg_pin(&gpio1->h0, 7, S5P_GPIO_OUTPUT);
-	s5p_gpio_set_value(&gpio1->h0, 7, 1);
+	gpio_cfg_pin(EXYNOS5420_GPIO_H07, S5P_GPIO_OUTPUT);
+	gpio_set_value(EXYNOS5420_GPIO_H07, 1);
 }
 
 void exynos_backlight_on(unsigned int onoff)
 {
-	struct exynos5420_gpio_part1 *gpio1 =
-		(struct exynos5420_gpio_part1 *) samsung_get_base_gpio_part1();
-
-	struct exynos5420_gpio_part2 *gpio2 =
-		(struct exynos5420_gpio_part2 *) samsung_get_base_gpio_part2();
-
 	/* For PWM */
-	s5p_gpio_cfg_pin(&gpio1->b2, 0, S5P_GPIO_OUTPUT);
-	s5p_gpio_set_value(&gpio1->b2, 0, onoff);
+	gpio_cfg_pin(EXYNOS5420_GPIO_B20, S5P_GPIO_OUTPUT);
+	gpio_set_value(EXYNOS5420_GPIO_B20, onoff);
 
 	/* BL_EN */
-	s5p_gpio_cfg_pin(&gpio2->x1, 5, S5P_GPIO_OUTPUT);
-	s5p_gpio_set_value(&gpio2->x1, 5, 1);
+	gpio_cfg_pin(EXYNOS5420_GPIO_X15, S5P_GPIO_OUTPUT);
+	gpio_set_value(EXYNOS5420_GPIO_X15, 1);
 }
 #endif
 
 void exynos_cfg_lcd_gpio(void)
 {
-	struct exynos5420_gpio_part2 *gpio2 =
-		(struct exynos5420_gpio_part2 *) samsung_get_base_gpio_part2();
-
 	/* Set Hotplug detect for DP */
-	s5p_gpio_cfg_pin(&gpio2->x0, 7, S5P_GPIO_FUNC(0x3));
+	gpio_cfg_pin(EXYNOS5420_GPIO_X07, S5P_GPIO_FUNC(0x3));
 }
 
 void init_panel_info(vidinfo_t *vid)
