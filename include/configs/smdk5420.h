@@ -50,6 +50,9 @@
 #define ANX1120_I2C_BUS           -1
 
 #define CONFIG_LCD
+#define RPLL_MDIV		0x10A
+#define RPLL_PDIV		0x3
+#define RPLL_SDIV		0x3
 #define CONFIG_EXYNOS_FB
 #define CONFIG_EXYNOS_DP
 #undef LCD_XRES

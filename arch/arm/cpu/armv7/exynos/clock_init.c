@@ -674,7 +674,6 @@ void exynos5420_system_clock_init(void)
 	writel(VPLL_LOCK_VAL, &clk->vpll_lock);
 	writel(IPLL_LOCK_VAL, &clk->ipll_lock);
 	writel(SPLL_LOCK_VAL, &clk->spll_lock);
-	writel(RPLL_LOCK_VAL, &clk->rpll_lock);
 	writel(KPLL_LOCK_VAL, &clk->kpll_lock);
 
 	setbits_le32(&clk->clk_src_cpu, MUX_HPM_SEL_MASK);
@@ -723,14 +722,6 @@ void exynos5420_system_clock_init(void)
 	val = set_pll(0x64, 0x2, 0x1);
 	writel(val, &clk->epll_con0);
 	while ((readl(&clk->epll_con0) & PLL_LOCKED) == 0)
-		;
-
-	/* Set RPLL */
-	writel(RPLL_CON2_VAL, &clk->rpll_con2);
-	writel(RPLL_CON1_VAL, &clk->rpll_con1);
-	val = set_pll(0x5E, 0x2, 0x4);
-	writel(val, &clk->rpll_con0);
-	while ((readl(&clk->rpll_con0) & PLL_LOCKED) == 0)
 		;
 
 	/* Set CPLL */

@@ -26,6 +26,7 @@
 #include <asm/arch/clock.h>
 #include <asm/arch/clk.h>
 #include <asm/arch/periph.h>
+#include "setup.h"
 
 /* *
  * This structure is to store the src bit, div bit and prediv bit
@@ -1181,6 +1182,26 @@ void exynos5_set_lcd_clk(void)
 	writel(cfg, &clk->div_disp1_0);
 }
 
+void exynos5420_set_lcd_clk(void)
+{
+#ifdef CONFIG_EXYNOS5420
+	struct exynos5420_clock *clk =
+		(struct exynos5420_clock *)EXYNOS5_CLOCK_BASE;
+	u32 val;
+
+	/* We use RPLL as the source for FIMD video stream clock */
+	writel(RPLL_LOCK_VAL, &clk->rpll_lock);
+
+	/* Set RPLL */
+	writel(RPLL_CON2_VAL, &clk->rpll_con2);
+	writel(RPLL_CON1_VAL, &clk->rpll_con1);
+	val = set_pll(RPLL_MDIV, RPLL_PDIV, RPLL_SDIV);
+	writel(val, &clk->rpll_con0);
+	while ((readl(&clk->rpll_con0) & PLL_LOCKED) == 0)
+		;
+#endif
+}
+
 void exynos4_set_mipi_clk(void)
 {
 	struct exynos4_clock *clk =
@@ -1658,6 +1679,8 @@ void set_lcd_clk(void)
 {
 	if (cpu_is_exynos4())
 		exynos4_set_lcd_clk();
+	else if (proid_is_exynos5420())
+		exynos5420_set_lcd_clk();
 	else
 		exynos5_set_lcd_clk();
 }
