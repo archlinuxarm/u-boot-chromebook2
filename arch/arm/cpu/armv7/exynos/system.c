@@ -92,5 +92,7 @@ void set_system_display_ctrl(void)
  */
 void arch_cleanup_before_linux(void)
 {
+#ifdef CONFIG_EXYNOS_FB
 	exynos_fimd_lcd_disable();
+#endif
 }

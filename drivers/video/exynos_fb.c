@@ -48,10 +48,10 @@ static unsigned int panel_width, panel_height;
  */
 #ifdef CONFIG_OF_CONTROL
 vidinfo_t panel_info  = {
-	.vl_col = LCD_XRES,
-	.vl_row = LCD_YRES,
-	.vl_bpix = LCD_COLOR16,
+	/* Insert a value here so that we don't end up in the BSS */
+	.vl_col = -1,
 };
+
 #endif
 
 static void exynos_lcd_init_mem(void *lcdbase, vidinfo_t *vid)
@@ -172,7 +172,7 @@ static void lcd_panel_on(vidinfo_t *vid)
 }
 
 #ifdef CONFIG_OF_CONTROL
-int exynos_fimd_parse_dt(const void *blob)
+int exynos_lcd_early_init(const void *blob)
 {
 	unsigned int node;
 	node = fdtdec_next_compatible(blob, 0, COMPAT_SAMSUNG_EXYNOS_FIMD);
@@ -317,7 +317,7 @@ void lcd_ctrl_init(void *lcdbase)
 	set_lcd_clk();
 
 #ifdef CONFIG_OF_CONTROL
-	if (exynos_fimd_parse_dt(gd->fdt_blob))
+	if (exynos_lcd_early_init(gd->fdt_blob))
 		debug("Can't get proper panel info\n");
 #else
 	/* initialize parameters which is specific to panel. */

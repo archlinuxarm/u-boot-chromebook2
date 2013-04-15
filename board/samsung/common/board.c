@@ -34,6 +34,7 @@
 #include <asm/arch/gpio.h>
 #include <asm/arch/pinmux.h>
 #include <asm/arch/power.h>
+#include <asm/arch/system.h>
 #include <power/pmic.h>
 #include <power/max77686_pmic.h>
 #include <power/tps65090_pmic.h>
@@ -156,7 +157,10 @@ int board_early_init_f(void)
 #ifdef CONFIG_SYS_I2C_INIT_BOARD
 	board_i2c_init(gd->fdt_blob);
 #endif
-	return err;
+#ifdef CONFIG_EXYNOS_FB
+	exynos_lcd_early_init(gd->fdt_blob);
+#endif
+	return 0;
 }
 #endif
 
