@@ -134,19 +134,19 @@ int board_mmc_init(bd_t *bis)
 	 */
 	for (i = 0; i < 7; i++) {
 		/* GPK2[0:6] special function 2 */
-		s5p_gpio_cfg_pin(&gpio2->k2, i, GPIO_FUNC(0x2));
+		s5p_gpio_cfg_pin(&gpio2->k2, i, S5P_GPIO_FUNC(0x2));
 
 		/* GPK2[0:6] drv 4x */
-		s5p_gpio_set_drv(&gpio2->k2, i, GPIO_DRV_4X);
+		s5p_gpio_set_drv(&gpio2->k2, i, S5P_GPIO_DRV_4X);
 
 		/* GPK2[0:1] pull disable */
 		if (i == 0 || i == 1) {
-			s5p_gpio_set_pull(&gpio2->k2, i, GPIO_PULL_NONE);
+			s5p_gpio_set_pull(&gpio2->k2, i, S5P_GPIO_PULL_NONE);
 			continue;
 		}
 
 		/* GPK2[2:6] pull up */
-		s5p_gpio_set_pull(&gpio2->k2, i, GPIO_PULL_UP);
+		s5p_gpio_set_pull(&gpio2->k2, i, S5P_GPIO_PULL_UP);
 	}
 
 	err = s5p_mmc_init(2, 4);

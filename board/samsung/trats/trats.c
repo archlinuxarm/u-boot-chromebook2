@@ -391,8 +391,8 @@ static unsigned int get_hw_revision(void)
 
 	/* hw_rev[3:0] == GPE1[3:0] */
 	for (i = 0; i < 4; i++) {
-		s5p_gpio_cfg_pin(&gpio->e1, i, GPIO_INPUT);
-		s5p_gpio_set_pull(&gpio->e1, i, GPIO_PULL_NONE);
+		s5p_gpio_cfg_pin(&gpio->e1, i, S5P_GPIO_INPUT);
+		s5p_gpio_set_pull(&gpio->e1, i, S5P_GPIO_PULL_NONE);
 	}
 
 	udelay(1);
@@ -431,7 +431,7 @@ int board_mmc_init(bd_t *bis)
 
 	/* eMMC_EN: SD_0_CDn: GPK0[2] Output High */
 	s5p_gpio_direction_output(&gpio->k0, 2, 1);
-	s5p_gpio_set_pull(&gpio->k0, 2, GPIO_PULL_NONE);
+	s5p_gpio_set_pull(&gpio->k0, 2, S5P_GPIO_PULL_NONE);
 
 	/*
 	 * MMC device init
@@ -446,7 +446,7 @@ int board_mmc_init(bd_t *bis)
 
 	/* T-flash detect */
 	s5p_gpio_cfg_pin(&gpio->x3, 4, 0xf);
-	s5p_gpio_set_pull(&gpio->x3, 4, GPIO_PULL_UP);
+	s5p_gpio_set_pull(&gpio->x3, 4, S5P_GPIO_PULL_UP);
 
 	/*
 	 * Check the T-flash  detect pin
@@ -523,7 +523,7 @@ static void pmic_reset(void)
 		(struct exynos4_gpio_part2 *)samsung_get_base_gpio_part2();
 
 	s5p_gpio_direction_output(&gpio->x0, 7, 1);
-	s5p_gpio_set_pull(&gpio->x2, 7, GPIO_PULL_NONE);
+	s5p_gpio_set_pull(&gpio->x2, 7, S5P_GPIO_PULL_NONE);
 }
 
 static void board_clock_init(void)
@@ -615,12 +615,13 @@ static void board_uart_init(void)
 	 */
 
 	for (i = 0; i < 4; i++) {
-		s5p_gpio_set_pull(&gpio1->a1, i, GPIO_PULL_NONE);
-		s5p_gpio_cfg_pin(&gpio1->a1, i, GPIO_FUNC((i > 1) ? 0x3 : 0x2));
+		s5p_gpio_set_pull(&gpio1->a1, i, S5P_GPIO_PULL_NONE);
+		s5p_gpio_cfg_pin(&gpio1->a1, i, S5P_GPIO_FUNC((i > 1) ?
+				 0x3 : 0x2));
 	}
 
 	/* UART_SEL GPY4[7] (part2) at EXYNOS4 */
-	s5p_gpio_set_pull(&gpio2->y4, 7, GPIO_PULL_UP);
+	s5p_gpio_set_pull(&gpio2->y4, 7, S5P_GPIO_PULL_UP);
 	s5p_gpio_direction_output(&gpio2->y4, 7, 1);
 }
 

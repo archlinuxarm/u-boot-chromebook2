@@ -50,7 +50,7 @@ void s5p_gpio_direction_output(struct s5p_gpio_bank *bank, int gpio, int en)
 {
 	unsigned int value;
 
-	s5p_gpio_cfg_pin(bank, gpio, GPIO_OUTPUT);
+	s5p_gpio_cfg_pin(bank, gpio, S5P_GPIO_OUTPUT);
 
 	value = readl(&bank->dat);
 	value &= ~DAT_MASK(gpio);
@@ -61,7 +61,7 @@ void s5p_gpio_direction_output(struct s5p_gpio_bank *bank, int gpio, int en)
 
 void s5p_gpio_direction_input(struct s5p_gpio_bank *bank, int gpio)
 {
-	s5p_gpio_cfg_pin(bank, gpio, GPIO_INPUT);
+	s5p_gpio_cfg_pin(bank, gpio, S5P_GPIO_INPUT);
 }
 
 void s5p_gpio_set_value(struct s5p_gpio_bank *bank, int gpio, int en)
@@ -91,8 +91,8 @@ void s5p_gpio_set_pull(struct s5p_gpio_bank *bank, int gpio, int mode)
 	value &= ~PULL_MASK(gpio);
 
 	switch (mode) {
-	case GPIO_PULL_DOWN:
-	case GPIO_PULL_UP:
+	case S5P_GPIO_PULL_DOWN:
+	case S5P_GPIO_PULL_UP:
 		value |= PULL_MODE(gpio, mode);
 		break;
 	default:
@@ -110,10 +110,10 @@ void s5p_gpio_set_drv(struct s5p_gpio_bank *bank, int gpio, int mode)
 	value &= ~DRV_MASK(gpio);
 
 	switch (mode) {
-	case GPIO_DRV_1X:
-	case GPIO_DRV_2X:
-	case GPIO_DRV_3X:
-	case GPIO_DRV_4X:
+	case S5P_GPIO_DRV_1X:
+	case S5P_GPIO_DRV_2X:
+	case S5P_GPIO_DRV_3X:
+	case S5P_GPIO_DRV_4X:
 		value |= DRV_SET(gpio, mode);
 		break;
 	default:
@@ -131,8 +131,8 @@ void s5p_gpio_set_rate(struct s5p_gpio_bank *bank, int gpio, int mode)
 	value &= ~RATE_MASK(gpio);
 
 	switch (mode) {
-	case GPIO_DRV_FAST:
-	case GPIO_DRV_SLOW:
+	case S5P_GPIO_DRV_FAST:
+	case S5P_GPIO_DRV_SLOW:
 		value |= RATE_SET(gpio);
 		break;
 	default:
@@ -250,10 +250,10 @@ int gpio_decode_number(unsigned gpio_list[], int count)
 		 *	return -1;
 		 */
 		gpio_direction_input(gpio);
-		gpio_set_pull(gpio, GPIO_PULL_UP);
+		gpio_set_pull(gpio, S5P_GPIO_PULL_UP);
 		udelay(GPIO_DELAY_US);
 		high = gpio_get_value(gpio);
-		gpio_set_pull(gpio, GPIO_PULL_DOWN);
+		gpio_set_pull(gpio, S5P_GPIO_PULL_DOWN);
 		udelay(GPIO_DELAY_US);
 		low = gpio_get_value(gpio);
 

@@ -155,22 +155,22 @@ static inline unsigned int s5p_gpio_part_max(int nr)
 #endif
 
 /* Pin configurations */
-#define GPIO_INPUT	0x0
-#define GPIO_OUTPUT	0x1
-#define GPIO_IRQ	0xf
-#define GPIO_FUNC(x)	(x)
+#define S5P_GPIO_INPUT	0x0
+#define S5P_GPIO_OUTPUT	0x1
+#define S5P_GPIO_IRQ	0xf
+#define S5P_GPIO_FUNC(x)	(x)
 
 /* Pull mode */
-#define GPIO_PULL_NONE	0x0
-#define GPIO_PULL_DOWN	0x1
-#define GPIO_PULL_UP	0x2
+#define S5P_GPIO_PULL_NONE	0x0
+#define S5P_GPIO_PULL_DOWN	0x1
+#define S5P_GPIO_PULL_UP	0x2
 
 /* Drive Strength level */
-#define GPIO_DRV_1X	0x0
-#define GPIO_DRV_3X	0x1
-#define GPIO_DRV_2X	0x2
-#define GPIO_DRV_4X	0x3
-#define GPIO_DRV_FAST	0x0
-#define GPIO_DRV_SLOW	0x1
+#define S5P_GPIO_DRV_1X	0x0
+#define S5P_GPIO_DRV_3X	0x1
+#define S5P_GPIO_DRV_2X	0x2
+#define S5P_GPIO_DRV_4X	0x3
+#define S5P_GPIO_DRV_FAST	0x0
+#define S5P_GPIO_DRV_SLOW	0x1
 
 #endif

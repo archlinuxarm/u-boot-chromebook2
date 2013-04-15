@@ -216,7 +216,7 @@ int board_mmc_init(bd_t *bis)
 
 	/* T-flash detect */
 	s5p_gpio_cfg_pin(&gpio2->x3, 4, 0xf);
-	s5p_gpio_set_pull(&gpio2->x3, 4, GPIO_PULL_UP);
+	s5p_gpio_set_pull(&gpio2->x3, 4, S5P_GPIO_PULL_UP);
 
 	/*
 	 * Check the T-flash  detect pin
@@ -390,35 +390,35 @@ void exynos_cfg_lcd_gpio(void)
 
 	for (i = 0; i < 8; i++) {
 		/* set GPF0,1,2[0:7] for RGB Interface and Data lines (32bit) */
-		s5p_gpio_cfg_pin(&gpio1->f0, i, GPIO_FUNC(2));
-		s5p_gpio_cfg_pin(&gpio1->f1, i, GPIO_FUNC(2));
-		s5p_gpio_cfg_pin(&gpio1->f2, i, GPIO_FUNC(2));
+		s5p_gpio_cfg_pin(&gpio1->f0, i, S5P_GPIO_FUNC(2));
+		s5p_gpio_cfg_pin(&gpio1->f1, i, S5P_GPIO_FUNC(2));
+		s5p_gpio_cfg_pin(&gpio1->f2, i, S5P_GPIO_FUNC(2));
 		/* pull-up/down disable */
-		s5p_gpio_set_pull(&gpio1->f0, i, GPIO_PULL_NONE);
-		s5p_gpio_set_pull(&gpio1->f1, i, GPIO_PULL_NONE);
-		s5p_gpio_set_pull(&gpio1->f2, i, GPIO_PULL_NONE);
+		s5p_gpio_set_pull(&gpio1->f0, i, S5P_GPIO_PULL_NONE);
+		s5p_gpio_set_pull(&gpio1->f1, i, S5P_GPIO_PULL_NONE);
+		s5p_gpio_set_pull(&gpio1->f2, i, S5P_GPIO_PULL_NONE);
 
 		/* drive strength to max (24bit) */
-		s5p_gpio_set_drv(&gpio1->f0, i, GPIO_DRV_4X);
-		s5p_gpio_set_rate(&gpio1->f0, i, GPIO_DRV_SLOW);
-		s5p_gpio_set_drv(&gpio1->f1, i, GPIO_DRV_4X);
-		s5p_gpio_set_rate(&gpio1->f1, i, GPIO_DRV_SLOW);
-		s5p_gpio_set_drv(&gpio1->f2, i, GPIO_DRV_4X);
-		s5p_gpio_set_rate(&gpio1->f0, i, GPIO_DRV_SLOW);
+		s5p_gpio_set_drv(&gpio1->f0, i, S5P_GPIO_DRV_4X);
+		s5p_gpio_set_rate(&gpio1->f0, i, S5P_GPIO_DRV_SLOW);
+		s5p_gpio_set_drv(&gpio1->f1, i, S5P_GPIO_DRV_4X);
+		s5p_gpio_set_rate(&gpio1->f1, i, S5P_GPIO_DRV_SLOW);
+		s5p_gpio_set_drv(&gpio1->f2, i, S5P_GPIO_DRV_4X);
+		s5p_gpio_set_rate(&gpio1->f0, i, S5P_GPIO_DRV_SLOW);
 	}
 
 	for (i = 0; i < f3_end; i++) {
 		/* set GPF3[0:3] for RGB Interface and Data lines (32bit) */
-		s5p_gpio_cfg_pin(&gpio1->f3, i, GPIO_FUNC(2));
+		s5p_gpio_cfg_pin(&gpio1->f3, i, S5P_GPIO_FUNC(2));
 		/* pull-up/down disable */
-		s5p_gpio_set_pull(&gpio1->f3, i, GPIO_PULL_NONE);
+		s5p_gpio_set_pull(&gpio1->f3, i, S5P_GPIO_PULL_NONE);
 		/* drive strength to max (24bit) */
-		s5p_gpio_set_drv(&gpio1->f3, i, GPIO_DRV_4X);
-		s5p_gpio_set_rate(&gpio1->f3, i, GPIO_DRV_SLOW);
+
+		s5p_gpio_set_rate(&gpio1->f3, i, S5P_GPIO_DRV_SLOW);
 	}
 
 	/* gpio pad configuration for LCD reset. */
-	s5p_gpio_cfg_pin(&gpio2->y4, 5, GPIO_OUTPUT);
+	s5p_gpio_cfg_pin(&gpio2->y4, 5, S5P_GPIO_OUTPUT);
 
 	spi_init();
 }

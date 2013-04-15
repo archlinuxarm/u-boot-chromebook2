@@ -102,9 +102,9 @@ int board_mmc_init(bd_t *bis)
 		/* GPG0[0:6] special function 2 */
 		s5p_gpio_cfg_pin(&s5pc110_gpio->g0, i, 0x2);
 		/* GPG0[0:6] pull disable */
-		s5p_gpio_set_pull(&s5pc110_gpio->g0, i, GPIO_PULL_NONE);
+		s5p_gpio_set_pull(&s5pc110_gpio->g0, i, S5P_GPIO_PULL_NONE);
 		/* GPG0[0:6] drv 4x */
-		s5p_gpio_set_drv(&s5pc110_gpio->g0, i, GPIO_DRV_4X);
+		s5p_gpio_set_drv(&s5pc110_gpio->g0, i, S5P_GPIO_DRV_4X);
 	}
 
 	return s5p_mmc_init(0, 4);

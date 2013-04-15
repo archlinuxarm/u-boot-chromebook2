@@ -175,15 +175,15 @@ int board_mmc_init(bd_t *bis)
 void exynos_cfg_lcd_gpio(void)
 {
 	/* For Backlight */
-	gpio_cfg_pin(EXYNOS5_GPIO_B20, GPIO_OUTPUT);
+	gpio_cfg_pin(EXYNOS5_GPIO_B20, S5P_GPIO_OUTPUT);
 	gpio_set_value(EXYNOS5_GPIO_B20, 1);
 
 	/* LCD power on */
-	gpio_cfg_pin(EXYNOS5_GPIO_X15, GPIO_OUTPUT);
+	gpio_cfg_pin(EXYNOS5_GPIO_X15, S5P_GPIO_OUTPUT);
 	gpio_set_value(EXYNOS5_GPIO_X15, 1);
 
 	/* Set Hotplug detect for DP */
-	gpio_cfg_pin(EXYNOS5_GPIO_X07, GPIO_FUNC(0x3));
+	gpio_cfg_pin(EXYNOS5_GPIO_X07, S5P_GPIO_FUNC(0x3));
 }
 
 void exynos_set_dp_phy(unsigned int onoff)
