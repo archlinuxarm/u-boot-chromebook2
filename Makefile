@@ -604,6 +604,7 @@ $(obj)u-boot.spr:	$(obj)u-boot.img $(obj)spl/u-boot-spl.bin
 		cat $(obj)spl/u-boot-spl-pad.img $(obj)u-boot.img > $@
 
 ifneq ($(CONFIG_TEGRA),)
+dtbfile=$(obj)u-boot.dtb
 
 $(obj)u-boot-dtb-tegra.bin: $(obj)spl/u-boot-spl.bin $(obj)u-boot.bin $(dtbfile)
 		$(OBJCOPY) ${OBJCFLAGS} --pad-to=$(CONFIG_SYS_TEXT_BASE) -O binary $(obj)spl/u-boot-spl $(obj)spl/u-boot-spl-pad.bin
