@@ -37,12 +37,12 @@ void Low_frequency_init_lpddr3(void)
 {
 	u32 chip;
 	struct exynos5_phy_control *phy0_ctrl, *phy1_ctrl;
-	struct exynos5420_dmc *drex0, *drex1;
+	struct exynos5_dmc *drex0, *drex1;
 
 	phy0_ctrl = (struct exynos5_phy_control *)EXYNOS5_DMC_PHY0_BASE;
 	phy1_ctrl = (struct exynos5_phy_control *)EXYNOS5_DMC_PHY1_BASE;
-	drex0 = (struct exynos5420_dmc *)EXYNOS5420_DMC_DREXI_0;
-	drex1 = (struct exynos5420_dmc *)EXYNOS5420_DMC_DREXI_1;
+	drex0 = (struct exynos5_dmc *)EXYNOS5420_DMC_DREXI_0;
+	drex1 = (struct exynos5_dmc *)EXYNOS5420_DMC_DREXI_1;
 
 	writel(PHY_CON0_VAL, &phy0_ctrl->phy_con0);
 	writel(PHY_CON0_VAL, &phy1_ctrl->phy_con0);
@@ -145,12 +145,12 @@ void High_frequency_init_lpddr3(void)
 {
 	u32 val;
 	struct exynos5_phy_control *phy0_ctrl, *phy1_ctrl;
-	struct exynos5420_dmc *drex0, *drex1;
+	struct exynos5_dmc *drex0, *drex1;
 
 	phy0_ctrl = (struct exynos5_phy_control *)EXYNOS5_DMC_PHY0_BASE;
 	phy1_ctrl = (struct exynos5_phy_control *)EXYNOS5_DMC_PHY1_BASE;
-	drex0 = (struct exynos5420_dmc *)EXYNOS5420_DMC_DREXI_0;
-	drex1 = (struct exynos5420_dmc *)EXYNOS5420_DMC_DREXI_1;
+	drex0 = (struct exynos5_dmc *)EXYNOS5420_DMC_DREXI_0;
+	drex1 = (struct exynos5_dmc *)EXYNOS5420_DMC_DREXI_1;
 
 	val = PHY_CON14_RESET_VAL | (CTRL_PULLD_DQS << CTRL_PULLD_DQS_OFFSET);
 	writel(val, &phy0_ctrl->phy_con14);
@@ -264,17 +264,17 @@ void High_frequency_init_lpddr3(void)
 	writel(PWRDNCONFIG_DEFAULT_VAL, &drex1->pwrdnconfig);
 
 	/* Set the TimingAref, TimingRow, TimingData and TimingPower regs */
-	writel(TIMINGAREF_VAL, &drex0->timingaref);
-	writel(TIMINGAREF_VAL, &drex1->timingaref);
+	writel(TIMINGAREF_VAL, &drex0->timingref);
+	writel(TIMINGAREF_VAL, &drex1->timingref);
 
-	writel(TIMINGROW_VAL, &drex0->timingrow0);
-	writel(TIMINGROW_VAL, &drex1->timingrow0);
+	writel(TIMINGROW_VAL, &drex0->timingrow);
+	writel(TIMINGROW_VAL, &drex1->timingrow);
 
-	writel(TIMINGDATA_VAL, &drex0->timingdata0);
-	writel(TIMINGDATA_VAL, &drex1->timingdata0);
+	writel(TIMINGDATA_VAL, &drex0->timingdata);
+	writel(TIMINGDATA_VAL, &drex1->timingdata);
 
-	writel(TIMINGPOWER_VAL, &drex0->timingpower0);
-	writel(TIMINGPOWER_VAL, &drex1->timingpower0);
+	writel(TIMINGPOWER_VAL, &drex0->timingpower);
+	writel(TIMINGPOWER_VAL, &drex1->timingpower);
 
 	do {
 		val = readl(&drex0->phystatus);
@@ -303,13 +303,13 @@ void mem_ctrl_init(int reset)
 	struct exynos5420_clock *clk =
 		(struct exynos5420_clock *)EXYNOS5_CLOCK_BASE;
 	struct exynos5_phy_control *phy0_ctrl, *phy1_ctrl;
-	struct exynos5420_dmc *drex0, *drex1;
+	struct exynos5_dmc *drex0, *drex1;
 	u32 val, nLockR, nLockW;
 
 	phy0_ctrl = (struct exynos5_phy_control *)EXYNOS5_DMC_PHY0_BASE;
 	phy1_ctrl = (struct exynos5_phy_control *)EXYNOS5_DMC_PHY1_BASE;
-	drex0 = (struct exynos5420_dmc *)EXYNOS5420_DMC_DREXI_0;
-	drex1 = (struct exynos5420_dmc *)EXYNOS5420_DMC_DREXI_1;
+	drex0 = (struct exynos5_dmc *)EXYNOS5420_DMC_DREXI_0;
+	drex1 = (struct exynos5_dmc *)EXYNOS5420_DMC_DREXI_1;
 
 	writel(ENABLE_BIT, &clk->lpddr3phy_ctrl);	/* LPDDR3PHY_CTRL */
 	writel(DISABLE_BIT, &clk->lpddr3phy_ctrl);	/* LPDDR3PHY_CTRL */

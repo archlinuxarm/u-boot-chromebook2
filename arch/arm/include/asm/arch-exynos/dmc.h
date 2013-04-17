@@ -114,13 +114,22 @@ struct exynos4_dmc {
 struct exynos5_dmc {
 	unsigned int concontrol;
 	unsigned int memcontrol;
+
+/* Between 5250 and 5420, the DMC Register differs only at 0x8 offset.
+ * So to use the same structure and simplify the code put a define to
+ * distinguish between memconfig0 and cgcontrol register */
+#ifdef CONFIG_EXYNOS5250
 	unsigned int memconfig0;
+#else
+	unsigned int cgcontrol;
+#endif
 	unsigned int memconfig1;
 	unsigned int directcmd;
-	unsigned int prechconfig;
+	unsigned int prechconfig0;
 	unsigned int phycontrol0;
-	unsigned char res1[0xc];
-	unsigned int pwrdnconfig;
+	unsigned int prechconfig1;
+	unsigned char res1[0x8];
+	unsigned int pwrdnconfig;	/* 0x0028*/
 	unsigned int timingpzq;
 	unsigned int timingref;
 	unsigned int timingrow;
@@ -128,12 +137,12 @@ struct exynos5_dmc {
 	unsigned int timingpower;
 	unsigned int phystatus;
 	unsigned char res2[0x4];
-	unsigned int chipstatus_ch0;
+	unsigned int chipstatus_ch0;	/* 0x0048 */
 	unsigned int chipstatus_ch1;
 	unsigned char res3[0x4];
 	unsigned int mrstatus;
 	unsigned char res4[0x8];
-	unsigned int qoscontrol0;
+	unsigned int qoscontrol0;	/* 0x0060 */
 	unsigned char resr5[0x4];
 	unsigned int qoscontrol1;
 	unsigned char res6[0x4];
@@ -164,126 +173,34 @@ struct exynos5_dmc {
 	unsigned int qoscontrol14;
 	unsigned char res19[0x4];
 	unsigned int qoscontrol15;
-	unsigned char res20[0x14];
-	unsigned int ivcontrol;
-	unsigned int wrtra_config;
-	unsigned int rdlvl_config;
-	unsigned char res21[0x8];
-	unsigned int brbrsvconfig;
-	unsigned int brbqosconfig;
-	unsigned int membaseconfig0;
-	unsigned int membaseconfig1;
-	unsigned char res22[0xc];
-	unsigned int wrlvl_config;
-	unsigned char res23[0xc];
-	unsigned int perevcontrol;
-	unsigned int perev0config;
-	unsigned int perev1config;
-	unsigned int perev2config;
-	unsigned int perev3config;
-	unsigned char res24[0xdebc];
-	unsigned int pmnc_ppc_a;
-	unsigned char res25[0xc];
-	unsigned int cntens_ppc_a;
-	unsigned char res26[0xc];
-	unsigned int cntenc_ppc_a;
-	unsigned char res27[0xc];
-	unsigned int intens_ppc_a;
-	unsigned char res28[0xc];
-	unsigned int intenc_ppc_a;
-	unsigned char res29[0xc];
-	unsigned int flag_ppc_a;
-	unsigned char res30[0xac];
-	unsigned int ccnt_ppc_a;
-	unsigned char res31[0xc];
-	unsigned int pmcnt0_ppc_a;
-	unsigned char res32[0xc];
-	unsigned int pmcnt1_ppc_a;
-	unsigned char res33[0xc];
-	unsigned int pmcnt2_ppc_a;
-	unsigned char res34[0xc];
-	unsigned int pmcnt3_ppc_a;
-};
-
-struct exynos5420_dmc {
-	unsigned int concontrol;	/* 0x0000 */
-	unsigned int memcontrol;
-	unsigned int cgcontrol;
-	unsigned char res100[0x4];
-	unsigned int directcmd;
-	unsigned int prechconfig0;
-	unsigned int phycontrol0;
-	unsigned int prechconfig1;
-	unsigned int timingrfcpb;
-	unsigned int timingzq;
-	unsigned int pwrdnconfig;	/* 0x0028 */
-	unsigned int timingpzq;
-	unsigned int timingaref;
-	unsigned int timingrow0;
-	unsigned int timingdata0;
-	unsigned int timingpower0;
-	unsigned int phystatus;
-	unsigned int etctiming;
-	unsigned int chipstatus;
-	unsigned char res1[0x8];
-	unsigned int mrstatus;
-	unsigned char res2[0x8];
-	unsigned int qoscontrol0;	/* 0x0060 */
-	unsigned char res3[0x4];
-	unsigned int qoscontrol1;
-	unsigned char res4[0x4];
-	unsigned int qoscontrol2;
-	unsigned char res5[0x4];
-	unsigned int qoscontrol3;
-	unsigned char res6[0x4];
-	unsigned int qoscontrol4;
-	unsigned char res7[0x4];
-	unsigned int qoscontrol5;
-	unsigned char res8[0x4];
-	unsigned int qoscontrol6;	/* 0x0090 */
-	unsigned char res9[0x4];
-	unsigned int qoscontrol7;
-	unsigned char res10[0x4];
-	unsigned int qoscontrol8;
-	unsigned char res11[0x4];
-	unsigned int qoscontrol9;
-	unsigned char res12[0x4];
-	unsigned int qoscontrol10;
-	unsigned char res13[0x4];
-	unsigned int qoscontrol11;
-	unsigned char res14[0x4];
-	unsigned int qoscontrol12;
-	unsigned char res15[0x4];
-	unsigned int qoscontrol13;
-	unsigned char res16[0x4];
-	unsigned int qoscontrol14;
-	unsigned char res17[0x4];
-	unsigned int qoscontrol15;
-	unsigned char res18[0x4];
+	unsigned char res20[0x4];
 	unsigned int timing_set_sw;	/* 0x00e0 */
 	unsigned int timingrow1;
 	unsigned int timingdata1;
 	unsigned int timingpower1;
-	unsigned char res19[0x4];
+	unsigned int ivcontrol;
 	unsigned int wrtra_config;
 	unsigned int rdlvl_config;
-	unsigned int perevconfig;
-	unsigned int brbrsvcontrol;
+	unsigned char res21[0x4];
+	unsigned int brbrsvcontrol;	/* 0x0100*/
 	unsigned int brbrsvconfig;
 	unsigned int brbqosconfig;
-	unsigned char res20[0x14];
+	unsigned int membaseconfig0;
+	unsigned int membaseconfig1;	/* 0x0110 */
+	unsigned char res22[0xc];
 	unsigned int wrlvl_config0;	/* 0x0120 */
 	unsigned int wrlvl_config1;
 	unsigned int wrlvl_status;
-	unsigned char res21[0x4];
-	unsigned int ppcclkcon;
-	unsigned int perevconfig0;
-	unsigned int perevconfig1;
-	unsigned int perevconfig2;
-	unsigned int perevconfig3;
-	unsigned char res22[0xc];
-	unsigned int ctrl_io_rdata;
-	unsigned char res23[0xc];
+	unsigned char res23[0x4];
+	unsigned int perevcontrol;	/* 0x0130 */
+	unsigned int perev0config;
+	unsigned int perev1config;
+	unsigned int perev2config;
+	unsigned int perev3config;
+	unsigned char res22a[0xc];
+	unsigned int ctrl_io_rdata_ch0;
+	unsigned int ctrl_io_rdata_ch1;
+	unsigned char res23a[0x8];
 	unsigned int cacal_config0;
 	unsigned int cacal_config1;
 	unsigned int cacal_status;

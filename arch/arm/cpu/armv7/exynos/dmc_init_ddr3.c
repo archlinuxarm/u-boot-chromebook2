@@ -121,7 +121,7 @@ int ddr3_mem_ctrl_init(struct mem_timings *mem, unsigned long mem_iv_size,
 
 	/* Precharge Configuration */
 	writel(mem->prechconfig_tp_cnt << PRECHCONFIG_TP_CNT_SHIFT,
-		&dmc->prechconfig);
+		&dmc->prechconfig0);
 
 	/* Power Down mode Configuration */
 	writel(mem->dpwrdn_cyc << PWRDNCONFIG_DPWRDN_CYC_SHIFT |
