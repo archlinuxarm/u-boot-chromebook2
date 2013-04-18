@@ -42,6 +42,15 @@
 		};
 	};
 
+	i2c@12c90000 {
+		#address-cells = <1>;
+		#size-cells = <0>;
+		tpm@20 {
+			compatible = "infineon,slb9635-tpm";
+			reg = <0x20>;
+		};
+	};
+
 	fimd@14400000 {
 		samsung,vl-freq = <60>;
 		samsung,vl-col = <1366>;
