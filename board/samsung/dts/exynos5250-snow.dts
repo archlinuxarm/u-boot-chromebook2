@@ -48,6 +48,8 @@
 	};
 
 	i2c4: i2c@12ca0000 {
+		/* Do not use hsi2c for this interface, override it here. */
+		compatible = "samsung,s3c2440-i2c";
 		cros-ec@1e {
 			reg = <0x1e>;
 			compatible = "google,cros-ec";
