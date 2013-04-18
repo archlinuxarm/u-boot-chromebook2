@@ -33,6 +33,8 @@
  */
 #include <configs/exynos5420.h>
 
+#include <configs/chromeos.h>
+
 #define CONFIG_CHROMEOS_PEACH
 
 #undef CONFIG_DEFAULT_DEVICE_TREE
