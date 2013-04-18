@@ -60,7 +60,7 @@
 
 		ro-boot {
 			label = "u-boot";
-			size = <0x96000>;
+			size = <0xc0000>;
 			read-only;
 			type = "blob boot,dtb,ecrw,ecro";
 			required;
@@ -74,25 +74,18 @@
 			 * For example, aligning to 512KB is better than to
 			 * 256KB. */
 
-			reg = <0x000a0000 0x00001000>;
+			size = <0x00001000>;
 			read-only;
 			type = "fmap";
 			ver-major = <1>;
 			ver-minor = <0>;
 		};
 
-		ro-firmware-id {
-			label = "ro-frid";
-			reg = <0x000aff00 0x00000100>;
-			read-only;
-			type = "blobstring fwid";
-		};
-
 		ro-gbb {
 			label = "gbb";
 
 			/* GBB offset must be aligned to 4K bytes */
-			reg = <0x000b0000 0x000ef000>;
+			size = <0x000ef000>;
 			read-only;
 			type = "blob gbb";
 		};
@@ -102,10 +95,17 @@
 			label = "ro-vpd";
 
 			/* VPD offset must be aligned to 4K bytes */
-			reg = <0x001a0000 0x00010000>;
+			size = <0x00010000>;
 			read-only;
 			type = "wiped";
 			wipe-value = [ff];
+		};
+
+		ro-firmware-id {
+			label = "ro-frid";
+			size = <0x00000100>;
+			read-only;
+			type = "blobstring fwid";
 		};
 	};
 };
