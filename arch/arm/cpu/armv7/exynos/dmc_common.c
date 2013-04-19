@@ -167,14 +167,6 @@ void dmc_config_prech(struct mem_timings *mem, struct exynos5_dmc *dmc)
 	}
 }
 
-void dmc_config_memory(struct mem_timings *mem, struct exynos5_dmc *dmc)
-{
-	writel(mem->memconfig, &dmc->memconfig0);
-	writel(mem->memconfig, &dmc->memconfig1);
-	writel(DMC_MEMBASECONFIG0_VAL, &dmc->membaseconfig0);
-	writel(DMC_MEMBASECONFIG1_VAL, &dmc->membaseconfig1);
-}
-
 void mem_ctrl_init(int reset)
 {
 	struct spl_machine_param *param = spl_get_machine_params();
