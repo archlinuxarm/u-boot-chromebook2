@@ -41,7 +41,7 @@
 #define CONFIG_MACH_TYPE	MACH_TYPE_SMDK5420
 
 /* select serial console configuration */
-#define CONFIG_SERIAL2		/* use SERIAL 2 */
+#define CONFIG_SERIAL3		/* use SERIAL 3 */
 
 #define CONFIG_SYS_PROMPT	"SMDK5420 # "
 #define CONFIG_IDENT_STRING	" for SMDK5420"
