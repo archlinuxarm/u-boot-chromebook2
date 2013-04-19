@@ -144,7 +144,7 @@ static int ec_command_inptr(struct cros_ec_dev *dev, uint8_t cmd,
 		int cmd_version, const void *dout, int dout_len, uint8_t **dinp,
 		int din_len)
 {
-	uint8_t *din;
+	uint8_t *din = NULL;
 	int len;
 
 	if (cmd_version != 0 && !dev->cmd_version_is_supported) {
