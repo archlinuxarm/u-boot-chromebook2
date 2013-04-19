@@ -178,14 +178,11 @@ void dmc_config_memory(struct mem_timings *mem, struct exynos5_dmc *dmc)
 void mem_ctrl_init(int reset)
 {
 	struct spl_machine_param *param = spl_get_machine_params();
-	struct mem_timings *mem;
 	int ret;
-
-	mem = clock_get_mem_timings();
 
 	/* If there are any other memory variant, add their init call below */
 	if (param->mem_type == DDR_MODE_DDR3) {
-		ret = ddr3_mem_ctrl_init(mem, param->mem_iv_size, reset);
+		ret = ddr3_mem_ctrl_init(reset);
 		if (ret) {
 			/* will hang if failed to init memory control */
 			while (1)

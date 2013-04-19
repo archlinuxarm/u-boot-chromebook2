@@ -40,18 +40,19 @@ static void reset_phy_ctrl(void)
 	writel(DDR3PHY_CTRL_PHY_RESET, &clk->lpddr3phy_ctrl);
 }
 
-int ddr3_mem_ctrl_init(struct mem_timings *mem, unsigned long mem_iv_size,
-			int reset)
+int ddr3_mem_ctrl_init(int reset)
 {
 	unsigned int val;
 	struct exynos5_phy_control *phy0_ctrl, *phy1_ctrl;
 	struct exynos5_dmc *dmc;
+	struct mem_timings *mem;
 	int i;
 
 	phy0_ctrl = (struct exynos5_phy_control *)EXYNOS5_DMC_PHY0_BASE;
 	phy1_ctrl = (struct exynos5_phy_control *)EXYNOS5_DMC_PHY1_BASE;
 	dmc = (struct exynos5_dmc *)EXYNOS5_DMC_CTRL_BASE;
 
+	mem = clock_get_mem_timings();
 	if (reset)
 		reset_phy_ctrl();
 
