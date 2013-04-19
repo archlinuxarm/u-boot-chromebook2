@@ -287,10 +287,13 @@
 #define CTRL_SHGATE		(1 << 8)
 
 #define PHY_CON1_RESET_VAL	0x09210100
+#define RDLVL_PASS_ADJ_VAL	0x6
+#define RDLVL_PASS_ADJ_OFFSET	16
 #define CTRL_GATEDURADJ_MASK	(0xf << 20)
 
 #define PHY_CON2_RESET_VAL	0x00010004
 #define INIT_DESKEW_EN		(1 << 6)
+#define DLL_DESKEW_EN		(1 << 12)
 #define RDLVL_GATE_EN		(1 << 24)
 
 /* DREX_PAUSE */
@@ -377,7 +380,9 @@
 #define CMD_DEFAULT_LPDDR3	0xF
 #define CMD_DEFUALT_OFFSET	0
 #define T_WRDATA_EN		0x7
+#define T_WRDATA_EN_DDR3	0x8
 #define T_WRDATA_EN_OFFSET	16
+#define T_WRDATA_EN_MASK	0x1f
 
 #define PHY_CON31_VAL	0x0C183060
 #define PHY_CON32_VAL	0x60C18306
@@ -429,6 +434,10 @@
 /* Driver strength for CK, CKE, CS & CA */
 #define IMP_OUTPUT_DRV_40_OHM	0x5
 #define IMP_OUTPUT_DRV_30_OHM	0x7
+#define DA_3_DS_OFFSET		25
+#define DA_2_DS_OFFSET		22
+#define DA_1_DS_OFFSET		19
+#define DA_0_DS_OFFSET		16
 #define CA_CK_DRVR_DS_OFFSET	9
 #define CA_CKE_DRVR_DS_OFFSET	6
 #define CA_CS_DRVR_DS_OFFSET	3
@@ -930,7 +939,7 @@ enum {
 int ddr3_mem_ctrl_init(int reset);
 
 /* Memory variant specific initialization code for LPDDR3 */
-void lpddr3_mem_ctrl_init(void);
+int lpddr3_mem_ctrl_init(int reset);
 
 /*
  * Configure ZQ I/O interface

@@ -180,6 +180,15 @@ void mem_ctrl_init(int reset)
 			while (1)
 				;
 		}
+#ifdef CONFIG_EXYNOS5420
+	} else if (param->mem_type == DDR_MODE_LPDDR3) {
+		ret = lpddr3_mem_ctrl_init(reset);
+		if (ret) {
+			/* will hang if failed to init memory control */
+			while (1)
+				;
+		}
+#endif
 	} else {
 		/* will hang if unknow memory type  */
 		while (1)

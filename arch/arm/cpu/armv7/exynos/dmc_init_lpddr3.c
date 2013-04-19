@@ -298,7 +298,7 @@ void High_frequency_init_lpddr3(void)
 	return;
 }
 
-void mem_ctrl_init(int reset)
+int lpddr3_mem_ctrl_init(int reset)
 {
 	struct exynos5420_clock *clk =
 		(struct exynos5420_clock *)EXYNOS5_CLOCK_BASE;
@@ -367,5 +367,5 @@ void mem_ctrl_init(int reset)
 	setbits_le32(&drex0->phycontrol0, SL_DLL_DYN_CON_EN);
 	setbits_le32(&drex0->phycontrol0, SL_DLL_DYN_CON_EN);
 
-	return;
+	return 0;
 }

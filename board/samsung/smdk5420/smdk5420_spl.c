@@ -36,7 +36,7 @@ static struct spl_machine_param machine_param
 	.size		= sizeof(machine_param),
 
 	.mem_iv_size	= 0x1f,
-	.mem_type	= DDR_MODE_LPDDR3,
+	.mem_type	= DDR_MODE_DDR3,
 
 	/*
 	 * Set uboot_size to 512KB bytes.
