@@ -613,3 +613,13 @@ int tegra_i2c_get_dvc_bus_num(void)
 
 	return -1;
 }
+
+#ifdef CONFIG_OF_CONTROL
+int i2c_get_bus_num_fdt(int node)
+{
+	/* TODO: add board specific supporting code */
+
+	debug("%s: Can't find any matched I2C bus\n", __func__);
+	return -1;
+}
+#endif
