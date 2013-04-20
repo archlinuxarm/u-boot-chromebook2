@@ -25,6 +25,12 @@
 		hwid = "snow TEST A-A 9382";
 	};
 
+	flash@0 {
+		spl { /* spl size override */
+			size = <0x4000>;
+		};
+	};
+
 	aliases {
 		i2c0 = "/i2c@12c60000";
 		i2c1 = "/i2c@12c70000";
