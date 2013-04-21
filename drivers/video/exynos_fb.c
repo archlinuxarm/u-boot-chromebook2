@@ -110,7 +110,7 @@ void __exynos_backlight_on(unsigned int onoff)
 {
 }
 void exynos_backlight_on(unsigned int onoff)
-	__attribute__((weak, alias("__exynos_cfg_lcd_gpio")));
+	__attribute__((weak, alias("__exynos_backlight_on")));
 
 void __exynos_reset_lcd(void)
 {
