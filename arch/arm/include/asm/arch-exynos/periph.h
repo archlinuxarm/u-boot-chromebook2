@@ -55,6 +55,8 @@ enum periph_id {
 	PERIPH_ID_SDMMC3,
 	PERIPH_ID_I2S1 = 99,
 
+	PERIPH_ID_DPHPD = 113,	/* eDP hot plug detect */
+
 	/* Since following peripherals do
 	 * not have shared peripheral interrupts (SPIs)
 	 * they are numbered arbitiraly after the maximum

@@ -431,6 +431,22 @@ void exynos5420_spi_config(int peripheral)
 	}
 }
 
+void exynos5_dp_config(int peripheral)
+{
+	switch (peripheral) {
+	case PERIPH_ID_DPHPD:
+		/* Set Hotplug detect for DP */
+		gpio_cfg_pin(EXYNOS5_GPIO_X07, S5P_GPIO_FUNC(0x3));
+
+		/*
+		 * Hotplug detect should have an external pullup; disable the
+		 * internal pulldown so they don't fight.
+		 */
+		gpio_set_pull(EXYNOS5_GPIO_X07, S5P_GPIO_PULL_NONE);
+		break;
+	}
+}
+
 static int exynos5_pinmux_config(int peripheral, int flags)
 {
 	switch (peripheral) {
@@ -467,6 +483,9 @@ static int exynos5_pinmux_config(int peripheral, int flags)
 	case PERIPH_ID_SPI3:
 	case PERIPH_ID_SPI4:
 		exynos5_spi_config(peripheral);
+		break;
+	case PERIPH_ID_DPHPD:
+		exynos5_dp_config(peripheral);
 		break;
 	default:
 		debug("%s: invalid peripheral %d", __func__, peripheral);
