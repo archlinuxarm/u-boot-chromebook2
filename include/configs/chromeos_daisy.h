@@ -47,6 +47,12 @@
 /* Support vboot flag reading from EC */
 #define CONFIG_CHROMEOS_CROS_EC_FLAG
 
+/* Enable LCD connected to FIMD/DP display pipe */
+#define CONFIG_LCD
+#define CONFIG_EXYNOS_FB
+#define CONFIG_EXYNOS_DP
+#define CONFIG_CMD_BMP
+
 /* Adjust the display resolution. */
 #undef MAIN_VRESOL_VAL
 #undef MAIN_HRESOL_VAL
@@ -56,6 +62,7 @@
 #undef LCD_YRES
 #define LCD_XRES 1366
 #define LCD_YRES 768
+#define LCD_BPP LCD_COLOR16
 #define CONFIG_SYS_WHITE_ON_BLACK
 
 #define CONFIG_SERIAL3
