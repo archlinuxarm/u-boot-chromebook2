@@ -26,6 +26,7 @@
 #include <asm/io.h>
 #include <errno.h>
 #include <i2c.h>
+#include <lcd.h>
 #include <netdev.h>
 #include <spi.h>
 #include <asm/arch/cpu.h>
@@ -204,25 +205,129 @@ int board_mmc_init(bd_t *bis)
 }
 #endif
 
-#ifdef CONFIG_LCD
-#ifdef CONFIG_EXYNOS5250
-void exynos_cfg_lcd_gpio(void)
+#if defined(CONFIG_LCD) && defined(CONFIG_EXYNOS5250)
+static int board_dp_bridge_setup(void)
 {
-	/* For Backlight */
-	gpio_cfg_pin(EXYNOS5_GPIO_B20, S5P_GPIO_OUTPUT);
-	gpio_set_value(EXYNOS5_GPIO_B20, 1);
+	const int MAX_TRIES = 10;
+	int num_tries;
 
-	/* LCD power on */
-	gpio_cfg_pin(EXYNOS5_GPIO_X15, S5P_GPIO_OUTPUT);
+	debug("%s\n", __func__);
+
+	/* Mux HPHPD to the special hotplug detect mode */
+	exynos_pinmux_config(PERIPH_ID_DPHPD, 0);
+
+	/* Setup the GPIOs */
+
+	/* PD is ACTIVE_LOW, and initially de-asserted */
+	gpio_set_pull(EXYNOS5_GPIO_Y25, S5P_GPIO_PULL_NONE);
+	gpio_direction_output(EXYNOS5_GPIO_Y25, 1);
+
+	/* Reset is ACTIVE_LOW */
+	gpio_set_pull(EXYNOS5_GPIO_X15, S5P_GPIO_PULL_NONE);
+	gpio_direction_output(EXYNOS5_GPIO_X15, 0);
+
+	udelay(10);
 	gpio_set_value(EXYNOS5_GPIO_X15, 1);
 
-	/* Set Hotplug detect for DP */
-	gpio_cfg_pin(EXYNOS5_GPIO_X07, S5P_GPIO_FUNC(0x3));
+	gpio_direction_input(EXYNOS5_GPIO_X07);
+
+	/*
+	 * We need to wait for 90ms after bringing up the bridge since there
+	 * is a phantom "high" on the HPD chip during its bootup.  The phantom
+	 * high comes within 7ms of de-asserting PD and persists for at least
+	 * 15ms.  The real high comes roughly 50ms after PD is de-asserted. The
+	 * phantom high makes it hard for us to know when the NXP chip is up.
+	 */
+	mdelay(90);
+
+	for (num_tries = 0; num_tries < MAX_TRIES; num_tries++) {
+		/* Check HPD.  If it's high, we're all good. */
+		if (gpio_get_value(EXYNOS5_GPIO_X07))
+				return 0;
+
+		debug("%s: eDP bridge failed to come up; try %d of %d\n",
+				__func__, num_tries, MAX_TRIES);
+	}
+
+	/* Immediately go into bridge reset if the hp line is not high */
+	return -ENODEV;
 }
-#endif
 
 void exynos_set_dp_phy(unsigned int onoff)
 {
+	debug("%s(%u)\n", __func__, onoff);
+
 	set_dp_phy_ctrl(onoff);
+}
+
+/* BEGIN exynos_fb lcd_panel_on stages */
+
+void exynos_cfg_lcd_gpio(void)
+{
+	debug("%s\n", __func__);
+}
+
+void exynos_backlight_on(unsigned int onoff)
+{
+	debug("%s(%u)\n", __func__, onoff);
+
+	if (onoff) {
+#ifdef CONFIG_POWER_TPS65090
+		int ret;
+
+		ret = tps65090_fet_enable(1); /* Enable FET1, backlight */
+		if (ret)
+			return;
+
+		/* T5 in the LCD timing spec (defined as > 10ms) */
+		mdelay(10);
+
+		/* board_dp_backlight_pwm */
+		gpio_direction_output(EXYNOS5_GPIO_B20, 1);
+
+		/* T6 in the LCD timing spec (defined as > 10ms) */
+		mdelay(10);
+
+		/* board_dp_backlight_en */
+		gpio_direction_output(EXYNOS5_GPIO_X30, 1);
+#endif
+	}
+}
+
+void exynos_reset_lcd(void)
+{
+	debug("%s\n", __func__);
+}
+
+void exynos_lcd_power_on(void)
+{
+	debug("%s\n", __func__);
+
+	/* board_dp_lcd_vdd */
+	tps65090_fet_enable(6); /* Enable FET6, lcd panel */
+
+	board_dp_bridge_setup();
+}
+
+void exynos_cfg_ldo(void)
+{
+	debug("%s\n", __func__);
+
+}
+void exynos_enable_ldo(unsigned int onoff)
+{
+	debug("%s(%u)\n", __func__, onoff);
+}
+
+void exynos_backlight_reset(void)
+{
+	debug("%s\n", __func__);
+}
+
+/* END exynos_fb lcd_panel_on stages */
+
+void init_panel_info(vidinfo_t *vid)
+{
+	debug("%s\n", __func__);
 }
 #endif
