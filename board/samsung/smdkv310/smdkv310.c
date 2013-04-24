@@ -137,3 +137,47 @@ int board_mmc_init(bd_t *bis)
 	return err;
 }
 #endif
+
+static int board_uart_init(void)
+{
+	int err;
+
+	err = exynos_pinmux_config(PERIPH_ID_UART0, PINMUX_FLAG_NONE);
+	if (err) {
+		debug("UART0 not configured\n");
+		return err;
+	}
+
+	err = exynos_pinmux_config(PERIPH_ID_UART1, PINMUX_FLAG_NONE);
+	if (err) {
+		debug("UART1 not configured\n");
+		return err;
+	}
+
+	err = exynos_pinmux_config(PERIPH_ID_UART2, PINMUX_FLAG_NONE);
+	if (err) {
+		debug("UART2 not configured\n");
+		return err;
+	}
+
+	err = exynos_pinmux_config(PERIPH_ID_UART3, PINMUX_FLAG_NONE);
+	if (err) {
+		debug("UART3 not configured\n");
+		return err;
+	}
+
+	return 0;
+}
+
+#ifdef CONFIG_BOARD_EARLY_INIT_F
+int board_early_init_f(void)
+{
+	int err;
+	err = board_uart_init();
+	if (err) {
+		debug("UART init failed\n");
+		return err;
+	}
+	return err;
+}
+#endif
