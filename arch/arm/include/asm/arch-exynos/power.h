@@ -890,6 +890,16 @@ void set_ps_hold_ctrl(void);
 void set_xclkout(void);
 
 /*
+ *  Read inform1 to get the reset status
+ */
+uint32_t get_reset_status(void);
+
+/*
+ *  Read the resume function and call it
+ */
+void power_exit_wakeup(void);
+
+/*
  * Power off the system; it should never return.
  */
 void power_shutdown(void);
