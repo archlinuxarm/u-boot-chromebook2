@@ -15,7 +15,12 @@
 #endif
 / {
 	model = "SAMSUNG Peach board based on EXYNOS5420";
-	compatible = "samsung,peach", "samsung,exynos5";
+	compatible = "samsung,peach-pit-rev1", "samsung,exynos5";
+
+	aliases {
+		serial0 = "/serial@12C30000";
+		console = "/serial@12C30000";
+	};
 
 	config {
 		hwid = "peach TEST A-A 9382";
@@ -27,27 +32,26 @@
 		};
 	};
 
-	i2c@12ca0000 {
-		#address-cells = <1>;
-		#size-cells = <0>;
-		power-regulator@48 {
-			compatible = "ti,tps65090";
-			reg = <0x48>;
-		};
-
-		pmic@66 {
-			compatible = "samsung,s2mps11-pmic";
-			reg = <0x66>;
-			u-boot-clocks = <3>;
+	i2c@12ca0000 { /* i2c4 */
+		power-regulator@9 {
+			compatible = "maxim,max77802-pmic";
+			reg = <0x9>;
 		};
 	};
 
-	i2c@12c90000 {
-		#address-cells = <1>;
-		#size-cells = <0>;
-		tpm@20 {
-			compatible = "infineon,slb9635-tpm";
-			reg = <0x20>;
+	i2c@12e10000 { /* i2c9 */
+                tpm@20 {
+                        compatible = "infineon,slb9645-tpm";
+                        reg = <0x20>;
+		};
+	};
+
+	i2c@12e20000 { /* i2c10 */
+		cros-ec@1e {
+			reg = <0x1e>;
+			compatible = "google,cros-ec";
+			i2c-max-frequency = <100000>;
+			ec-interrupt = <&gpio 181 0>; /* GPX1_5, active low */
 		};
 	};
 
