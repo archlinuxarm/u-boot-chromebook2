@@ -45,12 +45,12 @@
 #ifdef CONFIG_TEGRA_CLOCK_SCALING
 #include <asm/arch/emc.h>
 #endif
-#ifdef CONFIG_USB_EHCI_TEGRA
-#include <asm/arch-tegra/usb.h>
-#endif
 #ifdef CONFIG_TEGRA_MMC
 #include <asm/arch-tegra/tegra_mmc.h>
 #include <asm/arch-tegra/mmc.h>
+#endif
+#ifdef CONFIG_USB_EHCI_TEGRA
+#include <asm/arch/usb.h>
 #endif
 #include <i2c.h>
 #include <spi.h>

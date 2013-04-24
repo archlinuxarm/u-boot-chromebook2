@@ -31,4 +31,6 @@
 
 #define MAX_NUM_CPU            4
 
+#define TEGRA_USB1_BASE		0x7D000000
+
 #endif /* TEGRA114_H */
