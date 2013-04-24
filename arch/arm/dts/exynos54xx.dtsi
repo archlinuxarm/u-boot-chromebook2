@@ -91,4 +91,8 @@
 		samsung,ycbcr-coeff = <0>;
 		samsung,color-depth = <1>;
 	};
+
+	dmc {
+		mem-type = "ddr3";
+	};
 };

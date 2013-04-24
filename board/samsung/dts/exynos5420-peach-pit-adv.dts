@@ -74,4 +74,7 @@
 		samsung,dual-lcd-enabled = <0>;
 	};
 
+	dmc {
+		mem-type = "lpddr3";
+	};
 };
