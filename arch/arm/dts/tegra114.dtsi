@@ -216,4 +216,109 @@
 		clocks = <&tegra_car 15>;
 		status = "disable";
 	};
+
+/* This table has USB timing parameters for each Oscillator frequency we
+ * support. There are four sets of values:
+ *
+ * 1. PLLU configuration information (reference clock is osc/clk_m and
+ * PLLU-FOs are fixed at 12MHz/60MHz/480MHz).
+ * Reference frequency MHZ 12.0  13.0 19.2  26.0
+ * ----------------------------------------------------
+ *      DIVN              960   960    200   960
+ *      DIVM               12    13      4    26
+ *      CPCON              12    12      3    12
+ *      LFCON               2     2      2     2
+ *
+ * 2. PLL CONFIGURATION & PARAMETERS for different clock generators:
+ * Reference frequency MHZ 12.0  13.0  19.2  26.0
+ * ----------------------------------------------------
+ * PLLU_ENABLE_DLY_COUNT   02     2     3     4
+ * PLLU_STABLE_COUNT       47    51    75   102
+ * PLL_ACTIVE_DLY_COUNT    08     9    12     9
+ * XTAL_FREQ_COUNT        118   127   188   254
+ *
+ * 3. Debounce values IdDig, Avalid, Bvalid, VbusValid, VbusWakeUp, and
+ * SessEnd. Each of these signals have their own debouncer and for each of
+ * those one out of two debouncing times can be chosen (BIAS_DEBOUNCE_A or
+ * BIAS_DEBOUNCE_B).
+ *
+ * The values of DEBOUNCE_A and DEBOUNCE_B are calculated as follows:
+ *    0xffff -> No debouncing at all
+ *    <n> ms = <n> * 1000 / (1/19.2MHz) / 4
+ *
+ * So to program a 10 ms debounce for BIAS_DEBOUNCE_A, we have:
+ * BIAS_DEBOUNCE_A[15:0] = 10 * 1000 * 19.2 / 4  = 48000 = 0xBB80
+ *
+ * We need to use only DebounceA for BOOTROM. We don't need the DebounceB
+ * values, so we can keep those to default.
+ *
+ * 4. The 20 microsecond delay after bias cell operation.
+ *    UTMIP_BIAS_PAD_TRK_COUNT
+ *
+ * enum {
+ *	PARAM_DIVN,                     // PLL FEEDBACK DIVIDER
+ *	PARAM_DIVM,                     // PLL INPUT DIVIDER
+ *	PARAM_DIVP,                     // POST DIVIDER (2^N)
+ *	PARAM_CPCON,                    // BASE PLLC CHARGE Pump setup ctrl
+ *	PARAM_LFCON,                    // BASE PLLC LOOP FILter setup ctrl
+ *	PARAM_ENABLE_DELAY_COUNT,       // PLL-U Enable Delay Count
+ *	PARAM_STABLE_COUNT,             // PLL-U STABLE count
+ *	PARAM_ACTIVE_DELAY_COUNT,       // PLL-U Active delay count
+ *	PARAM_XTAL_FREQ_COUNT,          // PLL-U XTAL frequency count
+ *	PARAM_DEBOUNCE_A_TIME,          // 10MS DELAY for BIAS_DEBOUNCE_A
+ *	PARAM_BIAS_TIME,                // 20US DELAY AFter bias cell op
+ *					// UTMIP_BIAS_PAD_TRK_COUNT
+ *};
+ */
+	usbparams@0 {
+		compatible = "nvidia,usbparams";
+		osc-frequency = <13000000>;
+		/* DivN, DivM, DivP, CPCON, LFCON, Delays      Debounce, Bias */
+		params = <0x3c0 0x0d 0x00 0xc 2  0x02 0x33 0x09 0x7f  0x7ef4 6>;
+	};
+
+	usbparams@1 {
+		compatible = "nvidia,usbparams";
+		osc-frequency = <19200000>;
+		params = <0x0c8 0x04 0x00 0x3 2  0x03 0x4b 0x0c 0xbc  0xbb80 8>;
+	};
+
+	usbparams@2 {
+		compatible = "nvidia,usbparams";
+		osc-frequency = <12000000>;
+		params = <0x3c0 0x0c 0x00 0xc 2  0x02 0x2f 0x08 0x76  0x7530 5>;
+	};
+
+	usbparams@3 {
+		compatible = "nvidia,usbparams";
+		osc-frequency = <26000000>;
+		params = <0x3c0 0x1a 0x00 0xc 2  0x04 0x66 0x09 0xfe  0xfde8 0xb>;
+	};
+
+	usb@7d000000 {
+		compatible = "nvidia,tegra30-ehci", "nvidia,tegra114-ehci";
+		reg = <0x7d000000 0x4000>;
+		interrupts = < 52 >;
+		phy_type = "utmi";
+		clocks = <&tegra_car 22>;	/* PERIPH_ID_USBD */
+		status = "disabled";
+	};
+
+	usb@7d004000 {
+		compatible = "nvidia,tegra30-ehci", "nvidia,tegra114-ehci";
+		reg = <0x7d004000 0x4000>;
+		interrupts = < 53 >;
+		phy_type = "hsic";
+		clocks = <&tegra_car 58>;	/* PERIPH_ID_USB2 */
+		status = "disabled";
+	};
+
+	usb@7d008000 {
+		compatible = "nvidia,tegra30-ehci", "nvidia,tegra114-ehci";
+		reg = <0x7d008000 0x4000>;
+		interrupts = < 129 >;
+		phy_type = "utmi";
+		clocks = <&tegra_car 59>;	/* PERIPH_ID_USB3 */
+		status = "disabled";
+	};
 };
