@@ -299,6 +299,15 @@ struct exynos5_phy_control {
 	unsigned int phy_con42;
 };
 
+struct exynos5_tzasc {
+	unsigned char res1[0xf00];
+	unsigned int membaseconfig0;
+	unsigned int membaseconfig1;
+	unsigned char res2[0x8];
+	unsigned int memconfig0;
+	unsigned int memconfig1;
+};
+
 enum ddr_mode {
 	DDR_MODE_DDR2,
 	DDR_MODE_DDR3,
