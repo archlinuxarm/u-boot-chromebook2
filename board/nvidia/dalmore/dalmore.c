@@ -76,7 +76,7 @@ void board_sdmmc_voltage_init(void)
 	i2c_write_pmic(PMU_I2C_ADDRESS, 0x60, 0x01);
 
 	/* TPS65090: FET6_CTRL = enable output auto discharge, enable FET6 */
-	i2c_write_pmic(PMU_I2C_ADDRESS, 0x14, 0x03);
+	i2c_write_pmic(BAT_I2C_ADDRESS, 0x14, 0x03);
 }
 
 void board_vreg_init(void)
