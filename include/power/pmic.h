@@ -28,6 +28,7 @@
 #include <linux/list.h>
 #include <i2c.h>
 #include <power/power_chrg.h>
+#include <fdtdec.h>
 
 enum { PMIC_I2C, PMIC_SPI, PMIC_NONE};
 enum { I2C_PMIC, I2C_NUM, };
@@ -89,7 +90,7 @@ struct pmic {
 	struct pmic *parent;
 	struct list_head list;
 #ifdef CONFIG_OF_CONTROL
-	int node;
+	enum fdt_compat_id compat_id;
 #endif
 };
 
@@ -105,9 +106,17 @@ int pmic_set_output(struct pmic *p, u32 reg, int ldo, int on);
 int pmic_set_voltage(u32 new_voltage);
 
 /**
+ * Find registered PMIC based on its compatibility ID.
+ *
+ * @param pmic_compat   compatibility ID of the PMIC to search for.
+ * @return pointer to the relevant 'struct pmic' on success or NULL
+ */
+struct pmic *pmic_get_by_id(enum fdt_compat_id pmic_compat);
+
+/**
  * Update contents of a pmic register.
  *
- * This function reads a register, sets the bits which are set in the second
+ * This function reads a register, sets the bits which are set in the third
  * parameter and writes the resulting value back. Its use is not error prone
  * as if it is trying to set bit fields and the fields, the new value will be
  * mixed with the old value.
@@ -121,8 +130,32 @@ int pmic_set_voltage(u32 new_voltage);
  * @return zero on success, nonzero on failure
  */
 int pmic_reg_update(struct pmic *p, int reg, uint regval);
+
 #ifdef CONFIG_OF_CONTROL
-int pmic_enable_clocks(struct pmic *ppmic);
+enum pmic_reg_op { PMIC_REG_BAIL, PMIC_REG_WRITE, PMIC_REG_UPDATE };
+struct pmic_init_ops {
+	enum pmic_reg_op reg_op;
+	u8	reg_addr;
+	u8	reg_value;
+};
+
+/**
+ * Common function used to intialize an i2c based PMIC.
+ *
+ * This function finds the PMIC in the device tree based on its compatibility
+ * ID. If found, the struct pmic is allocated, initialized and registered.
+ *
+ * Then the table of initialization settings is scanned and the PMIC registers
+ * are set as dictated by the table contents,
+ *
+ * @param pmic_compat   compatibility ID f the PMIC to be initialized.
+ * @param pmic_ops      a pointer to the table containing PMIC initialization
+ *			settings. The last entry contains reg_op
+ *			of PMIC_REG_BAIL.
+ * @return zero on success, nonzero on failure
+ */
+int pmic_common_init(enum fdt_compat_id pmic_compat,
+		     const struct pmic_init_ops *pmic_ops);
 #endif
 
 #define pmic_i2c_addr (p->hw.i2c.addr)

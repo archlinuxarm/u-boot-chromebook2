@@ -36,7 +36,6 @@
 		pmic@66 {
 			compatible = "samsung,s2mps11-pmic";
 			reg = <0x66>;
-			u-boot-clocks = <3>;
 		};
 	};
 

@@ -124,6 +124,20 @@ struct pmic *pmic_get(const char *s)
 	return NULL;
 }
 
+struct pmic *pmic_get_by_id(enum fdt_compat_id pmic_compat)
+{
+	struct pmic *p;
+
+	list_for_each_entry(p, &pmic_list, list) {
+		if (p->compat_id == pmic_compat) {
+			debug("%s: pmic %s -> 0x%p\n", __func__, p->name, p);
+			return p;
+		}
+	}
+
+	return NULL;
+}
+
 const char *power_get_interface(int interface)
 {
 	const char *power_interface[] = {"I2C", "SPI", "|+|-|"};

@@ -299,12 +299,36 @@ static int board_init_tps65090(void)
 	return ret;
 }
 
+#ifdef CONFIG_SMDK5420
+static int s2mps11_init(void)
+{
+	const struct pmic_init_ops pmic_ops[] = {
+		{PMIC_REG_WRITE, S2MPS11_BUCK1_CTRL2, S2MPS11_BUCK_CTRL2_1V},
+		{PMIC_REG_WRITE, S2MPS11_BUCK2_CTRL2, S2MPS11_BUCK_CTRL2_1V},
+		{PMIC_REG_WRITE, S2MPS11_BUCK3_CTRL2, S2MPS11_BUCK_CTRL2_1V},
+		{PMIC_REG_WRITE, S2MPS11_BUCK4_CTRL2, S2MPS11_BUCK_CTRL2_1V},
+		{PMIC_REG_WRITE, S2MPS11_BUCK6_CTRL2, S2MPS11_BUCK_CTRL2_1V},
+		{PMIC_REG_UPDATE, S2MPS11_REG_RTC_CTRL,
+		 S2MPS11_RTC_CTRL_32KHZ_CP_EN | S2MPS11_RTC_CTRL_JIT},
+		{PMIC_REG_BAIL}
+	};
+
+	return pmic_common_init(COMPAT_SAMSUNG_S2MPS11_PMIC, pmic_ops);
+}
+#endif
+
 int power_init_board(void)
 {
 	int ret;
 
 	set_ps_hold_ctrl();
 
+	/* For now, this is not device-tree-controlled */
+#ifdef CONFIG_SMDK5420
+	ret = s2mps11_init();
+	if (ret)
+		return ret;
+#endif
 	ret = max77686_init();
 	if (ret)
 		return ret;

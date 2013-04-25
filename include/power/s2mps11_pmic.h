@@ -115,7 +115,7 @@ enum s2mps11_reg {
 	S2MPS11_REG_L37CTRL,
 	S2MPS11_REG_L38CTRL,
 
-	PMIC_NUM_OF_REGS,
+	S2MPS11_NUM_OF_REGS,
 };
 
 /* I2C device address for pmic S2MPS11 */
@@ -141,5 +141,8 @@ enum s2mps11_reg {
 #define S2MPS11_LDO22_CTRL	0x52
 
 #define S2MPS11_DEVICE_NAME "S2MPS11_PMIC"
+
+#define S2MPS11_RTC_CTRL_32KHZ_CP_EN (1 << 1)
+#define S2MPS11_RTC_CTRL_JIT (1 << 4)
 
 #endif /*  __LINUX_MFD_S2MPS11_H */

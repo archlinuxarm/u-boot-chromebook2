@@ -45,73 +45,14 @@ int s2mps11_pmic_init(unsigned char bus)
 		return -ENOMEM;
 	}
 
-#ifdef CONFIG_OF_CONTROL
-	const void *blob = gd->fdt_blob;
-	int node, parent;
-
-	node = fdtdec_next_compatible(blob, 0, COMPAT_SAMSUNG_S2MPS11_PMIC);
-	if (node < 0) {
-		debug("PMIC: No node for PMIC Chip in device tree\n");
-		debug("node = %d\n", node);
-		return -1;
-	}
-
-	parent = fdt_parent_offset(blob, node);
-	if (parent < 0) {
-		debug("%s: Cannot find node parent\n", __func__);
-		return -1;
-	}
-
-	p->bus = i2c_get_bus_num_fdt(parent);
-	if (p->bus < 0) {
-		debug("%s: Cannot find I2C bus\n", __func__);
-		return -1;
-	}
-	p->hw.i2c.addr = fdtdec_get_int(blob, node, "reg", 66);
-	p->node = node;
-#else
 	p->bus = bus;
 	p->hw.i2c.addr = S2MPS11_I2C_ADDR;
-#endif
-
 	p->name = name;
 	p->interface = PMIC_I2C;
-	p->number_of_regs = PMIC_NUM_OF_REGS;
+	p->number_of_regs = S2MPS11_NUM_OF_REGS;
 	p->hw.i2c.tx_num = 1;
 
 	puts("Board PMIC init\n");
 
 	return 0;
 }
-
-#ifdef CONFIG_OF_CONTROL
-int pmic_enable_clocks(struct pmic *ppmic)
-{
-	u32 reg;
-	int clocks = fdtdec_get_int
-		(gd->fdt_blob, ppmic->node, "u-boot-clocks", -1);
-
-	if (clocks == -1)
-		/* Not defined, leave at default. */
-		return 0;
-
-	/* Set clocks as required. */
-	I2C_SET_BUS(ppmic->bus);
-	if (pmic_reg_read(ppmic, S2MPS11_REG_RTC_CTRL, &reg)) {
-		printf("%s: Failed to read rtc_ctrl!\n", __func__);
-		return -1;
-	}
-
-	reg = (reg & ~S2MPS11_CLOCK_MASK) | (clocks & S2MPS11_CLOCK_MASK);
-
-	/* Let's enable Jitter control unconditionally. */
-	reg |= S2MPS11_RTC_CTRL_JIT;
-
-	if (pmic_reg_write(ppmic, S2MPS11_REG_RTC_CTRL, reg)) {
-		printf("%s: Failed to write rtc_ctrl!\n", __func__);
-		return -1;
-	}
-
-	return 0;
-}
-#endif

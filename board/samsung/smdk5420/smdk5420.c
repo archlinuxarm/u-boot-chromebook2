@@ -95,16 +95,11 @@ void exynos_lcd_power_on(void)
 {
 	struct pmic *p;
 
-	p = pmic_get("S2MPS11_PMIC");
+	p = pmic_get_by_id(COMPAT_SAMSUNG_S2MPS11_PMIC);
 	if (!p) {
-		debug("Failed to get PMIC data\n");
+		printf("%s: Failed to get PMIC data\n", __func__);
 		return;	/* TODO: return error */
 	}
-
-	if (pmic_probe(p))
-		return;
-
-	i2c_set_bus_num(S2MPS11_BUS_NUM);
 
 	/* PVDD_LDO12 set to 1V */
 	if (pmic_reg_write(p, S2MPS11_LDO22_CTRL, S2MPS11_BUCK_CTRL2_1_2V)) {
