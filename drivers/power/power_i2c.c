@@ -158,6 +158,25 @@ int pmic_reg_read(struct pmic *p, u32 reg, u32 *val)
 	return 0;
 }
 
+int pmic_reg_update(struct pmic *p, int reg, uint regval)
+{
+	u32 val;
+	int ret = 0;
+
+	ret = pmic_reg_read(p, reg, &val);
+	if (ret) {
+		debug("%s: PMIC %d register read failed\n", __func__, reg);
+		return -1;
+	}
+	val |= regval;
+	ret = pmic_reg_write(p, reg, val);
+	if (ret) {
+		debug("%s: PMIC %d register write failed\n", __func__, reg);
+		return -1;
+	}
+	return 0;
+}
+
 int pmic_probe(struct pmic *p)
 {
 	int ret, old_bus;

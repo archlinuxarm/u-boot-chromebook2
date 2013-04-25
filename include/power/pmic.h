@@ -103,6 +103,24 @@ int pmic_reg_read(struct pmic *p, u32 reg, u32 *val);
 int pmic_reg_write(struct pmic *p, u32 reg, u32 val);
 int pmic_set_output(struct pmic *p, u32 reg, int ldo, int on);
 int pmic_set_voltage(u32 new_voltage);
+
+/**
+ * Update contents of a pmic register.
+ *
+ * This function reads a register, sets the bits which are set in the second
+ * parameter and writes the resulting value back. Its use is not error prone
+ * as if it is trying to set bit fields and the fields, the new value will be
+ * mixed with the old value.
+ *
+ * TODO(vbendeb): Introduce a mask to make sure that the field is set as
+ * required (http://crosbug.com/39884).
+ *
+ * @param p	  pointer to the pmic structure of the PMIC to access
+ * @param reg	  register address of the register to modify
+ * @param regval  bits to set in the register
+ * @return zero on success, nonzero on failure
+ */
+int pmic_reg_update(struct pmic *p, int reg, uint regval);
 #ifdef CONFIG_OF_CONTROL
 int pmic_enable_clocks(struct pmic *ppmic);
 #endif
