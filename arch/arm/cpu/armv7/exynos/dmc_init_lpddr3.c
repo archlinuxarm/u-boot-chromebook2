@@ -324,7 +324,7 @@ int lpddr3_mem_ctrl_init(int reset)
 
 	setbits_le32(&clk->bpll_con1, BYPASS_EN);
 
-	writel(MUX_MCLK_CDR_MSPLL | MUX_BPLL_SEL_FOUTBPLL, &clk->clk_src_cdrex);
+	writel(MUX_BPLL_SEL_FOUTBPLL, &clk->clk_src_cdrex);
 	do {
 		val = readl(&clk->clk_mux_stat_cdrex);
 		val &= BPLL_SEL_MASK;
