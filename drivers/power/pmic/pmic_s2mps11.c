@@ -25,7 +25,7 @@
 #include <fdtdec.h>
 #include <i2c.h>
 #include <power/pmic.h>
-#include <power/s2mps11.c_pmic.h>
+#include <power/s2mps11_pmic.h>
 #include <errno.h>
 
 DECLARE_GLOBAL_DATA_PTR;

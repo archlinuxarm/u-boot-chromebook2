@@ -36,8 +36,9 @@
 #include <asm/arch/sromc.h>
 #include <asm/arch/dp_info.h>
 #include <asm/arch/power.h>
+#include <asm/arch/system.h>
 #include <power/pmic.h>
-#include <power/s2mps11.c_pmic.h>
+#include <power/s2mps11_pmic.h>
 #include <power/tps65090_pmic.h>
 
 DECLARE_GLOBAL_DATA_PTR;
