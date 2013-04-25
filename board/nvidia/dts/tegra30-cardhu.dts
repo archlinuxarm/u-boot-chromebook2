@@ -21,7 +21,6 @@
 		i2c4 = "/i2c@7000c700";
 		sdhci0 = "/sdhci@78000600";
 		sdhci1 = "/sdhci@78000000";
-                usb0 = "/usb@7d008000";
 	};
 
 	memory {
@@ -70,10 +69,5 @@
 	sdhci@78000600 {
 		status = "okay";
 		bus-width = <8>;
-	};
-
-	usb@7d008000 {
-		nvidia,vbus-gpio = <&gpio 233 3>;	/* PDD1, EN_3V3_PU */
-		status = "okay";
 	};
 };

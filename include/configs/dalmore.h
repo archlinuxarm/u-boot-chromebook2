@@ -78,20 +78,6 @@
 /* Backlight enable GPIO. TBD - move to DT when LCD driver added */
 #define DSI_PANEL_BL_EN_GPIO		GPIO_PH2
 
-/* USB Host support */
-#define CONFIG_USB_EHCI
-#define CONFIG_USB_EHCI_TEGRA
-#define CONFIG_USB_STORAGE
-#define CONFIG_CMD_USB
-
-/* USB networking support */
-#define CONFIG_USB_HOST_ETHER
-#define CONFIG_USB_ETHER_ASIX
-
-/* General networking support */
-#define CONFIG_CMD_NET
-#define CONFIG_CMD_DHCP
-
 #include "tegra-common-post.h"
 
 #endif /* __CONFIG_H */

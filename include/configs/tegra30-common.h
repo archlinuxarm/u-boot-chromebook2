@@ -89,8 +89,6 @@
 
 #define CONFIG_SPL_LDSCRIPT		"$(CPUDIR)/tegra30/u-boot-spl.lds"
 
-#define CONFIG_EHCI_IS_TDI
-
 /* Total I2C ports on Tegra30 */
 #define TEGRA_I2C_NUM_CONTROLLERS	5
 
