@@ -45,23 +45,24 @@ int dmc_config_zq(struct mem_timings *mem,
 	val = PHY_CON16_RESET_VAL;
 	val |= mem->zq_mode_dds << PHY_CON16_ZQ_MODE_DDS_SHIFT;
 	val |= mem->zq_mode_term << PHY_CON16_ZQ_MODE_TERM_SHIFT;
-	val |= ZQ_CLK_DIV_EN;
-	writel(val, &phy0_ctrl->phy_con16);
-	writel(val, &phy1_ctrl->phy_con16);
-
 	/* Disable termination */
 	if (mem->zq_mode_noterm)
 		val |= PHY_CON16_ZQ_MODE_NOTERM_MASK;
 	writel(val, &phy0_ctrl->phy_con16);
 	writel(val, &phy1_ctrl->phy_con16);
 
-	/* ZQ_MANUAL_START: Enable */
-	val |= ZQ_MANUAL_STR;
-	writel(val, &phy0_ctrl->phy_con16);
-	writel(val, &phy1_ctrl->phy_con16);
+	writel(0x7, &phy0_ctrl->phy_con40);
+	writel(0x7, &phy1_ctrl->phy_con40);
 
-	/* ZQ_MANUAL_START: Disable */
-	val &= ~ZQ_MANUAL_STR;
+	setbits_le32(&phy0_ctrl->phy_con16, ZQ_CLK_DIV_EN);
+	setbits_le32(&phy1_ctrl->phy_con16, ZQ_CLK_DIV_EN);
+
+	setbits_le32(&phy0_ctrl->phy_con16, LONG_CALIBRATION);
+	setbits_le32(&phy1_ctrl->phy_con16, LONG_CALIBRATION);
+
+	/* ZQ_MANUAL_START: Enable */
+	setbits_le32(&phy0_ctrl->phy_con16, ZQ_MANUAL_STR);
+	setbits_le32(&phy1_ctrl->phy_con16, ZQ_MANUAL_STR);
 
 	/*
 	 * Since we are manaully calibrating the ZQ values,
@@ -74,7 +75,7 @@ int dmc_config_zq(struct mem_timings *mem,
 	}
 	if (!i)
 		return -1;
-	writel(val, &phy0_ctrl->phy_con16);
+	clrbits_le32(&phy0_ctrl->phy_con16, ZQ_MANUAL_STR);
 
 	i = ZQ_INIT_TIMEOUT;
 	while ((readl(&phy1_ctrl->phy_con17) & ZQ_DONE) != ZQ_DONE && i > 0) {
@@ -83,7 +84,7 @@ int dmc_config_zq(struct mem_timings *mem,
 	}
 	if (!i)
 		return -1;
-	writel(val, &phy1_ctrl->phy_con16);
+	clrbits_le32(&phy1_ctrl->phy_con16, ZQ_MANUAL_STR);
 
 	return 0;
 }
@@ -162,7 +163,6 @@ void dmc_config_prech(struct mem_timings *mem, struct exynos5_dmc *dmc)
 
 			/* PALL (all banks precharge) CMD */
 			writel(DIRECT_CMD_PALL | mask, &dmc->directcmd);
-			sdelay(0x10000);
 		}
 	}
 }

@@ -82,6 +82,7 @@
 
 /* MEMCONFIG0 register bit fields */
 #define DMC_MEMCONFIGx_CHIP_MAP_INTERLEAVED     (1 << 12)
+#define DMC_MEMCONFIG_CHIP_MAP_SPLIT		(2 << 12)
 #define DMC_MEMCONFIGx_CHIP_COL_10              (3 << 8)
 #define DMC_MEMCONFIGx_CHIP_ROW_14              (2 << 4)
 #define DMC_MEMCONFIGx_CHIP_ROW_15              (3 << 4)
@@ -285,16 +286,20 @@
 #define P0_CMD_EN		(1 << 14)
 #define BYTE_RDLVL_EN		(1 << 13)
 #define CTRL_SHGATE		(1 << 8)
+#define CTRL_ATGATE		(1 << 6)
 
 #define PHY_CON1_RESET_VAL	0x09210100
 #define RDLVL_PASS_ADJ_VAL	0x6
 #define RDLVL_PASS_ADJ_OFFSET	16
 #define CTRL_GATEDURADJ_MASK	(0xf << 20)
+#define READ_LEVELLING_DDR3	0x0100
 
 #define PHY_CON2_RESET_VAL	0x00010004
 #define INIT_DESKEW_EN		(1 << 6)
 #define DLL_DESKEW_EN		(1 << 12)
 #define RDLVL_GATE_EN		(1 << 24)
+#define RDLVL_EN		(1 << 25)
+#define RDLVL_INCR_ADJ		(0x1 << 16)
 
 /* DREX_PAUSE */
 #define DREX_PAUSE_EN	(1 << 0)
@@ -307,6 +312,7 @@
 #define PHY_CON12_RESET_VAL	0x10100070
 #define PHY_CON12_VAL		0x10107F50
 #define CTRL_START		(1 << 6)
+#define CTRL_DLL_ON		(1 << 5)
 #define CTRL_FORCE_MASK		(0x7F << 8)
 #define CTRL_LOCK_COARSE_MASK	(0x7F << 10)
 
@@ -343,13 +349,18 @@
 
 #define ZQ_CLK_EN		(1 << 27)
 #define ZQ_CLK_DIV_EN		(1 << 18)
+#define ZQ_MANUAL_MODE_OFFSET	2
+#define ZQ_LONG_CALIBRATION	0x1
 #define ZQ_MANUAL_STR		(1 << 1)
 #define ZQ_DONE			(1 << 0)
 #define ZQ_MODE_DDS_OFFSET	24
 
-#define CTRL_RDLVL_GATE_ENABLE	1
-#define CTRL_RDLVL_GATE_DISABLE	1
+#define LONG_CALIBRATION	(ZQ_LONG_CALIBRATION << ZQ_MANUAL_MODE_OFFSET)
 
+#define CTRL_RDLVL_GATE_ENABLE	1
+#define CTRL_RDLVL_GATE_DISABLE	0
+
+#define CTRL_RDLVL_DATA_ENABLE	(1 << 1)
 /* Direct Command */
 #define DIRECT_CMD_NOP			0x07000000
 #define DIRECT_CMD_PALL			0x01000000

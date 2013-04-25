@@ -95,6 +95,10 @@ static struct mem_timings ares_ddr3_timings = {
 			DMC_MEMCONTROL_BL_8 |
 			DMC_MEMCONTROL_PZQ_DISABLE |
 			DMC_MEMCONTROL_MRR_BYTE_7_0,
+		.memconfig = DMC_MEMCONFIG_CHIP_MAP_SPLIT |
+			DMC_MEMCONFIGx_CHIP_COL_10 |
+			DMC_MEMCONFIGx_CHIP_ROW_15 |
+			DMC_MEMCONFIGx_CHIP_BANK_8,
 		.prechconfig_tp_cnt = 0xff,
 		.dpwrdn_cyc = 0xff,
 		.dsref_cyc = 0xffff,
@@ -111,12 +115,19 @@ static struct mem_timings ares_ddr3_timings = {
 		.gate_leveling_enable = 1,
 };
 
+/* TODO (samsung) */
+/* 'reset' field is currently ignored, this will be added/removed
+ * once we have more info about LPDDR3PHY_CTRL register for SCP silicon
+ * see chrome-os-partner:18991 for more
+ */
+
 int ddr3_mem_ctrl_init(int reset)
 {
 	struct exynos5420_clock *clk =
 		(struct exynos5420_clock *)EXYNOS5_CLOCK_BASE;
 	struct exynos5_phy_control *phy0_ctrl, *phy1_ctrl;
 	struct exynos5_dmc *drex0, *drex1;
+	struct exynos5_tzasc *tzasc0, *tzasc1;
 	struct mem_timings *mem = &ares_ddr3_timings;
 	u32 val, nLockR, nLockW_phy0, nLockW_phy1;
 	int i;
@@ -125,6 +136,8 @@ int ddr3_mem_ctrl_init(int reset)
 	phy1_ctrl = (struct exynos5_phy_control *)EXYNOS5_DMC_PHY1_BASE;
 	drex0 = (struct exynos5_dmc *)EXYNOS5420_DMC_DREXI_0;
 	drex1 = (struct exynos5_dmc *)EXYNOS5420_DMC_DREXI_1;
+	tzasc0 = (struct exynos5_tzasc *)EXYNOS5420_DMC_TZASC_0;
+	tzasc1 = (struct exynos5_tzasc *)EXYNOS5420_DMC_TZASC_1;
 
 	/* Enable PAUSE for DREX */
 	setbits_le32(&clk->pause, ENABLE_BIT);
@@ -214,28 +227,30 @@ int ddr3_mem_ctrl_init(int reset)
 	update_reset_dll(drex0, DDR_MODE_DDR3);
 	update_reset_dll(drex1, DDR_MODE_DDR3);
 
-	/* TODO(hatim.rv@samsung.com):
-	 * Create register structure for TZASC and remove the magic
-	 * numbers from below after getting a detailed register description
-	 */
 	/* Set Base Address:
 	 * 0x2000_0000 ~ 0x5FFF_FFFF
 	 * 0x6000_0000 ~ 0x9FFF_FFFF
 	 */
-	/* MEMBASECONFIG0/1*/
-	writel(0x001007E0, 0x10D40f00);
-	writel(0x001007E0, 0x10D50f00);
-	writel(0x003007E0, 0x10D40f04);
-	writel(0x003007E0, 0x10D50f04);
+	/* MEMBASECONFIG0 */
+	val = DMC_MEMBASECONFIGx_CHIP_BASE(0x10) |
+		DMC_MEMBASECONFIGx_CHIP_MASK(0x7E0);
+	writel(val, &tzasc0->membaseconfig0);
+	writel(val, &tzasc1->membaseconfig0);
+
+	/* MEMBASECONFIG1 */
+	val = DMC_MEMBASECONFIGx_CHIP_BASE(0x30) |
+		DMC_MEMBASECONFIGx_CHIP_MASK(0x7E0);
+	writel(val, &tzasc0->membaseconfig1);
+	writel(val, &tzasc1->membaseconfig1);
 
 	/* Memory Channel Inteleaving Size
 	 * Ares Channel interleaving = 128 bytes
 	 */
 	/* MEMCONFIG0/1 */
-	writel(0x2333, 0x10D40f10);
-	writel(0x2333, 0x10D50f10);
-	writel(0x2333, 0x10D40f14);
-	writel(0x2333, 0x10D50f14);
+	writel(mem->memconfig, &tzasc0->memconfig0);
+	writel(mem->memconfig, &tzasc1->memconfig0);
+	writel(mem->memconfig, &tzasc0->memconfig1);
+	writel(mem->memconfig, &tzasc1->memconfig1);
 
 	/* Precharge Configuration */
 	writel(mem->prechconfig_tp_cnt << PRECHCONFIG_TP_CNT_SHIFT,
@@ -261,10 +276,11 @@ int ddr3_mem_ctrl_init(int reset)
 
 	if (mem->gate_leveling_enable) {
 
-		val = PHY_CON0_RESET_VAL;
-		val |= P0_CMD_EN;
-		writel(val, &phy0_ctrl->phy_con0);
-		writel(val, &phy1_ctrl->phy_con0);
+		setbits_le32(&phy0_ctrl->phy_con0, CTRL_ATGATE);
+		setbits_le32(&phy1_ctrl->phy_con0, CTRL_ATGATE);
+
+		setbits_le32(&phy0_ctrl->phy_con0, P0_CMD_EN);
+		setbits_le32(&phy1_ctrl->phy_con0, P0_CMD_EN);
 
 		val = PHY_CON2_RESET_VAL;
 		val |= INIT_DESKEW_EN;
@@ -288,14 +304,14 @@ int ddr3_mem_ctrl_init(int reset)
 		nLockR = readl(&phy0_ctrl->phy_con13);
 		nLockW_phy0 = (nLockR & CTRL_LOCK_COARSE_MASK) >> 2;
 		nLockR = readl(&phy0_ctrl->phy_con12);
-		nLockR &= ~CTRL_START;
+		nLockR &= ~CTRL_DLL_ON;
 		nLockR |= nLockW_phy0;
 		writel(nLockR, &phy0_ctrl->phy_con12);
 
 		nLockR = readl(&phy1_ctrl->phy_con13);
 		nLockW_phy1 = (nLockR & CTRL_LOCK_COARSE_MASK) >> 2;
 		nLockR = readl(&phy1_ctrl->phy_con12);
-		nLockR &= ~CTRL_START;
+		nLockR &= ~CTRL_DLL_ON;
 		nLockR |= nLockW_phy1;
 		writel(nLockR, &phy1_ctrl->phy_con12);
 
@@ -304,22 +320,18 @@ int ddr3_mem_ctrl_init(int reset)
 		writel(0x00030004, &drex1->directcmd);
 		writel(0x00130004, &drex1->directcmd);
 
-		val = PHY_CON2_RESET_VAL;
-		val |= INIT_DESKEW_EN;
-		val |= RDLVL_GATE_EN;
-		writel(val, &phy0_ctrl->phy_con2);
-		writel(val, &phy1_ctrl->phy_con2);
+		setbits_le32(&phy0_ctrl->phy_con2, RDLVL_GATE_EN);
+		setbits_le32(&phy1_ctrl->phy_con2, RDLVL_GATE_EN);
 
-		val = PHY_CON0_RESET_VAL;
-		val |= P0_CMD_EN;
-		val |= BYTE_RDLVL_EN;
-		val |= CTRL_SHGATE;
-		writel(val, &phy0_ctrl->phy_con0);
-		writel(val, &phy1_ctrl->phy_con0);
+		setbits_le32(&phy0_ctrl->phy_con0, CTRL_SHGATE);
+		setbits_le32(&phy1_ctrl->phy_con0, CTRL_SHGATE);
 
-		val = PHY_CON1_RESET_VAL;
+		val = readl(&phy0_ctrl->phy_con1);
 		val &= ~(CTRL_GATEDURADJ_MASK);
 		writel(val, &phy0_ctrl->phy_con1);
+
+		val = readl(&phy1_ctrl->phy_con1);
+		val &= ~(CTRL_GATEDURADJ_MASK);
 		writel(val, &phy1_ctrl->phy_con1);
 
 		writel(CTRL_RDLVL_GATE_ENABLE, &drex0->rdlvl_config);
@@ -360,12 +372,66 @@ int ddr3_mem_ctrl_init(int reset)
 		writel(0x00030000, &drex1->directcmd);
 		writel(0x00130000, &drex1->directcmd);
 
-		val = (mem->ctrl_start_point <<
-				PHY_CON12_CTRL_START_POINT_SHIFT) |
-			(mem->ctrl_inc << PHY_CON12_CTRL_INC_SHIFT) |
-			(mem->ctrl_start << PHY_CON12_CTRL_START_SHIFT) |
-			(mem->ctrl_dll_on << PHY_CON12_CTRL_DLL_ON_SHIFT) |
-			(mem->ctrl_ref << PHY_CON12_CTRL_REF_SHIFT);
+		/* Set Read DQ Calibration */
+		writel(0x00030004, &drex0->directcmd);
+		writel(0x00130004, &drex0->directcmd);
+		writel(0x00030004, &drex1->directcmd);
+		writel(0x00130004, &drex1->directcmd);
+
+		val = readl(&phy0_ctrl->phy_con1);
+		val |= READ_LEVELLING_DDR3;
+		writel(val, &phy0_ctrl->phy_con1);
+		val = readl(&phy1_ctrl->phy_con1);
+		val |= READ_LEVELLING_DDR3;
+		writel(val, &phy1_ctrl->phy_con1);
+
+		val = readl(&phy0_ctrl->phy_con2);
+		val |= (RDLVL_EN | RDLVL_INCR_ADJ);
+		writel(val, &phy0_ctrl->phy_con2);
+		val = readl(&phy1_ctrl->phy_con2);
+		val |= (RDLVL_EN | RDLVL_INCR_ADJ);
+		writel(val, &phy1_ctrl->phy_con2);
+
+		setbits_le32(&drex0->rdlvl_config, CTRL_RDLVL_DATA_ENABLE);
+		i = TIMEOUT;
+		while (((readl(&drex0->phystatus) & RDLVL_COMPLETE_CHO) !=
+			RDLVL_COMPLETE_CHO) && (i > 0)) {
+			/*
+			 * TODO(waihong): Comment on how long this take to
+			 * timeout
+			 */
+			sdelay(100);
+			i--;
+		}
+		if (!i)
+			return SETUP_ERR_RDLV_COMPLETE_TIMEOUT;
+		clrbits_le32(&drex0->rdlvl_config, CTRL_RDLVL_DATA_ENABLE);
+
+		setbits_le32(&drex1->rdlvl_config, CTRL_RDLVL_DATA_ENABLE);
+		i = TIMEOUT;
+		while (((readl(&drex1->phystatus) & RDLVL_COMPLETE_CHO) !=
+			RDLVL_COMPLETE_CHO) && (i > 0)) {
+			/*
+			 * TODO(waihong): Comment on how long this take to
+			 * timeout
+			 */
+			sdelay(100);
+			i--;
+		}
+		if (!i)
+			return SETUP_ERR_RDLV_COMPLETE_TIMEOUT;
+		clrbits_le32(&drex1->rdlvl_config, CTRL_RDLVL_DATA_ENABLE);
+
+		writel(0x00030000, &drex0->directcmd);
+		writel(0x00130000, &drex0->directcmd);
+		writel(0x00030000, &drex1->directcmd);
+		writel(0x00130000, &drex1->directcmd);
+
+		update_reset_dll(drex0, DDR_MODE_DDR3);
+		update_reset_dll(drex1, DDR_MODE_DDR3);
+
+		/* Common Settings for Leveling */
+		val = PHY_CON12_RESET_VAL;
 		writel((val + nLockW_phy0), &phy0_ctrl->phy_con12);
 		writel((val + nLockW_phy1), &phy1_ctrl->phy_con12);
 
