@@ -52,6 +52,7 @@
 			compatible = "google,cros-ec";
 			i2c-max-frequency = <100000>;
 			ec-interrupt = <&gpio 181 0>; /* GPX1_5, active low */
+			status = "disabled";
 		};
 	};
 
