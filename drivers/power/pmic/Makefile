@@ -28,8 +28,8 @@ LIB	:= $(obj)libpmic.o
 COBJS-$(CONFIG_POWER_MAX8998) += pmic_max8998.o
 COBJS-$(CONFIG_POWER_MAX8997) += pmic_max8997.o
 COBJS-$(CONFIG_POWER_MUIC_MAX8997) += muic_max8997.o
-COBJS-$(CONFIG_POWER_MAX77686) += pmic_max77686.o
 ifeq ($(CONFIG_OF_CONTROL),)
+COBJS-$(CONFIG_POWER_MAX77686) += pmic_max77686.o
 COBJS-$(CONFIG_POWER_S2MPS11) += pmic_s2mps11.o
 else
 COBJS-$(CONFIG_POWER) += pmic_common.o

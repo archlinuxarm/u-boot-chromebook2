@@ -136,24 +136,11 @@ enum {
 	MAX77686_REG_PMIC_BBAT		= 0x7e,
 	MAX77686_REG_PMIC_32KHZ,
 
-	PMIC_NUM_OF_REGS,
+	MAX77686_NUM_OF_REGS
 };
 
 /* I2C device address for pmic max77686 */
 #define MAX77686_I2C_ADDR (0x12 >> 1)
-
-enum {
-	REG_DISABLE = 0,
-	REG_ENABLE
-};
-
-enum {
-	LDO_OFF = 0,
-	LDO_ON,
-
-	DIS_LDO = (0x00 << 6),
-	EN_LDO = (0x3 << 6),
-};
 
 /* Buck1 1 volt value */
 #define MAX77686_BUCK1OUT_1V	0x5
@@ -192,6 +179,7 @@ enum {
  * output is activated
  */
 #define MAX77686_32KHCP_EN	(1 << 1)
+#define MAX77686_32KHCP_LOW_JITTER (1 << 3)
 /*
  * MAX77686_REG_PMIC_BBAT set to
  * Back up batery charger on and
@@ -199,4 +187,6 @@ enum {
  */
 #define MAX77686_BBCHOSTEN	(1 << 0)
 #define MAX77686_BBCVS_3_5V	(3 << 3)
+
+#define MAX77686_EN_LDO		(0x3 << 6)
 #endif /* __MAX77686_PMIC_H_ */

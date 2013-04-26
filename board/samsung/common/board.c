@@ -181,98 +181,39 @@ static int board_init_cros_ec_devices(const void *blob)
 #endif
 
 #if defined(CONFIG_POWER)
-int max77686_init(void)
+static int max77686_init(void)
 {
-	struct pmic *p;
+	const struct pmic_init_ops pmic_ops[] = {
+		{PMIC_REG_UPDATE, MAX77686_REG_PMIC_32KHZ,
+		 MAX77686_32KHCP_EN|MAX77686_32KHCP_LOW_JITTER},
+		{PMIC_REG_WRITE, MAX77686_REG_PMIC_BUCK1OUT,
+		 MAX77686_BUCK1OUT_1V},
+		{PMIC_REG_UPDATE, MAX77686_REG_PMIC_BUCK1CRTL,
+		 MAX77686_BUCK1CTRL_EN},
+		{PMIC_REG_WRITE, MAX77686_REG_PMIC_BUCK2DVS1,
+		 MAX77686_BUCK2DVS1_1_3V},
+		{PMIC_REG_UPDATE, MAX77686_REG_PMIC_BUCK2CTRL1,
+		 MAX77686_BUCK2CTRL_ON},
+		{PMIC_REG_WRITE, MAX77686_REG_PMIC_BUCK3DVS1,
+		 MAX77686_BUCK3DVS1_1_0125V},
+		{PMIC_REG_UPDATE, MAX77686_REG_PMIC_BUCK3CTRL,
+		 MAX77686_BUCK3CTRL_ON},
+		{PMIC_REG_WRITE, MAX77686_REG_PMIC_BUCK4DVS1,
+		 MAX77686_BUCK4DVS1_1_2V},
+		{PMIC_REG_UPDATE, MAX77686_REG_PMIC_BUCK4CTRL1,
+		 MAX77686_BUCK3CTRL_ON},
+		{PMIC_REG_UPDATE, MAX77686_REG_PMIC_LDO2CTRL1,
+		 MAX77686_LD02CTRL1_1_5V | MAX77686_EN_LDO},
+		{PMIC_REG_UPDATE, MAX77686_REG_PMIC_LDO3CTRL1,
+		 MAX77686_LD03CTRL1_1_8V | MAX77686_EN_LDO},
+		{PMIC_REG_UPDATE, MAX77686_REG_PMIC_LDO5CTRL1,
+		 MAX77686_LD05CTRL1_1_8V | MAX77686_EN_LDO},
+		{PMIC_REG_UPDATE, MAX77686_REG_PMIC_LDO10CTRL1,
+		 MAX77686_LD10CTRL1_1_8V | MAX77686_EN_LDO},
+		{PMIC_REG_BAIL}
+	};
 
-	i2c_init(CONFIG_SYS_I2C_SPEED, CONFIG_SYS_I2C_SLAVE);
-
-	if (pmic_init(I2C_PMIC))
-		return -1;
-
-	p = pmic_get("MAX77686_PMIC");
-	if (!p)
-		return -ENODEV;
-
-	if (pmic_probe(p))
-		return -1;
-
-	if (pmic_reg_update(p, MAX77686_REG_PMIC_32KHZ, MAX77686_32KHCP_EN))
-		return -1;
-
-	if (pmic_reg_update(p, MAX77686_REG_PMIC_BBAT,
-			    MAX77686_BBCHOSTEN | MAX77686_BBCVS_3_5V))
-		return -1;
-
-	/* VDD_MIF */
-	if (pmic_reg_write(p, MAX77686_REG_PMIC_BUCK1OUT,
-			   MAX77686_BUCK1OUT_1V)) {
-		debug("%s: PMIC %d register write failed\n", __func__,
-		      MAX77686_REG_PMIC_BUCK1OUT);
-		return -1;
-	}
-
-	if (pmic_reg_update(p, MAX77686_REG_PMIC_BUCK1CRTL,
-			    MAX77686_BUCK1CTRL_EN))
-		return -1;
-
-	/* VDD_ARM */
-	if (pmic_reg_write(p, MAX77686_REG_PMIC_BUCK2DVS1,
-			   MAX77686_BUCK2DVS1_1_3V)) {
-		debug("%s: PMIC %d register write failed\n", __func__,
-		      MAX77686_REG_PMIC_BUCK2DVS1);
-		return -1;
-	}
-
-	if (pmic_reg_update(p, MAX77686_REG_PMIC_BUCK2CTRL1,
-			    MAX77686_BUCK2CTRL_ON))
-		return -1;
-
-	/* VDD_INT */
-	if (pmic_reg_write(p, MAX77686_REG_PMIC_BUCK3DVS1,
-			   MAX77686_BUCK3DVS1_1_0125V)) {
-		debug("%s: PMIC %d register write failed\n", __func__,
-		      MAX77686_REG_PMIC_BUCK3DVS1);
-		return -1;
-	}
-
-	if (pmic_reg_update(p, MAX77686_REG_PMIC_BUCK3CTRL,
-			    MAX77686_BUCK3CTRL_ON))
-		return -1;
-
-	/* VDD_G3D */
-	if (pmic_reg_write(p, MAX77686_REG_PMIC_BUCK4DVS1,
-			   MAX77686_BUCK4DVS1_1_2V)) {
-		debug("%s: PMIC %d register write failed\n", __func__,
-		      MAX77686_REG_PMIC_BUCK4DVS1);
-		return -1;
-	}
-
-	if (pmic_reg_update(p, MAX77686_REG_PMIC_BUCK4CTRL1,
-			    MAX77686_BUCK3CTRL_ON))
-		return -1;
-
-	/* VDD_LDO2 */
-	if (pmic_reg_update(p, MAX77686_REG_PMIC_LDO2CTRL1,
-			    MAX77686_LD02CTRL1_1_5V | EN_LDO))
-		return -1;
-
-	/* VDD_LDO3 */
-	if (pmic_reg_update(p, MAX77686_REG_PMIC_LDO3CTRL1,
-			    MAX77686_LD03CTRL1_1_8V | EN_LDO))
-		return -1;
-
-	/* VDD_LDO5 */
-	if (pmic_reg_update(p, MAX77686_REG_PMIC_LDO5CTRL1,
-			    MAX77686_LD05CTRL1_1_8V | EN_LDO))
-		return -1;
-
-	/* VDD_LDO10 */
-	if (pmic_reg_update(p, MAX77686_REG_PMIC_LDO10CTRL1,
-			    MAX77686_LD10CTRL1_1_8V | EN_LDO))
-		return -1;
-
-	return 0;
+	return pmic_common_init(COMPAT_MAXIM_MAX77686_PMIC, pmic_ops);
 }
 
 /* Set up the TPS65090 if present */

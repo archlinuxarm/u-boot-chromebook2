@@ -15,6 +15,8 @@ DECLARE_GLOBAL_DATA_PTR;
 static unsigned pmic_number_of_regs(enum fdt_compat_id pmic_compat)
 {
 	switch (pmic_compat) {
+	case COMPAT_MAXIM_MAX77686_PMIC:
+		return MAX77686_NUM_OF_REGS;
 	case COMPAT_SAMSUNG_S2MPS11_PMIC:
 		return S2MPS11_NUM_OF_REGS;
 	default:
