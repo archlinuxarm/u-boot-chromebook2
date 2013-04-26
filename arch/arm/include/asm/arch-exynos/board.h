@@ -42,6 +42,12 @@ int board_is_processor_reset(void);
 /* Enable the audio code ready for use */
 int board_enable_audio_codec(void);
 
+/* Set up available PMICs */
+int board_init_max77686(void);
+int board_init_max77802(void);
+int board_init_s2mps11(void);
+int board_init_tps65090(void);
+
 /*
  * Exynos baord specific changes for
  * board_init

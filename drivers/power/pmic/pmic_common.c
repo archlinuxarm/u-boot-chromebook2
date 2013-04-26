@@ -9,6 +9,7 @@
 #include <power/pmic.h>
 #include <power/s2mps11_pmic.h>
 #include <power/max77686_pmic.h>
+#include <power/max77802_pmic.h>
 
 DECLARE_GLOBAL_DATA_PTR;
 
@@ -17,6 +18,8 @@ static unsigned pmic_number_of_regs(enum fdt_compat_id pmic_compat)
 	switch (pmic_compat) {
 	case COMPAT_MAXIM_MAX77686_PMIC:
 		return MAX77686_NUM_OF_REGS;
+	case COMPAT_MAXIM_MAX77802_PMIC:
+		return MAX77802_NUM_OF_REGS;
 	case COMPAT_SAMSUNG_S2MPS11_PMIC:
 		return S2MPS11_NUM_OF_REGS;
 	default:

@@ -37,6 +37,8 @@
 #include <asm/arch/system.h>
 #include <power/pmic.h>
 #include <power/max77686_pmic.h>
+#include <power/max77802_pmic.h>
+#include <power/s2mps11_pmic.h>
 #include <power/tps65090_pmic.h>
 
 DECLARE_GLOBAL_DATA_PTR;
@@ -181,7 +183,8 @@ static int board_init_cros_ec_devices(const void *blob)
 #endif
 
 #if defined(CONFIG_POWER)
-static int max77686_init(void)
+#ifdef CONFIG_POWER_MAX77686
+int board_init_max77686(void)
 {
 	const struct pmic_init_ops pmic_ops[] = {
 		{PMIC_REG_UPDATE, MAX77686_REG_PMIC_32KHZ,
@@ -215,9 +218,60 @@ static int max77686_init(void)
 
 	return pmic_common_init(COMPAT_MAXIM_MAX77686_PMIC, pmic_ops);
 }
+#endif
+
+#ifdef CONFIG_POWER_MAX77802
+int board_init_max77802(void)
+{
+	const struct pmic_init_ops pmic_ops[] = {
+		{PMIC_REG_UPDATE, MAX77802_REG_PMIC_32KHZ, MAX77802_32KHCP_EN},
+		{PMIC_REG_WRITE, MAX77802_REG_PMIC_BUCK1DVS1,
+		 MAX77802_BUCK1DVS1_1V},
+		{PMIC_REG_UPDATE, MAX77802_REG_PMIC_BUCK1CRTL,
+		 MAX77802_BUCK_TYPE1_ON | MAX77802_BUCK_TYPE1_IGNORE_PWRREQ},
+		{PMIC_REG_WRITE, MAX77802_REG_PMIC_BUCK2DVS1,
+		 MAX77802_BUCK2DVS1_1V},
+		{PMIC_REG_UPDATE, MAX77802_REG_PMIC_BUCK2CTRL1,
+		 MAX77802_BUCK_TYPE2_ON | MAX77802_BUCK_TYPE2_IGNORE_PWRREQ},
+		{PMIC_REG_WRITE, MAX77802_REG_PMIC_BUCK3DVS1,
+		 MAX77802_BUCK3DVS1_1V},
+		{PMIC_REG_UPDATE, MAX77802_REG_PMIC_BUCK3CTRL1,
+		 MAX77802_BUCK_TYPE2_ON | MAX77802_BUCK_TYPE2_IGNORE_PWRREQ},
+		{PMIC_REG_WRITE, MAX77802_REG_PMIC_BUCK4DVS1,
+		 MAX77802_BUCK4DVS1_1V},
+		{PMIC_REG_UPDATE, MAX77802_REG_PMIC_BUCK4CTRL1,
+		 MAX77802_BUCK_TYPE2_ON | MAX77802_BUCK_TYPE2_IGNORE_PWRREQ},
+		{PMIC_REG_WRITE, MAX77802_REG_PMIC_BUCK6DVS1,
+		 MAX77802_BUCK6DVS1_1V},
+		{PMIC_REG_UPDATE, MAX77802_REG_PMIC_BUCK6CTRL,
+		 MAX77802_BUCK_TYPE1_ON | MAX77802_BUCK_TYPE1_IGNORE_PWRREQ},
+		{PMIC_REG_BAIL}
+	};
+
+	return pmic_common_init(COMPAT_MAXIM_MAX77802_PMIC, pmic_ops);
+}
+#endif
+
+#ifdef CONFIG_POWER_S2MPS11
+int board_init_s2mps11(void)
+{
+	const struct pmic_init_ops pmic_ops[] = {
+		{PMIC_REG_WRITE, S2MPS11_BUCK1_CTRL2, S2MPS11_BUCK_CTRL2_1V},
+		{PMIC_REG_WRITE, S2MPS11_BUCK2_CTRL2, S2MPS11_BUCK_CTRL2_1V},
+		{PMIC_REG_WRITE, S2MPS11_BUCK3_CTRL2, S2MPS11_BUCK_CTRL2_1V},
+		{PMIC_REG_WRITE, S2MPS11_BUCK4_CTRL2, S2MPS11_BUCK_CTRL2_1V},
+		{PMIC_REG_WRITE, S2MPS11_BUCK6_CTRL2, S2MPS11_BUCK_CTRL2_1V},
+		{PMIC_REG_UPDATE, S2MPS11_REG_RTC_CTRL,
+		 S2MPS11_RTC_CTRL_32KHZ_CP_EN | S2MPS11_RTC_CTRL_JIT},
+		{PMIC_REG_BAIL}
+	};
+
+	return pmic_common_init(COMPAT_SAMSUNG_S2MPS11_PMIC, pmic_ops);
+}
+#endif
 
 /* Set up the TPS65090 if present */
-static int board_init_tps65090(void)
+int board_init_tps65090(void)
 {
 	int ret = 0;
 
@@ -239,44 +293,7 @@ static int board_init_tps65090(void)
 
 	return ret;
 }
-
-#ifdef CONFIG_SMDK5420
-static int s2mps11_init(void)
-{
-	const struct pmic_init_ops pmic_ops[] = {
-		{PMIC_REG_WRITE, S2MPS11_BUCK1_CTRL2, S2MPS11_BUCK_CTRL2_1V},
-		{PMIC_REG_WRITE, S2MPS11_BUCK2_CTRL2, S2MPS11_BUCK_CTRL2_1V},
-		{PMIC_REG_WRITE, S2MPS11_BUCK3_CTRL2, S2MPS11_BUCK_CTRL2_1V},
-		{PMIC_REG_WRITE, S2MPS11_BUCK4_CTRL2, S2MPS11_BUCK_CTRL2_1V},
-		{PMIC_REG_WRITE, S2MPS11_BUCK6_CTRL2, S2MPS11_BUCK_CTRL2_1V},
-		{PMIC_REG_UPDATE, S2MPS11_REG_RTC_CTRL,
-		 S2MPS11_RTC_CTRL_32KHZ_CP_EN | S2MPS11_RTC_CTRL_JIT},
-		{PMIC_REG_BAIL}
-	};
-
-	return pmic_common_init(COMPAT_SAMSUNG_S2MPS11_PMIC, pmic_ops);
-}
-#endif
-
-int power_init_board(void)
-{
-	int ret;
-
-	set_ps_hold_ctrl();
-
-	/* For now, this is not device-tree-controlled */
-#ifdef CONFIG_SMDK5420
-	ret = s2mps11_init();
-	if (ret)
-		return ret;
-#endif
-	ret = max77686_init();
-	if (ret)
-		return ret;
-
-	return board_init_tps65090();
-}
-#endif
+#endif /* CONFIG_POWER */
 
 #ifdef CONFIG_BOARD_LATE_INIT
 int board_late_init(void)

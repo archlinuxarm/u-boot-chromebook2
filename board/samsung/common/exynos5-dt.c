@@ -67,6 +67,30 @@ int board_enable_audio_codec(void)
 }
 #endif
 
+#ifdef CONFIG_POWER
+int power_init_board(void)
+{
+	int ret;
+
+	set_ps_hold_ctrl();
+
+	/*
+	 * For now, this is not device-tree-controlled.
+	 * one and only one is supposed to succeed
+	 */
+#ifdef CONFIG_EXYNOS5250
+	ret = board_init_max77686();
+#else
+	ret = !((board_init_s2mps11() ? 1 : 0) ^
+		(board_init_max77802() ? 1 : 0));
+#endif
+	if (ret)
+		return ret;
+
+	return board_init_tps65090();
+}
+#endif
+
 int exynos_init(void)
 {
 #ifdef CONFIG_USB_EHCI_EXYNOS

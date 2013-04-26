@@ -38,6 +38,7 @@
 #include <asm/arch/power.h>
 #include <asm/arch/system.h>
 #include <power/pmic.h>
+#include <power/max77802_pmic.h>
 #include <power/s2mps11_pmic.h>
 #include <power/tps65090_pmic.h>
 
@@ -46,7 +47,7 @@ DECLARE_GLOBAL_DATA_PTR;
 #ifdef CONFIG_LCD
 /* TODO: Move these LCD initialization settings out of board file */
 #ifdef CONFIG_CHROMEOS_PEACH
-int anx1120_initialize(unsigned int i2c_bus)
+static int anx1120_initialize(unsigned int i2c_bus)
 {
 	static const struct {
 		u8 addr;
@@ -91,21 +92,21 @@ int anx1120_initialize(unsigned int i2c_bus)
 	return 0;
 }
 
-void exynos_lcd_power_on(void)
+static void exynos_lcd_power_on_adv(void)
 {
 	struct pmic *p;
 
 	p = pmic_get_by_id(COMPAT_SAMSUNG_S2MPS11_PMIC);
 	if (!p) {
-		printf("%s: Failed to get PMIC data\n", __func__);
-		return;	/* TODO: return error */
+		debug("%s: Failed to get PMIC data\n", __func__);
+		return;
 	}
 
 	/* PVDD_LDO12 set to 1V */
 	if (pmic_reg_write(p, S2MPS11_LDO22_CTRL, S2MPS11_BUCK_CTRL2_1_2V)) {
-		debug("%s: PMIC %d register write failed\n", __func__,
+		printf("%s: PMIC %d register write failed\n", __func__,
 							S2MPS11_LDO22_CTRL);
-		debug("P1.2V_LDO_OUT22 not initialized\n");
+		printf("P1.2V_LDO_OUT22 not initialized\n");
 		return;
 	}
 	mdelay(15);	/* TODO: Use state machine to remove delay */
@@ -116,10 +117,37 @@ void exynos_lcd_power_on(void)
 
 	/* Initialize the eDP-LVDS ANX chip */
 	if (anx1120_initialize(ANX1120_I2C_BUS)) {
-		debug("ANX1120 failed to init\n");
+		printf("ANX1120 failed to init\n");
+		return;
+	}
+}
+
+static void exynos_lcd_power_on_rev1(void)
+{
+	struct pmic *p;
+	p = pmic_get_by_id(COMPAT_MAXIM_MAX77802_PMIC);
+ 	if (!p) {
+		debug("%s: Failed to get PMIC data\n", __func__);
+ 		return;
+ 	}
+
+	/* LDO35 set 1.2V */
+	if (pmic_reg_update(p, MAX77802_REG_PMIC_LDO35CTRL1,
+			    MAX77802_LDO35CTRL1_1_2V)) {
+		debug("%s: PMIC %d register write failed\n", __func__,
+						MAX77802_LDO35CTRL1_1_2V);
 		return;
 	}
 
+	/* TODO: Take care of the bridge initialization here */
+ 	mdelay(15);	/* TODO: Use state machine to remove delay */
+}
+
+void exynos_lcd_power_on(void)
+{
+	/* one of the two will find its PMIC and set up the display */
+	exynos_lcd_power_on_adv();
+	exynos_lcd_power_on_rev1();
 	tps65090_fet_enable(6);
 }
 

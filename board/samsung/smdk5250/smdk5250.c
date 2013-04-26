@@ -69,6 +69,21 @@ int board_enable_audio_codec(void)
 }
 #endif
 
+#ifdef CONFIG_POWER
+int power_init_board(void)
+{
+	int ret;
+
+	set_ps_hold_ctrl();
+
+	ret = board_init_max77686();
+	if (ret)
+		return ret;
+
+	return board_init_tps65090();
+}
+#endif
+
 int exynos_init(void)
 {
 	gd->bd->bi_boot_params = (PHYS_SDRAM_1 + 0x100UL);
