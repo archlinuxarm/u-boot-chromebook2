@@ -36,19 +36,62 @@
 #define RATE_MASK(x)		(0x1 << (x + 16))
 #define RATE_SET(x)		(0x1 << (x + 16))
 
-struct gpio_name_num_table exynos5_gpio_table[] = {
-	{ 'a', EXYNOS5_GPIO_A00 },
-	{ 'b', EXYNOS5_GPIO_B00 },
-	{ 'c', EXYNOS5_GPIO_C00 },
-	{ 'd', EXYNOS5_GPIO_D00 },
-	{ 'y', EXYNOS5_GPIO_Y00 },
-	{ 'x', EXYNOS5_GPIO_X00 },
-	{ 'e', EXYNOS5_GPIO_E00 },
-	{ 'f', EXYNOS5_GPIO_F00 },
-	{ 'g', EXYNOS5_GPIO_G00 },
-	{ 'h', EXYNOS5_GPIO_H00 },
-	{ 'v', EXYNOS5_GPIO_V00 },
-	{ 'z', EXYNOS5_GPIO_Z0 },
+/*
+ * This structure helps mapping symbolic GPIO names into indices from
+ * exynos5_gpio_pin/exynos5420_gpio_pin enums.
+ *
+ * By convention, symbolic GPIO name is defined as follows:
+ *
+ * g[p]<bank><set><bit>, where
+ *   p is optional
+ *   <bank> - a single character bank name, as defined by the SOC
+ *   <set> - a single digit set number
+ *   <bit> - bit number within the set (in 0..7 range).
+ *
+ * <set><bit> essentially form an octal number of the GPIO pin within the bank
+ * space. On the 5420 architecture some banks' sets do not start not from zero
+ * ('d' starts from 1 and 'j' starts from 4). To compensate for that and
+ * maintain flat number space withoout holes, those banks use offsets to be
+ * deducted from the pin number.
+ */
+struct gpio_name_num_table {
+	char bank;		/* bank name symbol */
+	u8 bank_size;		/* total number of pins in the bank */
+	char bank_offset;	/* offset of the first bank's pin */
+	unsigned int base;	/* index of the first bank's pin in the enum */
+};
+
+#define GPIO_ENTRY(name, base, top, offset) { name, top - base, offset, base }
+static const struct gpio_name_num_table exynos5_gpio_table[] = {
+	GPIO_ENTRY('a', EXYNOS5_GPIO_A00, EXYNOS5_GPIO_B00, 0),
+        GPIO_ENTRY('b', EXYNOS5_GPIO_B00, EXYNOS5_GPIO_C00, 0),
+	GPIO_ENTRY('c', EXYNOS5_GPIO_C00, EXYNOS5_GPIO_D00, 0),
+	GPIO_ENTRY('d', EXYNOS5_GPIO_D00, EXYNOS5_GPIO_Y00, 0),
+	GPIO_ENTRY('y', EXYNOS5_GPIO_Y00, EXYNOS5_GPIO_C40, 0),
+	GPIO_ENTRY('x', EXYNOS5_GPIO_X00, EXYNOS5_GPIO_E00, 0),
+	GPIO_ENTRY('e', EXYNOS5_GPIO_E00, EXYNOS5_GPIO_F00, 0),
+	GPIO_ENTRY('f', EXYNOS5_GPIO_F00, EXYNOS5_GPIO_G00, 0),
+	GPIO_ENTRY('g', EXYNOS5_GPIO_G00, EXYNOS5_GPIO_H00, 0),
+	GPIO_ENTRY('h', EXYNOS5_GPIO_H00, EXYNOS5_GPIO_V00, 0),
+	GPIO_ENTRY('v', EXYNOS5_GPIO_V00, EXYNOS5_GPIO_Z0, 0),
+	GPIO_ENTRY('z', EXYNOS5_GPIO_Z0, EXYNOS5_GPIO_MAX_PORT, 0),
+	{ 0 }
+};
+
+static const struct gpio_name_num_table exynos5420_gpio_table[] = {
+	GPIO_ENTRY('a', EXYNOS5420_GPIO_A00, EXYNOS5420_GPIO_B00, 0),
+	GPIO_ENTRY('b', EXYNOS5420_GPIO_B00, EXYNOS5420_GPIO_H00, 0),
+	GPIO_ENTRY('h', EXYNOS5420_GPIO_H00, EXYNOS5420_GPIO_Y70, 0),
+	GPIO_ENTRY('x', EXYNOS5420_GPIO_X00, EXYNOS5420_GPIO_C00, 0),
+	GPIO_ENTRY('c', EXYNOS5420_GPIO_C00, EXYNOS5420_GPIO_D10, 0),
+	GPIO_ENTRY('d', EXYNOS5420_GPIO_D10, EXYNOS5420_GPIO_Y00, 010),
+	GPIO_ENTRY('y', EXYNOS5420_GPIO_Y00, EXYNOS5420_GPIO_E00, 0),
+	GPIO_ENTRY('e', EXYNOS5420_GPIO_E00, EXYNOS5420_GPIO_F00, 0),
+	GPIO_ENTRY('f', EXYNOS5420_GPIO_F00, EXYNOS5420_GPIO_G00, 0),
+	GPIO_ENTRY('g', EXYNOS5420_GPIO_G00, EXYNOS5420_GPIO_J40, 0),
+	GPIO_ENTRY('j', EXYNOS5420_GPIO_J40, EXYNOS5420_GPIO_Z0, 040),
+	GPIO_ENTRY('z', EXYNOS5420_GPIO_Z0, EXYNOS5420_GPIO_MAX_PORT, 0),
+	{ 0 }
 };
 
 void s5p_gpio_cfg_pin(struct s5p_gpio_bank *bank, int gpio, int cfg)
@@ -287,34 +330,72 @@ int gpio_decode_number(unsigned gpio_list[], int count)
 
 int s5p_name_to_gpio(const char *name)
 {
-	unsigned int num, i;
+	unsigned num, irregular_set_number, irregular_bank_base;
+	const struct gpio_name_num_table *tabp;
+	char this_bank, bank_name, irregular_bank_name;
+	char *endp;
 
-	name++;
+	/*
+	 * The gpio name starts with either 'g' ot 'gp' followed by the bank
+	 * name character. Skip one or two characters depending on the prefix.
+	 */
+	if (name[1] == 'p')
+		name += 2;
+	else
+		name++;
+	bank_name = *name++;
+	if (!*name)
+		return -1; /* At least one digit is required/expected. */
 
-	if (*name == 'p')
-		++name;
-
-	for (i = 0; i < ARRAY_SIZE(exynos5_gpio_table); i++) {
-		if (*name == exynos5_gpio_table[i].bank) {
-			if (*name == 'c') {
-				name++;
-				num = simple_strtoul(name, NULL, 10);
-				if (num >= 40) {
-					num = EXYNOS5_GPIO_C40 + (num - 40);
-				} else {
-					num = simple_strtoul(name, NULL, 8);
-					num = exynos5_gpio_table[i].base + num;
-				}
-			} else {
-				name++;
-				num = simple_strtoul(name, NULL, 8);
-				num = exynos5_gpio_table[i].base + num;
-			}
-			break;
-		}
+	/*
+	 * On both exynos5 and exynos5420 architectures there is a bank of
+	 * GPIOs which does not fall into the regular address pattern. Those
+	 * banks are c4 on Exynos5 and y7 on Exynos5420. The rest of the below
+	 * assignments help to handle these irregularities.
+	 */
+	if (proid_is_exynos5420()) {
+		tabp = exynos5420_gpio_table;
+		irregular_bank_name = 'y';
+		irregular_set_number = '7';
+		irregular_bank_base = EXYNOS5420_GPIO_Y70;
+	} else {
+		tabp = exynos5_gpio_table;
+		irregular_bank_name = 'c';
+		irregular_set_number = '4';
+		irregular_bank_base = EXYNOS5_GPIO_C40;
 	}
 
-	if (i == ARRAY_SIZE(exynos5_gpio_table))
-		return -1;
-	return num;
+	this_bank = tabp->bank;
+	do {
+		if (bank_name == this_bank) {
+			unsigned pin_index; /* pin number within the bank */
+			if ((bank_name == irregular_bank_name) &&
+			    (name[0] == irregular_set_number)) {
+				pin_index = name[1] - '0';
+				/* Irregular sets have 8 pins. */
+				if (pin_index > 7)
+					return -1;
+				num = irregular_bank_base + pin_index;
+			} else {
+				pin_index = simple_strtoul(name, &endp, 8);
+				pin_index -= tabp->bank_offset;
+				/*
+				 * Sanity check: bunk 'z' has no set number,
+				 * for all other banks there must be exactly
+				 * two octal digits, and the resulting number
+				 * should not exceed the number of pins in the
+				 * bank.
+				 */
+				if (((bank_name != 'z') && !name[1]) ||
+				    *endp ||
+				    (pin_index >= tabp->bank_size))
+					return -1;
+				num = tabp->base + pin_index;
+			}
+			return num;
+		}
+		this_bank = (++tabp)->bank;
+	} while (this_bank);
+
+	return -1;
 }
