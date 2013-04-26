@@ -32,7 +32,11 @@ COBJS	+= tzpc_init.o
 COBJS	+= smdk5250_spl.o
 
 ifndef CONFIG_SPL_BUILD
+ifdef CONFIG_OF_CONTROL
+COBJS	+= exynos5-dt.o
+else
 COBJS	+= smdk5250.o
+endif
 endif
 
 ifdef CONFIG_SPL_BUILD
