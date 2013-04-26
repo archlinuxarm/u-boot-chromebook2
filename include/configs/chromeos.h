@@ -157,8 +157,7 @@
 		"fi\0" \
 	\
 	"regen_ext2_bootargs=" \
-		"setenv bootdev_bootargs " \
-		"root=/dev/${devname}${rootpart} rootwait ro; " \
+		"setenv bootdev_bootargs root=${devname} rootwait ro; " \
 		"run regen_all\0" \
 	\
 	"ext2_boot=" \
@@ -296,20 +295,24 @@
 	CONFIG_EXT2_BOOT_HELPER_SETTINGS \
 	CONFIG_NETBOOT_SETTINGS \
 	\
+	"set_devname=" \
+		"part uuid ${devtype} ${devnum}:${rootpart} rootuuid; " \
+		"setenv devname PARTUUID=${rootuuid}\0" \
+	\
 	"usb_boot=setenv devtype usb; " \
 		"setenv devnum 0; " \
-		"setenv devname sda; " \
 		"run run_disk_boot_script;" \
+		"run set_devname; " \
 		"run ext2_boot\0" \
 	\
 	"mmc_setup=" \
 		"mmc dev ${devnum}; " \
 		"mmc rescan ${devnum}; " \
-		"setenv devtype mmc; " \
-		"setenv devname mmcblk${devnum}p\0" \
+		"setenv devtype mmc\0" \
 	"mmc_boot=" \
 		"run mmc_setup; " \
 		"run run_disk_boot_script;" \
+		"run set_devname; " \
 		"run ext2_boot\0" \
 	"mmc0_boot=setenv devnum 0; " \
 		"run mmc_boot\0" \
