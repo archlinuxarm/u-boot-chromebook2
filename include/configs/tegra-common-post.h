@@ -124,7 +124,7 @@
 
 /* CONFIG_CHROMEOS */
 #else
-#define CONFIG_BOOTCOMMAND CONFIG_NON_VERIFIED_BOOTCOMMAND
+#define CONFIG_BOOTCOMMAND "run non_verified_boot_rootfs_always_0"
 #endif
 
 #ifdef CONFIG_TEGRA_KEYBOARD
@@ -167,7 +167,32 @@
 #define CONFIG_EXTRA_ENV_SETTINGS \
 	TEGRA_DEVICE_SETTINGS \
 	MEM_LAYOUT_ENV_SETTINGS \
-	CONFIG_CHROMEOS_EXTRA_ENV_SETTINGS
+	CONFIG_CHROMEOS_EXTRA_ENV_SETTINGS \
+	\
+	"mmc_setup_rootfs_always_0=" \
+		"mmc dev ${devnum}; " \
+		"mmc rescan ${devnum}; " \
+		"setenv devtype mmc; " \
+		"setenv devname mmcblk0p\0" \
+	"mmc_boot_rootfs_always_0=" \
+		"run mmc_setup_rootfs_always_0; " \
+		"run run_disk_boot_script;" \
+		"run ext2_boot\0" \
+	\
+	"mmc0_boot_rootfs_always_0=" \
+		"setenv devnum 0; " \
+		"run mmc_boot_rootfs_always_0\0" \
+	"mmc1_boot_rootfs_always_0=" \
+		"setenv devnum 1; " \
+		"run mmc_boot_rootfs_always_0\0" \
+	\
+	"non_verified_boot_rootfs_always_0=" \
+		"usb start; " \
+		"run net_boot; " \
+		"run usb_boot; " \
+		\
+		"run mmc1_boot_rootfs_always_0; " \
+		"run mmc0_boot_rootfs_always_0\0"
 
 #endif /* CONFIG_CHROMEOS */
 

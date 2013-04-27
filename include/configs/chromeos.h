@@ -88,7 +88,8 @@
 	"common_bootargs=cros_legacy " CONFIG_DIRECT_BOOTARGS "\0" \
 	\
 	"dev_extras=\0" \
-	"extra_bootargs=\0" \
+	"extra_bootargs=" \
+		CONFIG_EXTRA_BOOTARGS "\0" \
 	"bootdev_bootargs=\0" \
 	\
 	"regen_all=" \
