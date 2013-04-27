@@ -248,7 +248,6 @@
 
 #define CONFIG_SYS_X86_TSC_TIMER
 #define CONFIG_SYS_PCAT_INTERRUPTS
-#define CONFIG_SYS_PCAT_TIMER
 #define CONFIG_SYS_NUM_IRQS			16
 
 /*-----------------------------------------------------------------------
@@ -310,6 +309,9 @@
 #define CONFIG_USB_ETHER_SMSC95XX
 
 #define CONFIG_CMD_USB
+
+#define CONFIG_CMD_SOUND
+#define CONFIG_SOUND_INTEL_HDA
 
 #define CONFIG_EXTRA_ENV_SETTINGS \
 	CONFIG_STD_DEVICES_SETTINGS
