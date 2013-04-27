@@ -1285,6 +1285,24 @@ static unsigned long exynos5_get_i2c_clk(void)
 	return aclk_66;
 }
 
+static unsigned long exynos5420_get_i2c_clk(void)
+{
+	struct exynos5420_clock *clk =
+		(struct exynos5420_clock *)samsung_get_base_clock();
+	unsigned long aclk_66, aclk_66_pre, sclk;
+	unsigned int ratio;
+
+	sclk = get_pll_clk(MPLL);
+
+	ratio = (readl(&clk->clk_div_top1)) >> 24;
+	ratio &= 0x7;
+	aclk_66_pre = sclk / (ratio + 1);
+	ratio = readl(&clk->clk_div_top0);
+	ratio &= 0x7;
+	aclk_66 = aclk_66_pre / (ratio + 1);
+	return aclk_66;
+}
+
 int exynos5_set_epll_clk(unsigned long rate)
 {
 	unsigned int epll_con, epll_con_k;
@@ -1608,6 +1626,8 @@ unsigned long get_arm_clk(void)
 unsigned long get_i2c_clk(void)
 {
 	if (cpu_is_exynos5()) {
+		if (proid_is_exynos5420())
+			return exynos5420_get_i2c_clk();
 		return exynos5_get_i2c_clk();
 	} else if (cpu_is_exynos4()) {
 		return exynos4_get_i2c_clk();
