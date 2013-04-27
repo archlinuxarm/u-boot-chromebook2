@@ -27,6 +27,7 @@ LIB	:= $(obj)libsound.o
 
 COBJS-$(CONFIG_SOUND)	+= sound.o
 COBJS-$(CONFIG_I2S)	+= samsung-i2s.o
+COBJS-$(CONFIG_SOUND_PCAT_BEEP)	+= pcat_beep.o
 COBJS-$(CONFIG_SOUND_WM8994)	+= wm8994.o
 COBJS-$(CONFIG_SOUND_MAX98095)	+= max98095.o
 

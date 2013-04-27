@@ -27,6 +27,10 @@
 
 #define TIMER2_VALUE 0x0a8e /* 440Hz */
 
+#define PPC_PORTB       0x61
+#define PORTB_BEEP_ENABLE 0x3
+#define PIT_HZ 1193180L
+
 int pcat_timer_init(void)
 {
 	/*
@@ -40,4 +44,26 @@ int pcat_timer_init(void)
 	outb(TIMER2_VALUE >> 8, PIT_BASE + PIT_T2);
 
 	return 0;
+}
+
+/* Timer 2 legacy PC beep functions */
+void pcat_enable_beep(uint32_t frequency)
+{
+	uint32_t countdown;
+
+	if (!frequency)
+		return;
+
+	countdown = PIT_HZ / frequency;
+
+	outb(PIT_CMD_CTR2 | PIT_CMD_BOTH | PIT_CMD_MODE3,
+	     PIT_BASE + PIT_COMMAND);
+	outb(countdown & 0xff, PIT_BASE + PIT_T2);
+	outb((countdown >> 8) & 0xff , PIT_BASE + PIT_T2);
+	outb(inb(PPC_PORTB) | PORTB_BEEP_ENABLE, PPC_PORTB);
+}
+
+void pcat_disable_beep(void)
+{
+	outb(inb(PPC_PORTB) & !PORTB_BEEP_ENABLE, PPC_PORTB);
 }
