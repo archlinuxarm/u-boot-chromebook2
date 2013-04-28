@@ -34,6 +34,9 @@
 #ifdef CONFIG_HAS_DATAFLASH
 #include <dataflash.h>
 #endif
+#ifdef CONFIG_ELOG
+#include <elog.h>
+#endif
 #include <environment.h>
 #include <fdtdec.h>
 #include <fthread.h>
@@ -712,6 +715,19 @@ static int run_main_loop(void)
 	return 0;
 }
 
+#ifdef CONFIG_ELOG
+static int initr_elog(void)
+{
+	if (elog_init() == 0)
+		elog_add_event_dword(ELOG_TYPE_BOOT, 0);
+	/*
+	 * Always claim success. If it didn't work then we just won't have
+	 * eventlog this boot.
+	 */
+	return 0;
+}
+#endif
+
 /*
  * Over time we hope to remove these functions with code fragments and
  * stub funtcions, and instead call the relevant function directly.
@@ -861,6 +877,9 @@ static const init_fnc_t init_sequence_r[] = {
 #endif
 #ifdef CONFIG_X86
 	timer_init,		/* initialize timer */
+#endif
+#ifdef CONFIG_ELOG
+	initr_elog,
 #endif
 #if defined(CONFIG_STATUS_LED) && defined(STATUS_LED_BOOT)
 	initr_status_led,
