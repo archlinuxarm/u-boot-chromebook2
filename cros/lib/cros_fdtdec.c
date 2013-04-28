@@ -188,6 +188,14 @@ static int process_fmap_node(const void *blob, int node, int depth,
 			return 0;
 	}
 
+	if (name && !strcmp("rw-elog", name)) {
+		/* handle the event log */
+		if (fdtdec_read_fmap_entry(blob, node, name, &config->elog))
+			return -FDT_ERR_NOTFOUND;
+		else
+			return 0;
+	}
+
 	/* We are looking only for ro-, rw-a- and rw-b- */
 	if (len < 4 || *name != 'r' || name[2] != '-')
 		return 0;
