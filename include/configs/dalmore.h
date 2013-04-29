@@ -92,6 +92,9 @@
 #define CONFIG_CMD_NET
 #define CONFIG_CMD_DHCP
 
+/* FIT image support */
+#define CONFIG_FIT
+
 #include "tegra-common-post.h"
 
 #endif /* __CONFIG_H */
