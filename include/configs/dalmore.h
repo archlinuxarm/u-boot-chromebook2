@@ -28,6 +28,7 @@
 #define CONFIG_DEFAULT_DEVICE_TREE	tegra114-dalmore
 #define CONFIG_OF_CONTROL
 #define CONFIG_OF_SEPARATE
+#define CONFIG_OF_BOARD_SETUP
 
 /* High-level configuration options */
 #define V_PROMPT		"Tegra114 (Dalmore) # "
