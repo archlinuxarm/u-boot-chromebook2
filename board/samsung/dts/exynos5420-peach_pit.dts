@@ -15,7 +15,8 @@
 #endif
 / {
 	model = "SAMSUNG Peach board based on EXYNOS5420";
-	compatible = "samsung,peach-pit-rev1", "samsung,exynos5";
+	compatible = "google,pit-rev1", "google,pit", "samsung,exynos5420",
+		"samsung,exynos5";
 
 	aliases {
 		serial0 = "/serial@12C30000";
