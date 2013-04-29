@@ -96,6 +96,9 @@
 /* FIT image support */
 #define CONFIG_FIT
 
+/* USB keyboard */
+#define CONFIG_USB_KEYBOARD
+
 #include "tegra-common-post.h"
 
 #endif /* __CONFIG_H */
