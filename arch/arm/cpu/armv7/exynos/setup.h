@@ -27,6 +27,7 @@
 
 #include <config.h>
 #include <asm/arch/dmc.h>
+#include <asm/sizes.h>
 
 #define NOT_AVAILABLE		0
 #define DATA_MASK		0xFFFFF
@@ -94,6 +95,21 @@
 	DMC_MEMBASECONFIGx_CHIP_BASE(x) |       \
 	DMC_MEMBASECONFIGx_CHIP_MASK(0x780)     \
 )
+
+/* As we use channel interleaving, therefore value of the base address
+ * register must be set as half of the bus base address
+ * RAM start addess is 0x2000_0000 which means chip_base is 0x20, so
+ * we need to set half 0x10 to the membaseconfigx registers
+ * see exynos5420 UM section 17.17.3.21 for more
+ */
+#define DMC_CHIP_BASE_0 0x10
+#if (CONFIG_NR_DRAM_BANKS * SDRAM_BANK_SIZE > SZ_2G)
+#define DMC_CHIP_BASE_1 0x50
+#define DMC_CHIP_MASK	0x7C0
+#else /* 2GB RAM */
+#define DMC_CHIP_BASE_1 0x30
+#define DMC_CHIP_MASK	0x7E0
+#endif
 
 #define DMC_MEMBASECONFIG0_VAL  DMC_MEMBASECONFIG_VAL(0x40)
 #define DMC_MEMBASECONFIG1_VAL  DMC_MEMBASECONFIG_VAL(0x80)

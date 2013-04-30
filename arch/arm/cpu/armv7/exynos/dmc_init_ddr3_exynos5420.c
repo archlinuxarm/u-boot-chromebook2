@@ -232,14 +232,14 @@ int ddr3_mem_ctrl_init(int reset)
 	 * 0x6000_0000 ~ 0x9FFF_FFFF
 	 */
 	/* MEMBASECONFIG0 */
-	val = DMC_MEMBASECONFIGx_CHIP_BASE(0x10) |
-		DMC_MEMBASECONFIGx_CHIP_MASK(0x7E0);
+	val = DMC_MEMBASECONFIGx_CHIP_BASE(DMC_CHIP_BASE_0) |
+		DMC_MEMBASECONFIGx_CHIP_MASK(DMC_CHIP_MASK);
 	writel(val, &tzasc0->membaseconfig0);
 	writel(val, &tzasc1->membaseconfig0);
 
 	/* MEMBASECONFIG1 */
-	val = DMC_MEMBASECONFIGx_CHIP_BASE(0x30) |
-		DMC_MEMBASECONFIGx_CHIP_MASK(0x7E0);
+	val = DMC_MEMBASECONFIGx_CHIP_BASE(DMC_CHIP_BASE_1) |
+		DMC_MEMBASECONFIGx_CHIP_MASK(DMC_CHIP_MASK);
 	writel(val, &tzasc0->membaseconfig1);
 	writel(val, &tzasc1->membaseconfig1);
 
