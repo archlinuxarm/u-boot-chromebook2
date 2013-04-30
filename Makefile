@@ -904,7 +904,7 @@ clean:
 	@$(MAKE) -s -C doc/DocBook/ cleandocs
 	@find $(OBJTREE) -type f \
 		\( -name 'core' -o -name '*.bak' -o -name '*~' -o -name '*.su' \
-		-o -name '*.o'	-o -name '*.a' -o -name '*.exe' \
+		-o -name '*.o'	-o -name '*.a' -o -name '*.exe' -o -name '*.dts.in' \
 		-o -name '*.cfgtmp' \) -print \
 		| xargs rm -f
 
