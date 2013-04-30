@@ -19,9 +19,14 @@
 
 include $(TOPDIR)/config.mk
 
+# The AVP is ARMv4T architecture so we must use special compiler
+# flags for any startup files it might use.
+CFLAGS_arch/arm/cpu/tegra114-common/warmboot_avp.o += -march=armv4t
+
 LIB	= $(obj)lib$(SOC)-common.o
 
 COBJS-y	+= clock.o funcmux.o pinmux.o
+COBJS-$(CONFIG_TEGRA_LP0) += warmboot.o warmboot_avp.o
 
 SRCS	:= $(SOBJS:.o=.S) $(COBJS-y:.o=.c)
 OBJS	:= $(addprefix $(obj),$(SOBJS) $(COBJS-y))

@@ -29,6 +29,7 @@
 
 /* Defines the supported operating modes */
 enum fuse_operating_mode {
+	MODE_PREPRODUCTION = 2,
 	MODE_PRODUCTION = 3,
 	MODE_UNDEFINED,
 };

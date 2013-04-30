@@ -82,4 +82,9 @@
 /* For USB EHCI controller */
 #define CONFIG_EHCI_IS_TDI
 
+#ifdef CONFIG_TEGRA_LP0
+#define TEGRA_LP0_ADDR			0xbdffd000
+#define TEGRA_LP0_SIZE			0x2000
+#endif
+
 #endif /* _TEGRA114_COMMON_H_ */

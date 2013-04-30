@@ -94,4 +94,7 @@ struct ahb_ctlr {
 
 #define GIZ_USB_IMMEDIATE	(1 << 18)
 
+/* AHB_ARBITRATION_XBAR_CTRL_0 0xe0 */
+#define ARBITRATION_XBAR_CTRL_PPSB_ENABLE	(1 << 2)
+
 #endif	/* _TEGRA114_AHB_H_ */
