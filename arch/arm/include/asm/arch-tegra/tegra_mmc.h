@@ -137,13 +137,8 @@ struct tegra_mmc {
 /* SDMMC1/3 settings from section 24.6 of T30 TRM */
 #define MEMCOMP_PADCTRL_VREF	7
 #define AUTO_CAL_ENABLED	(1 << 29)
-#if defined(CONFIG_TEGRA30)
 #define AUTO_CAL_PD_OFFSET	(0x70 << 8)
 #define AUTO_CAL_PU_OFFSET	(0x62 << 0)
-#else
-#define AUTO_CAL_PD_OFFSET	(0 << 8)
-#define AUTO_CAL_PU_OFFSET	(0 << 0)
-#endif
 
 struct mmc_host {
 	struct tegra_mmc *reg;

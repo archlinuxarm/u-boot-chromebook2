@@ -249,7 +249,7 @@ int board_mmc_init(bd_t *bd)
 
 void pad_init_mmc(struct mmc_host *host)
 {
-#if defined(CONFIG_TEGRA30) || defined(CONFIG_TEGRA114)
+#if defined(CONFIG_TEGRA30)
 	enum periph_id id = host->mmc_id;
 	u32 val;
 
@@ -272,7 +272,7 @@ void pad_init_mmc(struct mmc_host *host)
 	val &= 0xFFFF0000;
 	val |= AUTO_CAL_PU_OFFSET | AUTO_CAL_PD_OFFSET | AUTO_CAL_ENABLED;
 	writel(val, &host->reg->autocalcfg);
-#endif	/* T30/T114 */
+#endif	/* T30 */
 }
 #endif	/* MMC */
 
