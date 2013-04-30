@@ -275,3 +275,9 @@ void pad_init_mmc(struct mmc_host *host)
 #endif	/* T30/T114 */
 }
 #endif	/* MMC */
+
+__weak int ft_board_setup(void *blob, bd_t *bd)
+{
+	/* TODO: add board specific supporting code */
+	return -1;
+}
