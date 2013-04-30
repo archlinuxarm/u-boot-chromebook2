@@ -29,6 +29,7 @@ LIB	= $(obj)libcputegra-common.o
 
 SOBJS += lowlevel_init.o
 COBJS-y	+= ap.o board.o sys_info.o timer.o clock.o cache.o
+COBJS-$(CONFIG_TEGRA_LP0) += crypto.o
 
 SRCS	:= $(SOBJS:.o=.S) $(COBJS-y:.o=.c)
 OBJS	:= $(addprefix $(obj),$(SOBJS) $(COBJS-y))

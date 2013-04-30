@@ -32,7 +32,7 @@ CFLAGS_arch/arm/cpu/tegra20-common/warmboot_avp.o += -march=armv4t
 LIB	= $(obj)lib$(SOC)-common.o
 
 COBJS-y	+= clock.o funcmux.o pinmux.o
-COBJS-$(CONFIG_TEGRA_LP0) += warmboot.o crypto.o warmboot_avp.o
+COBJS-$(CONFIG_TEGRA_LP0) += warmboot.o warmboot_avp.o
 COBJS-$(CONFIG_TEGRA_CLOCK_SCALING) += emc.o
 COBJS-$(CONFIG_TEGRA_PMU) += pmu.o
 
