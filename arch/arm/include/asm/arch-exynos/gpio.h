@@ -1041,7 +1041,9 @@ static inline unsigned int get_bank_num(void)
 }
 
 int s5p_name_to_gpio(const char *name);
+void s5p_gpio_describe(const char *name);
 #define name_to_gpio(n) s5p_name_to_gpio(n)
+#define gpio_describe(str) s5p_gpio_describe(str)
 
 void gpio_cfg_pin(int gpio, int cfg);
 void gpio_set_pull(int gpio, int value);

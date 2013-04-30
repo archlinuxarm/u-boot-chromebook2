@@ -373,7 +373,7 @@ int s5p_name_to_gpio(const char *name)
 			    (name[0] == irregular_set_number)) {
 				pin_index = name[1] - '0';
 				/* Irregular sets have 8 pins. */
-				if (pin_index > 7)
+				if (pin_index >= GPIO_PER_BANK)
 					return -1;
 				num = irregular_bank_base + pin_index;
 			} else {
@@ -398,4 +398,23 @@ int s5p_name_to_gpio(const char *name)
 	} while (this_bank);
 
 	return -1;
+}
+
+void s5p_gpio_describe(const char* gpio_name)
+{
+	struct s5p_gpio_bank *bank;
+	int index = s5p_name_to_gpio(gpio_name);
+	int pin = s5p_gpio_get_pin(index);
+
+	if (index < 0) {
+		printf ("%s is not a valid GPIO name\n", gpio_name);
+		return;
+	}
+
+	bank = s5p_gpio_get_bank(index);
+
+	printf("%s: index %d, config 0x%x at %p\n",
+	       gpio_name, index,
+	       (readl(&bank->con) & CON_MASK(pin)) >> (0xf << pin),
+	       &bank->con);
 }
