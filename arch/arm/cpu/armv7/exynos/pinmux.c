@@ -300,7 +300,7 @@ static void exynos5_i2c_config(int peripheral, int flags)
 	}
 }
 
-static void exynos5420_i2c_config(int peripheral, int flags)
+static void exynos5420_i2c_config(int peripheral)
 {
 
 	switch (peripheral) {
@@ -527,7 +527,7 @@ static int exynos5420_pinmux_config(int peripheral, int flags)
 	case PERIPH_ID_I2C8:
 	case PERIPH_ID_I2C9:
 	case PERIPH_ID_I2C10:
-		exynos5420_i2c_config(peripheral, flags);
+		exynos5420_i2c_config(peripheral);
 		break;
 	default:
 		debug("%s: invalid peripheral %d", __func__, peripheral);
