@@ -48,6 +48,11 @@ static int do_gpio(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[])
 		case 's': sub_cmd = GPIO_SET;    break;
 		case 'c': sub_cmd = GPIO_CLEAR;  break;
 		case 't': sub_cmd = GPIO_TOGGLE; break;
+#ifdef gpio_describe
+		case 'd':
+			gpio_describe(str_gpio);
+			return 0;
+#endif
 		default:  goto show_usage;
 	}
 
@@ -84,6 +89,13 @@ static int do_gpio(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[])
 }
 
 U_BOOT_CMD(gpio, 3, 0, do_gpio,
+#ifdef gpio_describe
+	"input/set/clear/toggle/describe gpio pins",
+	"<input|set|clear|toggle|describe> <pin>\n"
+	"    - input/set/clear/toggle|describe the specified pin"
+#else
 	"input/set/clear/toggle gpio pins",
 	"<input|set|clear|toggle> <pin>\n"
-	"    - input/set/clear/toggle the specified pin");
+	"    - input/set/clear/toggle the specified pin"
+#endif
+);
