@@ -54,13 +54,14 @@
 		};
 	};
 
-	i2c@12e20000 { /* i2c10 */
-		cros-ec@1e {
-			reg = <0x1e>;
+	spi@12d40000 { /* spi2 */
+		clock-frequency = <10000000>;
+		cros-ec@0 {
+			reg = <0>;
 			compatible = "google,cros-ec";
-			i2c-max-frequency = <100000>;
-			ec-interrupt = <&gpio 181 0>; /* GPX1_5, active low */
-			status = "disabled";
+			spi-half-duplex;
+			spi-max-timeout-ms = <100>;
+			spi-frame-header = <0xec>;
 		};
 	};
 
