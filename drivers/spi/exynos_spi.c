@@ -52,7 +52,6 @@ struct exynos_spi_slave {
 	unsigned int mode;
 	enum periph_id periph_id;	/* Peripheral ID for this device */
 	unsigned int fifo_size;
-	int skip_preamble;
 	struct spi_bus *bus;		/* Pointer to our SPI bus info */
 	ulong last_transaction_us;	/* Time of last transaction end */
 };
@@ -110,7 +109,6 @@ struct spi_slave *spi_setup_slave(unsigned int busnum, unsigned int cs,
 	else
 		spi_slave->fifo_size = 256;
 
-	spi_slave->skip_preamble = 0;
 	spi_slave->last_transaction_us = timer_get_us();
 
 	spi_slave->freq = bus->frequency;
@@ -118,6 +116,37 @@ struct spi_slave *spi_setup_slave(unsigned int busnum, unsigned int cs,
 		spi_slave->freq = min(max_hz, spi_slave->freq);
 
 	return &spi_slave->slave;
+}
+
+/**
+ * Setup the driver private data for half duplex slaves
+ *
+ * @param bus		ID of the bus that the slave is attached to
+ * @param cs		ID of the chip select connected to the slave
+ * @param max_hz	Required spi frequency
+ * @param mode		Required spi mode (clk polarity, clk phase and
+ *			master or slave)
+ * @param timeout	timeout, in milliseconds, to wait for slave responses
+ * @param frame_header  the first byte sent by the slave in the response frame
+ * @return new device or NULL
+ */
+struct spi_slave *spi_setup_half_duplex_slave(unsigned busnum,
+					      unsigned cs,
+					      unsigned max_hz,
+					      unsigned mode,
+					      uint16_t timeout,
+					      uint8_t frame_header)
+{
+	struct spi_slave *slave;
+
+
+	slave = spi_setup_slave(busnum, cs, max_hz, mode);
+	if (slave) {
+		slave->half_duplex = 1;
+		slave->frame_header = frame_header;
+		slave->max_timeout_ms = timeout;
+	}
+	return slave;
 }
 
 /**
@@ -235,112 +264,96 @@ static void spi_request_bytes(struct exynos_spi *regs, int count, int step)
 		writel(0, &regs->swap_cfg);
 	}
 
-	assert(count && count < (1 << 16));
+	assert(count < (1 << 16));
 	setbits_le32(&regs->ch_cfg, SPI_CH_RST);
 	clrbits_le32(&regs->ch_cfg, SPI_CH_RST);
-
-	writel(count | SPI_PACKET_CNT_EN, &regs->pkt_cnt);
+	if (count)
+		writel(count | SPI_PACKET_CNT_EN, &regs->pkt_cnt);
 }
 
 static int spi_rx_tx(struct exynos_spi_slave *spi_slave, int todo,
-			void **dinp, void const **doutp, unsigned long flags)
+			void **dinp, void const **doutp)
 {
 	struct exynos_spi *regs = spi_slave->regs;
 	uchar *rxp = *dinp;
 	const uchar *txp = *doutp;
-	int rx_lvl, tx_lvl;
+	int rx_lvl, tx_lvl, step;
 	uint out_bytes, in_bytes;
-	int toread;
-	unsigned start = get_timer(0);
-	int stopping;
-	int step;
+	unsigned start_time = get_timer(0);
+	int hunting = spi_slave->slave.half_duplex;
 
-	out_bytes = in_bytes = todo;
+	if (hunting)
+		start_time = get_timer(0);
 
-	stopping = spi_slave->skip_preamble && (flags & SPI_XFER_END) &&
-					!(spi_slave->mode & SPI_SLAVE);
+	in_bytes = todo;
+	out_bytes = txp ? todo : 0;
 
 	/*
 	 * Try to transfer words if we can. This helps read performance at
 	 * SPI clock speeds above about 20MHz.
 	 */
-	step = 1;
-	if (!((todo | (uintptr_t)rxp | (uintptr_t)txp) & 3) &&
-			!spi_slave->skip_preamble)
+	if (((todo | (uintptr_t)rxp | (uintptr_t)txp) & 3) ||
+	    spi_slave->slave.half_duplex)
+		step = 1;
+	else
 		step = 4;
 
 	/*
-	 * If there's something to send, do a software reset and set a
-	 * transaction size.
+	 * Do a software reset and maybe set a transaction size (if not
+	 * hunting).
 	 */
-	spi_request_bytes(regs, todo, step);
+	spi_request_bytes(regs, hunting ? 0 : todo, step);
 
-	/*
-	 * Bytes are transmitted/received in pairs. Wait to receive all the
-	 * data because then transmission will be done as well.
-	 */
-	toread = in_bytes;
+	/* Keep transmitting no matter what, as it clocks the bus. */
 	while (in_bytes) {
 		int temp;
 
+		if (hunting &&
+		    (get_timer(start_time) > spi_slave->slave.max_timeout_ms)) {
+			debug("%s: Did not get reply in %d ms\n",
+			      __func__, spi_slave->slave.max_timeout_ms);
+			return -1;
+		}
+
 		/* Keep the fifos full/empty. */
 		spi_get_fifo_levels(regs, &rx_lvl, &tx_lvl);
-
 		/*
 		 * Don't completely fill the txfifo, since we don't want our
 		 * rxfifo to overflow, and it may already contain data.
 		 */
-		while (tx_lvl < spi_slave->fifo_size / 2 && out_bytes) {
-			if (!txp)
+		while (tx_lvl < (spi_slave->fifo_size / 2)) {
+			if (out_bytes) {
+				if (step == 4) {
+					temp = *((uint32_t *)txp);
+					txp += 4;
+				} else {
+					temp = *txp++;
+				}
+				out_bytes -= step;
+			} else {
 				temp = -1;
-			else if (step == 4)
-				temp = *(uint32_t *)txp;
-			else
-				temp = *txp;
+			}
 			writel(temp, &regs->tx_data);
-			out_bytes -= step;
-			if (txp)
-				txp += step;
 			tx_lvl += step;
 		}
-		if (rx_lvl >= step && in_bytes) {
-			while (rx_lvl >= step && in_bytes) {
-				temp = readl(&regs->rx_data);
-				if (!rxp && !stopping) {
-					in_bytes -= step;
-				} else if (spi_slave->skip_preamble) {
-					if (temp == SPI_PREAMBLE_END_BYTE) {
-						spi_slave->skip_preamble = 0;
-						stopping = 0;
-					}
-				} else {
-					if (step == 4)
-						*(uint32_t *)rxp = temp;
-					else
-						*rxp = temp;
-					in_bytes -= step;
-					rxp += step;
-				}
-				toread -= step;
-				rx_lvl -= step;
+
+		while ((rx_lvl >= step) && in_bytes) {
+			temp = readl(&regs->rx_data);
+			rx_lvl -= step;
+			if (hunting) {
+				if ((temp & 0xff) !=
+				    spi_slave->slave.frame_header)
+					break; /* Restart the outer loop. */
+				else
+					hunting = 0;
 			}
-		/*
-		 * We have run out of input data, but haven't read enough
-		 * bytes after the preamble yet. Read some more, and make
-		 * sure that we transmit dummy bytes too, to keep things
-		 * going.
-		 */
-		} else if (in_bytes && !toread) {
-			assert(!out_bytes);
-			out_bytes = in_bytes;
-			toread = in_bytes;
-			txp = NULL;
-			spi_request_bytes(regs, toread, step);
-		}
-		if (spi_slave->skip_preamble && get_timer(start) > 100) {
-			printf("SPI timeout: in_bytes=%d, out_bytes=%d, ",
-			       in_bytes, out_bytes);
-			return -1;
+			if (step == 4) {
+				*((uint32_t *)rxp) = temp;
+				rxp += 4;
+			} else {
+				*rxp++ = temp;
+			}
+			in_bytes -= step;
 		}
 	}
 	*dinp = rxp;
@@ -378,25 +391,19 @@ int spi_xfer(struct spi_slave *slave, unsigned int bitlen, const void *dout,
 		spi_cs_activate(slave);
 
 	/*
-	 * Exynos SPI limits each transfer to 65535 transfers. To keep
-	 * things simple, allow a maximum of 65532 bytes. We could allow
-	 * more in word mode, but the performance difference is small.
+	 * Exynos SPI limits each transfer to 65535 bytes. To keep things
+	 * simple, allow a maximum of 65532 bytes. We could allow more in word
+	 * mode, but the performance difference is small.
 	 */
 	bytelen =  bitlen / 8;
-	for (upto = 0; !ret && upto < bytelen; upto += todo) {
+	for (upto = 0; !ret && (upto < bytelen); upto += todo) {
 		todo = min(bytelen - upto, (1 << 16) - 4);
-		ret = spi_rx_tx(spi_slave, todo, &din, &dout, flags);
+		ret = spi_rx_tx(spi_slave, todo, &din, &dout);
 	}
 
 	/* Stop the transaction, if necessary. */
-	if ((flags & SPI_XFER_END) && !(spi_slave->mode & SPI_SLAVE)) {
+	if (flags & SPI_XFER_END)
 		spi_cs_deactivate(slave);
-		if (spi_slave->skip_preamble) {
-			assert(!spi_slave->skip_preamble);
-			debug("Failed to complete premable transaction\n");
-			ret = -1;
-		}
-	}
 
 	return ret;
 }
@@ -433,7 +440,6 @@ void spi_cs_activate(struct spi_slave *slave)
 	}
 	clrbits_le32(&spi_slave->regs->cs_reg, SPI_SLAVE_SIG_INACT);
 	debug("Activate CS, bus %d\n", spi_slave->slave.bus);
-	spi_slave->skip_preamble = spi_slave->mode & SPI_PREAMBLE;
 
 	/* Remember time of this transaction so we can honour the bus delay */
 	if (spi_slave->bus->deactivate_delay_us)
@@ -463,6 +469,7 @@ static inline struct exynos_spi *get_spi_base(int dev_index)
 					(dev_index - 3);
 }
 
+#ifdef CONFIG_OF_CONTROL
 /*
  * Read the SPI config from the device tree node.
  *
@@ -471,7 +478,6 @@ static inline struct exynos_spi *get_spi_base(int dev_index)
  * @param bus   SPI bus structure to fill with information
  * @return 0 if ok, or -FDT_ERR_NOTFOUND if something was missing
  */
-#ifdef CONFIG_OF_CONTROL
 static int spi_get_config(const void *blob, int node, struct spi_bus *bus)
 {
 	bus->node = node;
@@ -529,29 +535,61 @@ static int process_nodes(const void *blob, int node_list[], int count)
 
 	return 0;
 }
-#endif
 
 /**
  * Set up a new SPI slave for an fdt node
  *
  * @param blob		Device tree blob
- * @param node		SPI peripheral node to use
+ * @param slave_node	pointer to this SPI slave node in the device tree
+ * @param spi_node	cached pointer to the SPI interface this node belongs to
  * @return 0 if ok, -1 on error
  */
-struct spi_slave *spi_setup_slave_fdt(const void *blob, int node,
-		unsigned int cs, unsigned int max_hz, unsigned int mode)
+struct spi_slave *spi_setup_slave_fdt(const void *blob,
+				      int slave_node,
+				      int spi_node)
 {
 	struct spi_bus *bus;
 	unsigned int i;
 
 	for (i = 0, bus = spi_bus; i < bus_count; i++, bus++) {
-		if (bus->node == node)
-			return spi_setup_slave(i, cs, max_hz, mode);
+		uint32_t max_freq;
+		unsigned cs;
+		unsigned mode;
+
+		if (bus->node != spi_node)
+			continue;
+
+		/* Decode slave-specific params, providing sendible defaults */
+		max_freq = fdtdec_get_int(blob, slave_node,
+					  "spi-max-frequency", 500000);
+		mode = fdtdec_get_int(blob, slave_node, "spi-mode", 0);
+		cs = fdtdec_get_int(blob, slave_node, "reg", 0);
+		if (fdtdec_get_bool(blob, slave_node, "spi-half-duplex")) {
+			unsigned timeout;
+			unsigned frame_header;
+
+			timeout = fdtdec_get_int(blob,
+						 slave_node,
+						 "spi-max-timeout-ms", 1000);
+			frame_header = fdtdec_get_int(blob, slave_node,
+						      "spi-frame-header",
+						      0x100);
+			if (frame_header >= 0x100) {
+				debug("%s: frame header not defined "
+				      "or invalid!\n", __func__);
+				return NULL;
+			}
+			return spi_setup_half_duplex_slave(i, cs, max_freq,
+							   mode, timeout,
+							   frame_header);
+		}
+		return spi_setup_slave(i, cs, max_freq, mode);
 	}
 
-	debug("%s: Failed to find bus node %d\n", __func__, node);
+	debug("%s: Failed to find bus node %d\n", __func__, spi_node);
 	return NULL;
 }
+#endif /* ^^^^^^^ CONFIG_OF_CONTROL defined */
 
 /* Sadly there is no error return from this function */
 void spi_init(void)
