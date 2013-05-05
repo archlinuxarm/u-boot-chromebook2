@@ -102,26 +102,26 @@ int cros_ec_i2c_command(struct cros_ec_dev *dev, uint8_t cmd, int cmd_version,
 			 cros_ec_calc_checksum(dev->dout, dout_len + 3);
 
 	/* Set to the proper i2c bus */
-	if (i2c_set_bus_num(dev->bus_num)) {
+	if (i2c_set_bus_num(dev->u.i2c.bus_num)) {
 		debug("%s: Cannot change to I2C bus %d\n", __func__,
-			dev->bus_num);
+			dev->u.i2c.bus_num);
 		return -1;
 	}
 
 	/* Send output data */
 	cros_ec_dump_data("out", -1, dev->dout, out_bytes);
-	ret = i2c_write(dev->addr, 0, 0, dev->dout, out_bytes);
+	ret = i2c_write(dev->u.i2c.addr, 0, 0, dev->dout, out_bytes);
 	if (ret) {
 		debug("%s: Cannot complete I2C write to 0x%x\n",
-			__func__, dev->addr);
+			__func__, dev->u.i2c.addr);
 		ret = -1;
 	}
 
 	if (!ret) {
-		ret = i2c_read(dev->addr, 0, 0, in_ptr, in_bytes);
+		ret = i2c_read(dev->u.i2c.addr, 0, 0, in_ptr, in_bytes);
 		if (ret) {
 			debug("%s: Cannot complete I2C read from 0x%x\n",
-				__func__, dev->addr);
+				__func__, dev->u.i2c.addr);
 			ret = -1;
 		}
 	}
@@ -168,13 +168,13 @@ int cros_ec_i2c_decode_fdt(struct cros_ec_dev *dev, const void *blob)
 	/* Decode interface-specific FDT params */
 	dev->max_frequency = fdtdec_get_int(blob, dev->node,
 					    "i2c-max-frequency", 100000);
-	dev->bus_num = i2c_get_bus_num_fdt(dev->parent_node);
-	if (dev->bus_num == -1) {
+	dev->u.i2c.bus_num = i2c_get_bus_num_fdt(dev->parent_node);
+	if (dev->u.i2c.bus_num == -1) {
 		debug("%s: Failed to read bus number\n", __func__);
 		return -1;
 	}
-	dev->addr = fdtdec_get_int(blob, dev->node, "reg", -1);
-	if (dev->addr == -1) {
+	dev->u.i2c.addr = fdtdec_get_int(blob, dev->node, "reg", -1);
+	if (dev->u.i2c.addr == -1) {
 		debug("%s: Failed to read device address\n", __func__);
 		return -1;
 	}
@@ -191,7 +191,7 @@ int cros_ec_i2c_decode_fdt(struct cros_ec_dev *dev, const void *blob)
  */
 int cros_ec_i2c_init(struct cros_ec_dev *dev, const void *blob)
 {
-	i2c_init(dev->max_frequency, dev->addr);
+	i2c_init(dev->max_frequency, dev->u.i2c.addr);
 
 	dev->cmd_version_is_supported = 0;
 

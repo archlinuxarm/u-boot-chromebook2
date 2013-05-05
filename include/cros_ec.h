@@ -40,16 +40,19 @@ enum cros_ec_interface_t {
 /* Our configuration information */
 struct cros_ec_dev {
 	enum cros_ec_interface_t interface;
-	struct spi_slave *spi;		/* Our SPI slave, if using SPI */
-	int node;                       /* Our node */
-	int parent_node;		/* Our parent node (interface) */
-	unsigned int cs;		/* Our chip select */
-	unsigned int addr;		/* Device address (for I2C) */
-	unsigned int bus_num;		/* Bus number (for I2C) */
+	uint16_t node;			/* EC node offset */
+	uint16_t parent_node;		/* EC parent node (interface) offset */
+	union {
+		struct spi_slave *spi;	/* Our SPI slave, if using SPI */
+		struct {
+			uint8_t addr;	/* Device address (for I2C) */
+			uint8_t bus_num;	/* Bus number (for I2C) */
+		} i2c;
+	} u;
 	unsigned int max_frequency;	/* Maximum interface frequency */
 	struct fdt_gpio_state ec_int;	/* GPIO used as EC interrupt line */
-	int cmd_version_is_supported;   /* Device supports command versions */
-	int optimise_flash_write;	/* Don't write erased flash blocks */
+	int cmd_version_is_supported:1; /* Device supports command versions */
+	int optimise_flash_write:1;	/* Don't write erased flash blocks */
 
 	/*
 	 * These two buffers will always be dword-aligned and include enough

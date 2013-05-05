@@ -21,19 +21,30 @@
  * MA 02111-1307 USA
  */
 
-/*
- * The Matrix Keyboard Protocol driver handles talking to the keyboard
- * controller chip. Mostly this is for keyboard functions, but some other
- * things have slipped in, so we provide generic services to talk to the
- * KBC.
- */
-
 #include <common.h>
 #include <cros_ec.h>
 #include <spi.h>
 
+/*
+ * The EC driver handles talking to the embedded controller.
+ *
+ * Data exchanged between the master and the EC is encapsulated in frames, as
+ * follows:
+ *
+ * Master to EC: <version><data type><data size><data...><checksum>
+ * EC to Master: <start><result code><response size><response...><checksum>
+ *
+ * All fields but <data> and <response> are one byte is size.
+ */
+
+#define EC_FRAME_OVERHEAD (MSG_HEADER_BYTES + 1) /* header plus checksum */
+
+#ifdef CONFIG_NEW_SPI_XFER
+#error "CONFIG_NEW_SPI_XFER not supported in CROS_EC"
+#endif
+
 /**
- * Send a command to a LPC CROS_EC device and return the reply.
+ * Send a command to a SPI CROS_EC device and return the reply.
  *
  * The device's internal input/output buffers are used.
  *
@@ -51,23 +62,29 @@ int cros_ec_spi_command(struct cros_ec_dev *dev, uint8_t cmd, int cmd_version,
 		     const uint8_t *dout, int dout_len,
 		     uint8_t **dinp, int din_len)
 {
-	int in_bytes = din_len + 4;	/* status, length, checksum, trailer */
+	int in_bytes = din_len + EC_FRAME_OVERHEAD;
 	uint8_t *out;
 	uint8_t *p;
 	int csum, len;
 	int rv;
 
+	if (!dev->cmd_version_is_supported) {
+		debug("%s: Can't talk to EC not supporting command versions\n",
+		      __func__);
+		return -1;
+	}
+
 	/*
 	 * Sanity-check input size to make sure it plus transaction overhead
 	 * fits in the internal device buffer.
 	 */
-	if (in_bytes > sizeof(dev->din)) {
+	if (in_bytes > MSG_BYTES) {
 		debug("%s: Cannot receive %d bytes\n", __func__, din_len);
 		return -1;
 	}
 
 	/* We represent message length as a byte */
-	if (dout_len > 0xff) {
+	if (dout_len > MSG_BYTES) {
 		debug("%s: Cannot send %d bytes\n", __func__, dout_len);
 		return -1;
 	}
@@ -77,51 +94,53 @@ int cros_ec_spi_command(struct cros_ec_dev *dev, uint8_t cmd, int cmd_version,
 	 */
 	memset(dev->din, '\0', in_bytes);
 
-	if (spi_claim_bus(dev->spi)) {
+	if (spi_claim_bus(dev->u.spi)) {
 		debug("%s: Cannot claim SPI bus\n", __func__);
 		return -1;
 	}
 
 	out = dev->dout;
-	out[0] = cmd_version;
-	out[1] = cmd;
-	out[2] = (uint8_t)dout_len;
-	memcpy(out + 3, dout, dout_len);
-	csum = cros_ec_calc_checksum(out, 3)
-	       + cros_ec_calc_checksum(dout, dout_len);
-	out[3 + dout_len] = (uint8_t)csum;
+
+	*out++ = EC_CMD_VERSION0 + cmd_version;
+	*out++ = cmd;
+	*out++ = (uint8_t)dout_len;
+	memcpy(out, dout, dout_len);
+	out[dout_len] = cros_ec_calc_checksum(dev->dout, dout_len + 3);
 
 	/*
 	 * Send output data and receive input data starting such that the
 	 * message body will be dword aligned.
 	 */
-	p = dev->din + sizeof(int64_t) - 2;
-	len = dout_len + 4;
-	cros_ec_dump_data("out", cmd, out, len);
-	rv = spi_xfer(dev->spi, max(len, in_bytes) * 8, out, p,
+	p = dev->din + sizeof(int64_t) - MSG_HEADER_BYTES;
+	len = dout_len + EC_FRAME_OVERHEAD;
+	cros_ec_dump_data("out", cmd, dev->dout, len);
+	rv = spi_xfer(dev->u.spi, max(len, in_bytes) * 8, dev->dout, p,
 		      SPI_XFER_BEGIN | SPI_XFER_END);
 
-	spi_release_bus(dev->spi);
+	spi_release_bus(dev->u.spi);
 
 	if (rv) {
 		debug("%s: Cannot complete SPI transfer\n", __func__);
 		return -1;
 	}
 
-	len = min(p[1], din_len);
-	cros_ec_dump_data("in", -1, p, len + 3);
+	p++;	/* Skip the frame start symbol SPI RX synchronized on. */
+	len = min(p[1] + EC_FRAME_OVERHEAD, din_len + EC_FRAME_OVERHEAD);
 
-	/* Response code is first byte of message */
+	/* Include frame start symbol in the dump */
+	cros_ec_dump_data("in", -1, p - 1, len);
+
+	/* Response code is first byte of the message after start symbol */
 	if (p[0] != EC_RES_SUCCESS) {
 		printf("%s: Returned status %d\n", __func__, p[0]);
 		return -(int)(p[0]);
 	}
 
-	/* Check checksum */
-	csum = cros_ec_calc_checksum(p, len + 2);
-	if (csum != p[len + 2]) {
+	/* Verify checksum, exclude start and checksum from calculations. */
+	csum = cros_ec_calc_checksum(p, len - 2);
+	if (csum != p[len - 2]) {
 		debug("%s: Invalid checksum rx %#02x, calced %#02x\n", __func__,
-		      p[2 + len], csum);
+		      p[len - 1], csum);
 		return -1;
 	}
 
@@ -136,7 +155,6 @@ int cros_ec_spi_decode_fdt(struct cros_ec_dev *dev, const void *blob)
 	/* Decode interface-specific FDT params */
 	dev->max_frequency = fdtdec_get_int(blob, dev->node,
 					    "spi-max-frequency", 500000);
-	dev->cs = fdtdec_get_int(blob, dev->node, "reg", 0);
 
 	return 0;
 }
@@ -150,8 +168,8 @@ int cros_ec_spi_decode_fdt(struct cros_ec_dev *dev, const void *blob)
  */
 int cros_ec_spi_init(struct cros_ec_dev *dev, const void *blob)
 {
-	dev->spi = spi_setup_slave_fdt(blob, dev->node, dev->parent_node);
-	if (!dev->spi) {
+	dev->u.spi = spi_setup_slave_fdt(blob, dev->node, dev->parent_node);
+	if (!dev->u.spi) {
 		debug("%s: Could not setup SPI slave\n", __func__);
 		return -1;
 	}
