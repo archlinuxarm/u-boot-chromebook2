@@ -58,4 +58,6 @@
 #define CONFIG_CHROMEOS_GPIO_FLAG
 #define CONFIG_CHROMEOS_CROS_EC_FLAG
 
+#define CONFIG_CROS_EC_SPI		/* Support CROS_EC over SPI */
+
 #endif	/* __CONFIG_CHROMEOS_PEACH_H */

@@ -88,12 +88,11 @@
 #define CONFIG_BAUDRATE			115200
 #define EXYNOS5_DEFAULT_UART_OFFSET	0x010000
 
-/* Enable keyboard */
 #define CONFIG_CROS_EC		/* CROS_EC protocol */
-#define CONFIG_CROS_EC_SPI		/* Support CROS_EC over SPI */
-#define CONFIG_CROS_EC_I2C		/* Support CROS_EC over I2C */
 #define CONFIG_CROS_EC_KEYB	/* CROS_EC keyboard input */
 #define CONFIG_CMD_CROS_EC
+
+/* Enable keyboard */
 #define CONFIG_KEYBOARD
 
 /* Console configuration */

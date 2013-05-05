@@ -55,9 +55,9 @@ static int wait_for_sync(struct cros_ec_dev *dev)
 	return 0;
 }
 
-int cros_ec_lpc_command(struct cros_ec_dev *dev, uint8_t cmd, int cmd_version,
-		     const uint8_t *dout, int dout_len,
-		     uint8_t **dinp, int din_len)
+int cros_ec_if_command(struct cros_ec_dev *dev, uint8_t cmd, int cmd_version,
+		       const uint8_t *dout, int dout_len,
+		       uint8_t **dinp, int din_len)
 {
 	const int cmd_addr = EC_LPC_ADDR_HOST_CMD;
 	const int data_addr = EC_LPC_ADDR_HOST_DATA;
@@ -166,7 +166,7 @@ int cros_ec_lpc_command(struct cros_ec_dev *dev, uint8_t cmd, int cmd_version,
  * @param blob		Device tree blob
  * @return 0 if ok, -1 on error
  */
-int cros_ec_lpc_init(struct cros_ec_dev *dev, const void *blob)
+int cros_ec_if_init(struct cros_ec_dev *dev, const void *blob)
 {
 	int byte, i;
 
@@ -193,7 +193,7 @@ int cros_ec_lpc_init(struct cros_ec_dev *dev, const void *blob)
  * seeing whether the EC sets the EC_HOST_ARGS_FLAG_FROM_HOST flag
  * in args when it responds.
  */
-int cros_ec_lpc_check_version(struct cros_ec_dev *dev)
+int cros_ec_check_version(struct cros_ec_dev *dev)
 {
 	if (inb(EC_LPC_ADDR_MEMMAP + EC_MEMMAP_ID) == 'E' &&
 			inb(EC_LPC_ADDR_MEMMAP + EC_MEMMAP_ID + 1)
@@ -206,4 +206,19 @@ int cros_ec_lpc_check_version(struct cros_ec_dev *dev)
 
 	printf("%s: ERROR: old EC interface not supported\n", __func__);
 	return -1;
+}
+
+int cros_ec_if_packet(struct cros_ec_dev *dev, int out_bytes, int in_bytes)
+{
+	printf("%s: not yet implemented\n", __func__);
+	return -1;
+}
+
+int cros_ec_if_decode_fdt(struct cros_ec_dev *dev, const void *blob)
+{
+	/*
+	 * Nothing to do here, should be dropped when driver model is
+	 * implemented.
+	 */
+	return 0;
 }

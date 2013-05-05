@@ -231,18 +231,8 @@ static int send_command_proto3(struct cros_ec_dev *dev,
 	if (in_bytes < 0)
 		return in_bytes;
 
-	switch (dev->interface) {
-#ifdef CONFIG_CROS_EC_SPI
-	case CROS_EC_IF_SPI:
-		rv = cros_ec_spi_packet(dev, out_bytes, in_bytes);
-		break;
-#endif
-	case CROS_EC_IF_NONE:
-	/* TODO: support protocol 3 for LPC, I2C; for now fall through */
-	default:
-		debug("%s: Unsupported interface\n", __func__);
-		rv = -1;
-	}
+	rv = cros_ec_if_packet(dev, out_bytes, in_bytes);
+
 	if (rv < 0)
 		return rv;
 
@@ -258,36 +248,12 @@ static int send_command(struct cros_ec_dev *dev, uint8_t cmd, int cmd_version,
 
 	/* Handle protocol version 3 support */
 	if (dev->protocol_version == 3)
-		return send_command_proto3(dev, cmd, cmd_version,
-					   dout, dout_len, dinp, din_len);
-
-	switch (dev->interface) {
-#ifdef CONFIG_CROS_EC_SPI
-	case CROS_EC_IF_SPI:
-		ret = cros_ec_spi_command(dev, cmd, cmd_version,
-					(const uint8_t *)dout, dout_len,
-					dinp, din_len);
-		break;
-#endif
-#ifdef CONFIG_CROS_EC_I2C
-	case CROS_EC_IF_I2C:
-		ret = cros_ec_i2c_command(dev, cmd, cmd_version,
-					(const uint8_t *)dout, dout_len,
-					dinp, din_len);
-		break;
-#endif
-#ifdef CONFIG_CROS_EC_LPC
-	case CROS_EC_IF_LPC:
-		ret = cros_ec_lpc_command(dev, cmd, cmd_version,
-					(const uint8_t *)dout, dout_len,
-					dinp, din_len);
-		break;
-#endif
-	case CROS_EC_IF_NONE:
-	default:
-		ret = -1;
-	}
-
+		ret = send_command_proto3(dev, cmd, cmd_version,
+					  dout, dout_len, dinp, din_len);
+	else
+		ret = cros_ec_if_command(dev, cmd, cmd_version,
+				      (const uint8_t *)dout, dout_len,
+				dinp, din_len);
 	return ret;
 }
 
@@ -658,16 +624,12 @@ int cros_ec_flash_protect(struct cros_ec_dev *dev,
 	return 0;
 }
 
-static int cros_ec_check_version(struct cros_ec_dev *dev)
+#ifndef CONFIG_CROS_EC_LPC
+/* LPC has its own way of doing this */
+int cros_ec_check_version(struct cros_ec_dev *dev)
 {
 	struct ec_params_hello req;
 	struct ec_response_hello *resp;
-
-#ifdef CONFIG_CROS_EC_LPC
-	/* LPC has its own way of doing this */
-	if (dev->interface == CROS_EC_IF_LPC)
-		return cros_ec_lpc_check_version(dev);
-#endif
 
 	/*
 	 * TODO(sjg@chromium.org).
@@ -707,6 +669,7 @@ static int cros_ec_check_version(struct cros_ec_dev *dev)
 	printf("%s: ERROR: old EC interface not supported\n", __func__);
 	return -1;
 }
+#endif
 
 int cros_ec_test(struct cros_ec_dev *dev)
 {
@@ -998,7 +961,8 @@ int cros_ec_get_ldo(struct cros_ec_dev *dev, uint8_t index, uint8_t *state)
 }
 
 /**
- * Decode MBKP details from the device tree and allocate a suitable device.
+ * Decode EC interface details from the device tree and allocate a suitable
+ * device.
  *
  * @param blob		Device tree blob
  * @param node		Node to decode from
@@ -1008,8 +972,6 @@ int cros_ec_get_ldo(struct cros_ec_dev *dev, uint8_t index, uint8_t *state)
 static int cros_ec_decode_fdt(const void *blob, int node,
 		struct cros_ec_dev **devp)
 {
-	enum fdt_compat_id compat;
-	struct cros_ec_dev *dev;
 	int parent;
 
 	/* See what type of parent we are inside (this is expensive) */
@@ -1019,40 +981,16 @@ static int cros_ec_decode_fdt(const void *blob, int node,
 		return -1;
 	}
 
-	dev = &static_dev;
-	dev->node = node;
-	dev->parent_node = parent;
+	static_dev.node = node;
+	static_dev.parent_node = parent;
 
-	compat = fdtdec_lookup(blob, parent);
-	switch (compat) {
-#ifdef CONFIG_CROS_EC_SPI
-	case COMPAT_SAMSUNG_EXYNOS_SPI:
-		dev->interface = CROS_EC_IF_SPI;
-		if (cros_ec_spi_decode_fdt(dev, blob))
-			return -1;
-		break;
-#endif
-#ifdef CONFIG_CROS_EC_I2C
-	case COMPAT_SAMSUNG_S3C2440_I2C:
-		dev->interface = CROS_EC_IF_I2C;
-		if (cros_ec_i2c_decode_fdt(dev, blob))
-			return -1;
-		break;
-#endif
-#ifdef CONFIG_CROS_EC_LPC
-	case COMPAT_INTEL_LPC:
-		dev->interface = CROS_EC_IF_LPC;
-		break;
-#endif
-	default:
-		debug("%s: Unknown compat id %d\n", __func__, compat);
+	if (cros_ec_if_decode_fdt(&static_dev, blob))
 		return -1;
-	}
 
-	fdtdec_decode_gpio(blob, node, "ec-interrupt", &dev->ec_int);
-	dev->optimise_flash_write = fdtdec_get_bool(blob, node,
-						    "optimise-flash-write");
-	*devp = dev;
+	fdtdec_decode_gpio(blob, node, "ec-interrupt", &static_dev.ec_int);
+	static_dev.optimise_flash_write =
+		fdtdec_get_bool(blob, node, "optimise-flash-write");
+	*devp = &static_dev;
 
 	return 0;
 }
@@ -1078,30 +1016,9 @@ int cros_ec_init(const void *blob, struct cros_ec_dev **cros_ecp)
 		return -CROS_EC_ERR_FDT_DECODE;
 	}
 
-	switch (dev->interface) {
-#ifdef CONFIG_CROS_EC_SPI
-	case CROS_EC_IF_SPI:
-		if (cros_ec_spi_init(dev, blob)) {
-			debug("%s: Could not setup SPI interface\n", __func__);
-			return -CROS_EC_ERR_DEV_INIT;
-		}
-		break;
-#endif
-#ifdef CONFIG_CROS_EC_I2C
-	case CROS_EC_IF_I2C:
-		if (cros_ec_i2c_init(dev, blob))
-			return -CROS_EC_ERR_DEV_INIT;
-		break;
-#endif
-#ifdef CONFIG_CROS_EC_LPC
-	case CROS_EC_IF_LPC:
-		if (cros_ec_lpc_init(dev, blob))
-			return -CROS_EC_ERR_DEV_INIT;
-		break;
-#endif
-	case CROS_EC_IF_NONE:
-	default:
-		return 0;
+	if (cros_ec_if_init(dev, blob)) {
+		debug("%s: Could not setup SPI interface\n", __func__);
+		return -CROS_EC_ERR_DEV_INIT;
 	}
 
 	/* we will poll the EC interrupt line */

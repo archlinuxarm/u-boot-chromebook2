@@ -45,7 +45,7 @@
  */
 #define EC_FRAME_OVERHEAD MSG_HEADER_BYTES
 
-int cros_ec_spi_packet(struct cros_ec_dev *dev, int out_bytes, int in_bytes)
+int cros_ec_if_packet(struct cros_ec_dev *dev, int out_bytes, int in_bytes)
 {
 	int rv;
 
@@ -84,9 +84,9 @@ int cros_ec_spi_packet(struct cros_ec_dev *dev, int out_bytes, int in_bytes)
  * @param din_len	Maximum size of response in bytes
  * @return number of bytes in response, or -1 on error
  */
-int cros_ec_spi_command(struct cros_ec_dev *dev, uint8_t cmd, int cmd_version,
-		     const uint8_t *dout, int dout_len,
-		     uint8_t **dinp, int din_len)
+int cros_ec_if_command(struct cros_ec_dev *dev, uint8_t cmd, int cmd_version,
+		       const uint8_t *dout, int dout_len,
+		       uint8_t **dinp, int din_len)
 {
 	/* SPI driver will return the entire frame but the framing byte. */
 	int in_bytes = din_len + EC_FRAME_OVERHEAD;
@@ -185,7 +185,7 @@ int cros_ec_spi_command(struct cros_ec_dev *dev, uint8_t cmd, int cmd_version,
 	return len - EC_FRAME_OVERHEAD;
 }
 
-int cros_ec_spi_decode_fdt(struct cros_ec_dev *dev, const void *blob)
+int cros_ec_if_decode_fdt(struct cros_ec_dev *dev, const void *blob)
 {
 	/* Decode interface-specific FDT params */
 	dev->max_frequency = fdtdec_get_int(blob, dev->node,
@@ -201,7 +201,7 @@ int cros_ec_spi_decode_fdt(struct cros_ec_dev *dev, const void *blob)
  * @param blob		Device tree blob
  * @return 0 if ok, -1 on error
  */
-int cros_ec_spi_init(struct cros_ec_dev *dev, const void *blob)
+int cros_ec_if_init(struct cros_ec_dev *dev, const void *blob)
 {
 	dev->u.spi = spi_setup_slave_fdt(blob, dev->node, dev->parent_node);
 	if (!dev->u.spi) {

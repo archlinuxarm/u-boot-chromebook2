@@ -38,9 +38,9 @@
 #define debug_trace(fmt, b...)
 #endif
 
-int cros_ec_i2c_command(struct cros_ec_dev *dev, uint8_t cmd, int cmd_version,
-		     const uint8_t *dout, int dout_len,
-		     uint8_t **dinp, int din_len)
+int cros_ec_if_command(struct cros_ec_dev *dev, uint8_t cmd, int cmd_version,
+		       const uint8_t *dout, int dout_len,
+		       uint8_t **dinp, int din_len)
 {
 	int old_bus = 0;
 	/* version8, cmd8, arglen8, out8[dout_len], csum8 */
@@ -157,7 +157,7 @@ int cros_ec_i2c_command(struct cros_ec_dev *dev, uint8_t cmd, int cmd_version,
 	return din_len;
 }
 
-int cros_ec_i2c_decode_fdt(struct cros_ec_dev *dev, const void *blob)
+int cros_ec_if_decode_fdt(struct cros_ec_dev *dev, const void *blob)
 {
 	/* Decode interface-specific FDT params */
 	dev->max_frequency = fdtdec_get_int(blob, dev->node,
@@ -183,8 +183,14 @@ int cros_ec_i2c_decode_fdt(struct cros_ec_dev *dev, const void *blob)
  * @param blob		Device tree blob
  * @return 0 if ok, -1 on error
  */
-int cros_ec_i2c_init(struct cros_ec_dev *dev, const void *blob)
+int cros_ec_if_init(struct cros_ec_dev *dev, const void *blob)
 {
 	i2c_init(dev->max_frequency, dev->u.i2c.addr);
 	return 0;
+}
+
+int cros_ec_if_packet(struct cros_ec_dev *dev, int out_bytes, int in_bytes)
+{
+	printf("%s: not yet implemented\n", __func__);
+	return -1;
 }

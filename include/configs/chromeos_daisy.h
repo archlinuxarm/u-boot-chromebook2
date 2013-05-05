@@ -93,5 +93,6 @@
 #endif
 #define CONFIG_BOOTCOMMAND CONFIG_NON_VERIFIED_BOOTCOMMAND
 
+#define CONFIG_CROS_EC_I2C		/* Support CROS_EC over I2C */
 
 #endif	/* __CONFIG_SMDK_H */

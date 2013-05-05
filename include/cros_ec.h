@@ -29,17 +29,8 @@
 #include <fdtdec.h>
 #include <cros_ec_message.h>
 
-/* Which interface is the device on? */
-enum cros_ec_interface_t {
-	CROS_EC_IF_NONE,
-	CROS_EC_IF_SPI,
-	CROS_EC_IF_I2C,
-	CROS_EC_IF_LPC,	/* Intel Low Pin Count interface */
-};
-
 /* Our configuration information */
 struct cros_ec_dev {
-	enum cros_ec_interface_t interface;
 	uint16_t node;			/* EC node offset */
 	uint16_t parent_node;		/* EC parent node (interface) offset */
 	union {
@@ -158,7 +149,7 @@ enum {
 };
 
 /**
- * Set up the Chromium OS matrix keyboard protocol
+ * Initialize Chromium OS EC driver.
  *
  * @param blob		Device tree blob containing setup information
  * @param cros_ecp        Returns pointer to the cros_ec device, or NULL if none
@@ -169,7 +160,7 @@ enum {
 int cros_ec_init(const void *blob, struct cros_ec_dev **cros_ecp);
 
 /**
- * Read information about the keyboard matrix
+ * Read information about the EC driver
  *
  * @param dev		CROS-EC device
  * @param info		Place to put the info structure
@@ -240,41 +231,42 @@ int cros_ec_flash_update_rw(struct cros_ec_dev *dev,
 struct cros_ec_dev *board_get_cros_ec_dev(void);
 
 
-/* Internal interfaces */
-int cros_ec_i2c_init(struct cros_ec_dev *dev, const void *blob);
-int cros_ec_spi_init(struct cros_ec_dev *dev, const void *blob);
-int cros_ec_lpc_init(struct cros_ec_dev *dev, const void *blob);
+/**
+ * Initialize EC interface
+ *
+ * Each of the tree EC interface types (LPC, I2C, SPI) provide their own
+ * implementation.
+ *
+ * @param dev    CROS-EC device.
+ * @param blob   device tree blob
+ * @return zero on success, error code otherwise
+ */
+int cros_ec_if_init(struct cros_ec_dev *dev, const void *blob);
 
 /**
- * Read information from the fdt for the i2c cros_ec interface
+ * Read information from the fdt for cros_ec interface
  *
  * @param dev		CROS-EC device
  * @param blob		Device tree blob
  * @return 0 if ok, -1 if we failed to read all required information
  */
-int cros_ec_i2c_decode_fdt(struct cros_ec_dev *dev, const void *blob);
+int cros_ec_if_decode_fdt(struct cros_ec_dev *dev, const void *blob);
 
 /**
- * Read information from the fdt for the spi cros_ec interface
- *
- * @param dev		CROS-EC device
- * @param blob		Device tree blob
- * @return 0 if ok, -1 if we failed to read all required information
- */
-int cros_ec_spi_decode_fdt(struct cros_ec_dev *dev, const void *blob);
-
-/**
- * Check whether the LPC interface supports new-style commands.
+ * Check whether the EC interface supports new-style commands.
  *
  * LPC has its own way of doing this, which involves checking LPC values
  * visible to the host. Do this, and update dev->protocol_version accordingly.
  *
  * @param dev		CROS-EC device to check
  */
-int cros_ec_lpc_check_version(struct cros_ec_dev *dev);
+int cros_ec_check_version(struct cros_ec_dev *dev);
 
 /**
- * Send a command to an I2C CROS-EC device and return the reply.
+ * Send a command to a CROS-EC device and return the reply.
+ *
+ * Each of the tree EC interface types (LPC, I2C, SPI) provide their own
+ * implementation.
  *
  * This rather complicated function deals with sending both old-style and
  * new-style commands. The old ones have just a command byte and arguments.
@@ -292,31 +284,9 @@ int cros_ec_lpc_check_version(struct cros_ec_dev *dev);
  * @param din_len       Maximum size of response in bytes
  * @return number of bytes in response, or -1 on error
  */
-int cros_ec_i2c_command(struct cros_ec_dev *dev, uint8_t cmd, int cmd_version,
-		     const uint8_t *dout, int dout_len,
-		     uint8_t **dinp, int din_len);
-
-/**
- * Send a command to a LPC CROS-EC device and return the reply.
- *
- * The device's internal input/output buffers are used.
- *
- * @param dev		CROS-EC device
- * @param cmd		Command to send (EC_CMD_...)
- * @param cmd_version	Version of command to send (EC_VER_...)
- * @param dout          Output data (may be NULL If dout_len=0)
- * @param dout_len      Size of output data in bytes
- * @param dinp          Returns pointer to response data
- * @param din_len       Maximum size of response in bytes
- * @return number of bytes in response, or -1 on error
- */
-int cros_ec_lpc_command(struct cros_ec_dev *dev, uint8_t cmd, int cmd_version,
-		     const uint8_t *dout, int dout_len,
-		     uint8_t **dinp, int din_len);
-
-int cros_ec_spi_command(struct cros_ec_dev *dev, uint8_t cmd, int cmd_version,
-		     const uint8_t *dout, int dout_len,
-		     uint8_t **dinp, int din_len);
+int cros_ec_if_command(struct cros_ec_dev *dev, uint8_t cmd, int cmd_version,
+		       const uint8_t *dout, int dout_len,
+		       uint8_t **dinp, int din_len);
 
 /**
  * Send a packet to a CROS-EC device and return the response packet.
@@ -329,7 +299,7 @@ int cros_ec_spi_command(struct cros_ec_dev *dev, uint8_t cmd, int cmd_version,
  * @param in_bytes	Maximum size of response packet to receive
  * @return number of bytes in response packet, or <0 on error
  */
-int cros_ec_spi_packet(struct cros_ec_dev *dev, int out_bytes, int in_bytes);
+int cros_ec_if_packet(struct cros_ec_dev *dev, int out_bytes, int in_bytes);
 
 /**
  * Dump a block of data for a command.
