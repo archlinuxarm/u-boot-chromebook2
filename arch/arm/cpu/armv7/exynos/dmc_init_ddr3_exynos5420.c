@@ -456,5 +456,13 @@ int ddr3_mem_ctrl_init(int reset)
 	writel(mem->concontrol | (mem->aref_en << CONCONTROL_AREF_EN_SHIFT) |
 		(mem->rd_fetch << CONCONTROL_RD_FETCH_SHIFT),
 		&drex1->concontrol);
+
+	/* Enable Clock Gating Control for DMC
+	 * this saves around 25 mw dmc power as compared to the power
+	 * consumption without these bits enabled
+	 */
+        setbits_le32(&drex0->cgcontrol, DMC_INTERNAL_CG);
+        setbits_le32(&drex1->cgcontrol, DMC_INTERNAL_CG);
+
 	return 0;
 }
