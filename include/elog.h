@@ -151,6 +151,11 @@ struct elog_header {
 	u8 reserved[2];
 } __packed;
 
+/* ARM/generic versions of sleep/wake */
+#define ELOG_TYPE_SLEEP                   0xa7
+#define ELOG_TYPE_WAKE                    0xa8
+#define ELOG_TYPE_FW_WAKE                0xa9
+
 /* ELOG related constants */
 #define ELOG_SIGNATURE		0x474f4c45  /* 'ELOG' */
 #define ELOG_VERSION		1

@@ -21,7 +21,9 @@
  */
 
 #include <common.h>
+#include <linux/compiler.h>
 #include <config.h>
+#include <elog.h>
 #include <errno.h>
 #include <mmc.h>
 #include <dwmmc.h>
@@ -50,6 +52,12 @@ enum index {
 	SPI_INDEX,
 	USB_INDEX,
 };
+
+struct wake_event {
+	struct event_header header;
+	uint8_t sleep_type;
+	uint8_t checksum;
+} __packed;
 
 /* IROM Function Pointers Table */
 u32 irom_ptr_table[] = {
@@ -80,55 +88,74 @@ static int config_branch_prediction(int set_cr_z)
 	return cr & CR_Z;
 }
 
-#ifdef CONFIG_EXYNOS_FAST_SPI_BOOT
-static void spi_rx_tx(struct exynos_spi *regs, int todo,
-			void *dinp, void const *doutp, int i)
+#if defined(CONFIG_ELOG) || defined(CONFIG_EXYNOS_FAST_SPI_BOOT)
+/**
+ * Send and receive data over SPI. This doesn't handle bus initialization or
+ * cleanup.
+ *
+ * @param regs		pointer to SPI controller register block
+ * @parma todo		how many bytes to send
+ * @param dinp		pointer to the buffer for received data, or NULL
+ * @param doutp		pointer to the buffer of data to transmit, or NULL
+ * @param word_chunks	whether to send the data in byte or word chunks
+ */
+static void spi_rx_tx(struct exynos_spi *regs, int todo, void *dinp,
+		      void const *doutp, int word_chunks)
 {
-	uint *rxp = (uint *)(dinp + (i * (32 * 1024)));
+	uint8_t *rxp = (uint8_t *)dinp;
+	uint8_t *txp = (uint8_t *)doutp;
 	int rx_lvl, tx_lvl;
 	uint out_bytes, in_bytes;
+	int chunk_size;
 
 	in_bytes = todo;
 	out_bytes = todo;
+
+	if (word_chunks)
+		chunk_size = 4;
+	else
+		chunk_size = 1;
+
 	setbits_le32(&regs->ch_cfg, SPI_CH_RST);
 	clrbits_le32(&regs->ch_cfg, SPI_CH_RST);
-	writel(((todo * 8) / 32) | SPI_PACKET_CNT_EN, &regs->pkt_cnt);
+	writel(((todo + chunk_size - 1) / chunk_size) | SPI_PACKET_CNT_EN,
+	       &regs->pkt_cnt);
 
-	while (in_bytes) {
+	while (in_bytes || out_bytes) {
 		uint32_t spi_sts;
-		int temp;
+		int temp = 0xffffffff;
 
 		spi_sts = readl(&regs->spi_sts);
 		rx_lvl = ((spi_sts >> 15) & 0x7f);
 		tx_lvl = ((spi_sts >> 6) & 0x7f);
 		while (tx_lvl < 32 && out_bytes) {
-			temp = 0xffffffff;
+			if (doutp) {
+				memcpy(&temp, txp, chunk_size);
+				txp += chunk_size;
+			}
 			writel(temp, &regs->tx_data);
-			out_bytes -= 4;
-			tx_lvl += 4;
+			out_bytes -= chunk_size;
+			tx_lvl += chunk_size;
 		}
-		while (rx_lvl >= 4 && in_bytes) {
+		while (rx_lvl >= chunk_size && in_bytes) {
 			temp = readl(&regs->rx_data);
-			if (rxp)
-				*rxp++ = temp;
-			in_bytes -= 4;
-			rx_lvl -= 4;
+			if (dinp) {
+				memcpy(rxp, &temp, chunk_size);
+				rxp += chunk_size;
+			}
+			in_bytes -= chunk_size;
+			rx_lvl -= chunk_size;
 		}
 	}
 }
 
 /**
- * Copy uboot from spi flash to RAM
+ * Prepare the spi controller for a transaction
  *
- * @parma uboot_size	size of u-boot to copy
- * @param uboot_addr	address of u-boot to copy
+ * @param regs		spi controller register structure
  */
-static void exynos_spi_copy(unsigned int uboot_size, unsigned int uboot_addr)
+static void exynos_spi_init(struct exynos_spi *regs, int word_chunks)
 {
-	int upto, todo;
-	int i;
-	struct exynos_spi *regs = (struct exynos_spi *)CONFIG_ENV_SPI_BASE;
-
 	set_spi_clk(PERIPH_ID_SPI1, 50000000); /* set spi clock to 50Mhz */
 	/* set the spi1 GPIO */
 	exynos_pinmux_config(PERIPH_ID_SPI1, PINMUX_FLAG_NONE);
@@ -137,18 +164,22 @@ static void exynos_spi_copy(unsigned int uboot_size, unsigned int uboot_addr)
 	writel(4 | SPI_PACKET_CNT_EN, &regs->pkt_cnt);
 	/* set FB_CLK_SEL */
 	writel(SPI_FB_DELAY_180, &regs->fb_clk);
-	/* set CH_WIDTH and BUS_WIDTH as word */
-	setbits_le32(&regs->mode_cfg, SPI_MODE_CH_WIDTH_WORD |
-					SPI_MODE_BUS_WIDTH_WORD);
+	/* set CH_WIDTH and BUS_WIDTH */
+	clrbits_le32(&regs->mode_cfg, SPI_MODE_CH_WIDTH_MASK |
+				      SPI_MODE_BUS_WIDTH_MASK);
+	if (word_chunks)
+		setbits_le32(&regs->mode_cfg, SPI_MODE_CH_WIDTH_WORD |
+					      SPI_MODE_BUS_WIDTH_WORD);
+	else
+		setbits_le32(&regs->mode_cfg, SPI_MODE_CH_WIDTH_BYTE |
+					      SPI_MODE_BUS_WIDTH_BYTE);
 	clrbits_le32(&regs->ch_cfg, SPI_CH_CPOL_L); /* CPOL: active high */
 
 	/* clear rx and tx channel if set priveously */
 	clrbits_le32(&regs->ch_cfg, SPI_RX_CH_ON | SPI_TX_CH_ON);
 
-	typedef u32 (*spi_copy_func_t)(u32 offset, u32 nblock, u32 dst);
 	setbits_le32(&regs->swap_cfg, SPI_RX_SWAP_EN |
-		SPI_RX_BYTE_SWAP |
-		SPI_RX_HWORD_SWAP);
+		SPI_RX_BYTE_SWAP | SPI_RX_HWORD_SWAP);
 
 	/* do a soft reset */
 	setbits_le32(&regs->ch_cfg, SPI_CH_RST);
@@ -157,20 +188,14 @@ static void exynos_spi_copy(unsigned int uboot_size, unsigned int uboot_addr)
 	/* now set rx and tx channel ON */
 	setbits_le32(&regs->ch_cfg, SPI_RX_CH_ON | SPI_TX_CH_ON | SPI_CH_HS_EN);
 	clrbits_le32(&regs->cs_reg, SPI_SLAVE_SIG_INACT); /* CS low */
-
-	/* Send read instruction (0x3h) followed by a 24 bit addr */
-	writel((SF_READ_DATA_CMD << 24) | SPI_FLASH_UBOOT_POS, &regs->tx_data);
-
-	/* waiting for TX done */
-	while (!(readl(&regs->spi_sts) & SPI_ST_TX_DONE))
-		;
-
-	for (upto = 0, i = 0; upto < uboot_size; upto += todo, i++) {
-		todo = min(uboot_size - upto, (1 << 15));
-		spi_rx_tx(regs, todo, (void *)(uboot_addr),
-			  (void *)(SPI_FLASH_UBOOT_POS), i);
-	}
-
+}
+/**
+ * Shut down the spi controller after a transaction
+ *
+ * @param regs		spi controller register structure
+ */
+static void exynos_spi_finish(struct exynos_spi *regs)
+{
 	setbits_le32(&regs->cs_reg, SPI_SLAVE_SIG_INACT);/* make the CS high */
 
 	/*
@@ -189,7 +214,194 @@ static void exynos_spi_copy(unsigned int uboot_size, unsigned int uboot_addr)
 	clrbits_le32(&regs->ch_cfg, SPI_CH_RST);
 	clrbits_le32(&regs->ch_cfg, SPI_TX_CH_ON | SPI_RX_CH_ON);
 }
-#endif /* CONFIG_EXYNOS_FAST_SPI_BOOT */
+#endif
+
+#ifdef CONFIG_EXYNOS_FAST_SPI_BOOT
+/**
+ * Read data from spi flash
+ *
+ * @param offset	offset to read from
+ * @parma size		size of data to read, must be a divisible by 4
+ * @param addr		address to read data into
+ */
+static void exynos_spi_read(unsigned int offset, unsigned int size,
+			    uintptr_t addr)
+{
+	int upto, todo;
+	int i;
+	struct exynos_spi *regs = (struct exynos_spi *)CONFIG_ENV_SPI_BASE;
+
+	exynos_spi_init(regs, 1);
+
+	/* Send read instruction (0x3h) followed by a 24 bit addr */
+	writel((SF_READ_DATA_CMD << 24) | (offset & 0xffffff), &regs->tx_data);
+
+	/* waiting for TX done */
+	while (!(readl(&regs->spi_sts) & SPI_ST_TX_DONE))
+		;
+
+	for (upto = 0, i = 0; upto < size; upto += todo, i++) {
+		todo = min(size - upto, (1 << 15));
+		spi_rx_tx(regs, todo, (void *)(addr + (i << 15)), NULL, 1);
+	}
+
+	exynos_spi_finish(regs);
+}
+#endif
+
+#ifdef CONFIG_ELOG
+/**
+ * Write data into spi flash
+ *
+ * @param offset	offset to write to
+ * @parma size		size of data to write
+ * @param addr		address of data to write
+ */
+#define SPI_PAGE_SIZE (1 << 8)
+static void exynos_spi_write(unsigned int offset, unsigned int size,
+			     uintptr_t addr)
+{
+	struct exynos_spi *regs = (struct exynos_spi *)CONFIG_ENV_SPI_BASE;
+	uint8_t *data = (uint8_t *)addr;
+
+	while (size) {
+		int block_size, page_offset;
+
+		page_offset = offset % SPI_PAGE_SIZE;
+		if ((page_offset + size) > SPI_PAGE_SIZE)
+			block_size = SPI_PAGE_SIZE - page_offset;
+		else
+			block_size = size;
+
+		/* Send a write enable command */
+		exynos_spi_init(regs, 0);
+		writel(SF_WRITE_ENABLE_CMD, &regs->tx_data);
+		while (!(readl(&regs->spi_sts) & SPI_ST_TX_DONE))
+			;
+		exynos_spi_finish(regs);
+		exynos_spi_init(regs, 0);
+
+		/* Send a write command followed by a 24 bit addr */
+		writel(SF_WRITE_DATA_CMD, &regs->tx_data);
+		writel(offset >> 16, &regs->tx_data);
+		writel(offset >> 8, &regs->tx_data);
+		writel(offset >> 0, &regs->tx_data);
+
+		/* Write out a block. */
+		spi_rx_tx(regs, block_size, NULL, data, 0);
+
+		/* waiting for TX done */
+		while (!(readl(&regs->spi_sts) & SPI_ST_TX_DONE))
+			;
+
+		exynos_spi_finish(regs);
+
+		data += block_size;
+		offset += block_size;
+		size -= block_size;
+	}
+}
+
+/**
+ * Small helper for exynos_find_end_of_log.
+ *
+ * @param regs		SPI controller registers
+ * @param data		A buffer for the data
+ * @param offset	The offset to read from, which is updated
+ */
+static void exynos_spi_get4bytes(struct exynos_spi *regs, void *data,
+				 int *offset)
+{
+	spi_rx_tx(regs, 4, data, NULL, 1);
+	*offset += 4;
+}
+
+/* Scan for the end of the event log coming in over SPI. */
+static int exynos_find_end_of_log(void)
+{
+	struct exynos_spi *regs = (struct exynos_spi *)CONFIG_ENV_SPI_BASE;
+	struct elog_header eheader;
+
+	uint8_t bytes[4];
+	int offset = 0;
+	int log_offset;
+
+	exynos_spi_init(regs, 1);
+
+	/* Send read instruction (0x3h) followed by a 24 bit addr */
+	writel((SF_READ_DATA_CMD << 24) | CONFIG_ELOG_OFFSET, &regs->tx_data);
+
+	/* waiting for TX done */
+	while (!(readl(&regs->spi_sts) & SPI_ST_TX_DONE))
+		;
+
+	spi_rx_tx(regs, sizeof(eheader), &eheader, NULL, 1);
+	offset += sizeof(eheader);
+
+	if (eheader.magic != ELOG_SIGNATURE) {
+		/* Bad event log signature. */
+		log_offset = -1;
+	} else {
+		/* Get to the start of the first event */
+		log_offset = eheader.header_size;
+	}
+
+	/* Traverse the log looking for a free space. */
+	while (log_offset >= 0) {
+		uint8_t type;
+		uint8_t event_length;
+
+		while (log_offset >= offset)
+			exynos_spi_get4bytes(regs, bytes, &offset);
+
+		/* the type is the first byte */
+		type = bytes[log_offset % 4];
+
+		/* if we found the end, stop looking */
+		if (type == ELOG_TYPE_EOL)
+			break;
+
+		/* load more bytes if the size is in the next chunk */
+		if (log_offset + 1 >= offset)
+			exynos_spi_get4bytes(regs, bytes, &offset);
+
+		/* scan past this event */
+		event_length = bytes[(log_offset + 1) % 4];
+		if (!event_length) {
+			/* Something is broken, bail out. */
+			log_offset = -1;
+			break;
+		}
+
+		log_offset += event_length;
+		if (log_offset >= CONFIG_ELOG_SIZE)
+			/* Reached the end of the log. */
+			log_offset = -1;
+	}
+
+	exynos_spi_finish(regs);
+	return log_offset;
+}
+
+/* Put a wake event in the event log. */
+static void exynos_log_wake_event(void)
+{
+	int offset;
+	struct wake_event event;
+	uint8_t sleep_type = 3;
+
+	offset = exynos_find_end_of_log();
+
+	if (offset < 0)
+		return;
+	/* offset is relative to the log, we need relative to flash */
+	offset += CONFIG_ELOG_OFFSET;
+
+	elog_prepare_event(&event, ELOG_TYPE_FW_WAKE, &sleep_type, 1);
+	exynos_spi_write(offset, sizeof(event), (uintptr_t)&event);
+}
+#endif
+
 
 /*
 * Copy U-boot from mmc to RAM:
@@ -225,7 +437,8 @@ enum boot_mode copy_uboot_to_ram(void)
 	case BOOT_MODE_SERIAL:
 #ifdef CONFIG_EXYNOS_FAST_SPI_BOOT
 		/* let us our own function to copy u-boot from SF */
-		exynos_spi_copy(param->uboot_size, CONFIG_SYS_TEXT_BASE);
+		exynos_spi_read(SPI_FLASH_UBOOT_POS, param->uboot_size,
+				CONFIG_SYS_TEXT_BASE);
 #else
 		spi_copy = get_irom_func(SPI_INDEX);
 		spi_copy(SPI_FLASH_UBOOT_POS, param->uboot_size,
@@ -433,6 +646,9 @@ void board_init_f(unsigned long bootflag)
 
 	if (do_lowlevel_init()) {
 		reset_if_invalid_wakeup();
+#ifdef CONFIG_ELOG
+		exynos_log_wake_event();
+#endif
 		power_exit_wakeup();
 	}
 

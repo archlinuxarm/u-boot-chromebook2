@@ -44,6 +44,8 @@ struct exynos_spi {
 #define SPI_TIMEOUT_MS		10
 
 #define SF_READ_DATA_CMD	0x3
+#define SF_WRITE_DATA_CMD	0x2
+#define SF_WRITE_ENABLE_CMD	0x6
 
 /* SPI_CHCFG */
 #define SPI_CH_HS_EN		(1 << 6)
@@ -55,6 +57,10 @@ struct exynos_spi {
 #define SPI_TX_CH_ON		(1 << 0)
 
 /* SPI_MODECFG */
+#define SPI_MODE_CH_WIDTH_MASK  (0x3 << 29)
+#define SPI_MODE_BUS_WIDTH_MASK (0x3 << 17)
+#define SPI_MODE_CH_WIDTH_BYTE	(0x0 << 29)
+#define SPI_MODE_BUS_WIDTH_BYTE	(0x0 << 17)
 #define SPI_MODE_CH_WIDTH_WORD	(0x2 << 29)
 #define SPI_MODE_BUS_WIDTH_WORD	(0x2 << 17)
 
