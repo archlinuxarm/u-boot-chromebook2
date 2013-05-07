@@ -218,6 +218,13 @@ struct clk_rst_ctlr {
 #define PLLP_OUT3_RATIO		8
 #define PLLP_OUT4_RATIO		24
 
+#define PLLP_OUT3_RSTN_DIS	(1 << 0)
+#define PLLP_OUT3_RSTN_EN	(0 << 0)
+#define PLLP_OUT3_CLKEN		(1 << 1)
+#define PLLP_OUT4_RSTN_DIS	(1 << 16)
+#define PLLP_OUT4_RSTN_EN	(0 << 16)
+#define PLLP_OUT4_CLKEN		(1 << 17)
+
 /* CLK_RST_CONTROLLER_UTMIP_PLL_CFG1_0 */
 #define PLLU_POWERDOWN		(1 << 16)
 #define PLL_ENABLE_POWERDOWN	(1 << 14)

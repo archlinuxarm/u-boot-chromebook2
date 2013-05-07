@@ -33,12 +33,19 @@
 #include <asm/arch/spl.h>
 #include "cpu.h"
 
+__weak void set_avp_clock_to_clkm(void)
+{
+}
+
 void spl_board_init(void)
 {
 	struct pmux_tri_ctlr *pmt = (struct pmux_tri_ctlr *)NV_PA_APB_MISC_BASE;
 
 	/* enable JTAG */
 	writel(0xC0, &pmt->pmt_cfg_ctl);
+
+	/* use clk_m as avp clock source */
+	set_avp_clock_to_clkm();
 
 	board_init_uart_f();
 

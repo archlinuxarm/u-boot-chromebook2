@@ -697,6 +697,7 @@ void clock_early_init(void)
 {
 	struct clk_rst_ctlr *clkrst =
 		(struct clk_rst_ctlr *)NV_PA_CLK_RST_BASE;
+	u32	reg;
 
 	/*
 	 * PLLP output frequency set to 408Mhz
@@ -741,6 +742,18 @@ void clock_early_init(void)
 	/* PLLD_MISC: Set CLKENABLE, CPCON 12, LFCON 1 */
 	writel(0x40000C10, &clkrst->crc_pll[CLOCK_ID_DISPLAY].pll_misc);
 	udelay(2);
+
+	/* Set PLLP_OUT3 and 4 freqs to 102MHz and 204MHz */
+	/* Assert RSTN before enable */
+	reg = PLLP_OUT4_RSTN_EN | PLLP_OUT3_RSTN_EN;
+	writel(reg, &clkrst->crc_pll[CLOCK_ID_PERIPH].pll_out[1]);
+
+	/* set divisor and reenable */
+	reg = (IN_408_OUT_204_DIVISOR << PLLP_OUT4_RATIO)
+		| PLLP_OUT4_OVR | PLLP_OUT4_CLKEN | PLLP_OUT4_RSTN_DIS
+		| (IN_408_OUT_102_DIVISOR << PLLP_OUT3_RATIO)
+		| PLLP_OUT3_OVR | PLLP_OUT3_CLKEN | PLLP_OUT3_RSTN_DIS;
+	writel(reg, &clkrst->crc_pll[CLOCK_ID_PERIPH].pll_out[1]);
 }
 
 void arch_timer_init(void)

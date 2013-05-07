@@ -197,8 +197,8 @@ void t114_init_clocks(void)
 	writel(val, &pmc->pmc_osc_edpd_over);
 
 	/*
-	 * Switch system clock to PLLP_OUT4 (108 MHz), AVP will now run
-	 * at 108 MHz. This is glitch free as only the source is changed, no
+	 * Switch system clock to PLLP_OUT4 (204 MHz), AVP will now run
+	 * at 204 MHz. This is glitch free as only the source is changed, no
 	 * special precaution needed.
 	 */
 	val = (SCLK_SOURCE_PLLP_OUT4 << SCLK_SWAKEUP_FIQ_SOURCE_SHIFT) |
@@ -393,4 +393,25 @@ void start_cpu(u32 reset_vector)
 
 	/* If the CPU(s) don't already have power, power 'em up */
 	powerup_cpus();
+}
+
+/*
+ * On poweron, AVP clock source (also called system clock) is set to PLLP_out0
+ * with frequency set at 1MHz. Before initializing PLLP, we need to move the
+ * system clock's source to CLK_M temporarily. And then switch it to PLLP_out4
+ * (204MHz) at a later time.
+ */
+void set_avp_clock_to_clkm(void)
+{
+	struct clk_rst_ctlr *clkrst =
+			(struct clk_rst_ctlr *)NV_PA_CLK_RST_BASE;
+	u32 val;
+
+	val = (SCLK_SOURCE_CLKM << SCLK_SWAKEUP_FIQ_SOURCE_SHIFT) |
+		(SCLK_SOURCE_CLKM << SCLK_SWAKEUP_IRQ_SOURCE_SHIFT) |
+		(SCLK_SOURCE_CLKM << SCLK_SWAKEUP_RUN_SOURCE_SHIFT) |
+		(SCLK_SOURCE_CLKM << SCLK_SWAKEUP_IDLE_SOURCE_SHIFT) |
+		(SCLK_SYS_STATE_RUN << SCLK_SYS_STATE_SHIFT);
+	writel(val, &clkrst->crc_sclk_brst_pol);
+	udelay(3);
 }
