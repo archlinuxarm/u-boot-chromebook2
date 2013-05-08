@@ -86,6 +86,7 @@ static const char * const compat_names[COMPAT_COUNT] = {
 	COMPAT(SAMSUNG_EXYNOS5_I2C, "samsung,exynos5-hsi2c"),
 	COMPAT(TI_TPS65090, "ti,tps65090"),
 	COMPAT(MAXIM_MAX77802_PMIC, "maxim,max77802-pmic"),
+	COMPAT(PARADE_PS8625, "parade,ps8625"),
 };
 
 const char *fdtdec_get_compatible(enum fdt_compat_id id)
