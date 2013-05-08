@@ -58,4 +58,7 @@ void set_system_display_ctrl(void);
 void exynos_fimd_lcd_disable(void);
 int exynos_lcd_early_init(const void *blob);
 
+/* Initialize the Parade dP<->LVDS bridge if present */
+int parade_init(const void *blob);
+
 #endif	/* _EXYNOS4_SYSTEM_H */

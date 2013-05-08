@@ -141,6 +141,18 @@ static void exynos_lcd_power_on_rev1(void)
 
 	/* TODO: Take care of the bridge initialization here */
  	mdelay(15);	/* TODO: Use state machine to remove delay */
+
+	/* TODO(sjg@chromium.org): Use device tree */
+	gpio_direction_output(EXYNOS5420_GPIO_Y77, 1);	/* EDP_RST# */
+	gpio_direction_output(EXYNOS5420_GPIO_X35, 1);	/* EDP_SLP# */
+	gpio_direction_output(EXYNOS5420_GPIO_X26, 0);	/* EDP_HPD */
+
+	/*
+	 * TODO(sjg@chromium.org): printf() for now until this function can
+	 * actually return a value.
+	 */
+	if (parade_init(gd->fdt_blob))
+		printf("%s: ps8625_init() failed\n", __func__);
 }
 
 void exynos_lcd_power_on(void)
