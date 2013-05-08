@@ -40,6 +40,13 @@
 		};
 	};
 
+	i2c@12cd0000 { /* i2c7 */
+		edp-lvds-bridge@48 {
+			compatible = "parade,ps8625";
+			reg = <0x48>;
+		};
+	};
+
 	i2c@12e10000 { /* i2c9 */
                 tpm@20 {
                         compatible = "infineon,slb9645-tpm";
