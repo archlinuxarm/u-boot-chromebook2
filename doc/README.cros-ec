@@ -1,0 +1,94 @@
+Chrome OS Embedded Controller
+=============================
+
+The Chrome OS Embedded Controller (EC) provides certain features to Chrome
+OS devices. These include battery charging and keyboard scanning.
+
+The Chrome OS EC code base is available on gitweb here:
+
+http://git.chromium.org/gitweb/?p=chromiumos/platform/ec.git;a=summary
+
+The messaging interface between the AP and the EC is defined by the
+include/ec_commands.h file in U-Boot, which is the same as the file of the
+same name in the EC code base.
+
+At the time of writing there is no separate documentation of the EC
+interface. Many messages are somewhat self-explanatory once the purpose is
+understood.
+
+The file includes information about some of the more complex messages. Note
+that in the event of a conflict between this file and ec_command.h, it is
+the header file which is correct.
+
+
+
+EC I2C Pass-Through
+-------------------
+
+On snow, we use a single I2C bus and a GPIO-based arbitration scheme to
+determine whether the AP or EC has control of the battery I2C bus.
+
+There are two other devices (spring and pit) which use two I2C buses in a
+pass-through arrangement, where the EC always controls the battery I2C bus,
+but provides access to the AP through an AP->EC message on a separate I2C bus.
+
+A 'pure' pass-through seems to be better than an ad-hoc device-by-device
+approach, with a message for each type of device/feature since it allows
+U-Boot and the kernel to use existing drivers. All of the complexity of the
+pass-through can be kept inside the i2c mux driver and there is no need to
+write a new driver for each chip (tps65090_regulator, tps65090_charger,
+sbs_battery).
+
+This document describes a message protocol for the AP and EC to use for this
+activity.
+
+Note that the EC may wish to filter some slave addresses for security if WP
+is enabled. Attempting to read/write one of those will return
+EC_RES_ACCESS_DENIED.
+
+
+Message Protocol
+----------------
+
+We allow sending of multiple I2C messages in each EC pass-through message.
+This better matches the kernel's requirements, while putting no additional
+stress on U-Boot.
+
+
+Request:
+
+Field		Size	Description
+Bus ID		1	Bus number to use
+n		1	Number of messages within this  transaction
+<message>	2 * n	Message details, consisting of 2 halfwords:
+
+
+	Address and flags:
+		7- or 10-bit I2C slave address
+		(note we don't include the RW bit in the address)
+
+		FLAG_10BIT - enable 10-bit addressing
+		FLAG_READ - read data (else write)
+
+	len - number of bytes to read/write
+		Data
+		m
+		Bytes to write (m is the sum of all message lengths where
+		EC_I2C_FLAG_READ is not set)
+
+
+Response:
+
+Field		Size	Description
+Status		1	I2C status flags:
+				TIMEOUT - timeout during transfer
+				NAK - transfer was not acknowledged
+n		1	Number of messages successfully sent within this
+			transaction
+Data		m	Bytes read (m is the sum of all message lengths where
+			EC_I2C_FLAG_READ is set, unless there is an error
+			response, in which case it may be less)
+
+
+For structures, see include/ec_commands.h (e.g. truct ec_params_i2c_passthru
+for the request parameters).

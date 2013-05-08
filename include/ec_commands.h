@@ -1,4 +1,4 @@
-/* Copyright (c) 2012 The Chromium OS Authors. All rights reserved.
+/* Copyright (c) 2013 The Chromium OS Authors. All rights reserved.
  * Use of this source code is governed by a BSD-style license that can be
  * found in the LICENSE file.
  */
@@ -45,10 +45,6 @@
 #define EC_LPC_ADDR_HOST_ARGS  0x800
 #define EC_LPC_ADDR_HOST_PARAM 0x804
 #define EC_HOST_PARAM_SIZE     0x0fc  /* Size of param area in bytes */
-
-/* I/O addresses for host command params, old interface */
-#define EC_LPC_ADDR_OLD_PARAM  0x880
-#define EC_OLD_PARAM_SIZE      0x080  /* Size of param area in bytes */
 
 /* EC command register bit functions */
 #define EC_LPC_CMDR_DATA	(1 << 0)  /* Data ready for host to read */
@@ -122,8 +118,8 @@
 #define EC_SWITCH_LID_OPEN               0x01
 #define EC_SWITCH_POWER_BUTTON_PRESSED   0x02
 #define EC_SWITCH_WRITE_PROTECT_DISABLED 0x04
-/* Recovery requested via keyboard */
-#define EC_SWITCH_KEYBOARD_RECOVERY      0x08
+/* Was recovery requested via keyboard; now unused. */
+#define EC_SWITCH_IGNORE1		 0x08
 /* Recovery requested via dedicated signal (from servo board) */
 #define EC_SWITCH_DEDICATED_RECOVERY     0x10
 /* Was fake developer mode switch; now unused.  Remove in next refactor. */
@@ -1144,7 +1140,7 @@ struct ec_response_gpio_get {
 #define EC_CMD_I2C_READ 0x94
 
 struct ec_params_i2c_read {
-	uint16_t addr;
+	uint16_t addr; /* 8-bit address (7-bit shifted << 1) */
 	uint8_t read_size; /* Either 8 or 16. */
 	uint8_t port;
 	uint8_t offset;
@@ -1158,7 +1154,7 @@ struct ec_response_i2c_read {
 
 struct ec_params_i2c_write {
 	uint16_t data;
-	uint16_t addr;
+	uint16_t addr; /* 8-bit address (7-bit shifted << 1) */
 	uint8_t write_size; /* Either 8 or 16. */
 	uint8_t port;
 	uint8_t offset;
@@ -1242,6 +1238,61 @@ struct ec_response_ldo_get {
 } __packed;
 
 /*****************************************************************************/
+/* Power info. */
+
+/*
+ * Get power info.
+ */
+#define EC_CMD_POWER_INFO 0x9d
+
+struct ec_response_power_info {
+	uint32_t usb_dev_type;
+	uint16_t voltage_ac;
+	uint16_t voltage_system;
+	uint16_t current_system;
+	uint16_t usb_current_limit;
+} __packed;
+
+/*****************************************************************************/
+/* I2C passthru command */
+
+#define EC_CMD_I2C_PASSTHRU 0x9e
+
+/* Slave address is 10 (not 7) bit */
+#define EC_I2C_FLAG_10BIT	(1 << 16)
+
+/* Read data; if not present, message is a write */
+#define EC_I2C_FLAG_READ	(1 << 15)
+
+/* Mask for address */
+#define EC_I2C_ADDR_MASK	0x3ff
+
+#define EC_I2C_STATUS_NAK	(1 << 0) /* Transfer was not acknowledged */
+#define EC_I2C_STATUS_TIMEOUT	(1 << 1) /* Timeout during transfer */
+
+/* Any error */
+#define EC_I2C_STATUS_ERROR	(EC_I2C_STATUS_NAK | EC_I2C_STATUS_TIMEOUT)
+
+struct ec_params_i2c_passthru_msg {
+	uint16_t addr_flags;	/* I2C slave address (7 or 10 bits) and flags */
+	uint16_t len;		/* Number of bytes to write*/
+} __packed;
+
+struct ec_params_i2c_passthru {
+	uint8_t port;		/* I2C port number */
+	uint8_t num_msgs;	/* Number of messages */
+	struct ec_params_i2c_passthru_msg msg[];
+	/* Data for all messages is concatenated here */
+} __packed;
+
+struct ec_response_i2c_passthru {
+	uint8_t i2c_status;	/* Status flags (EC_I2C_STATUS_...) */
+	uint8_t num_msgs;	/* Number of messages processed */
+	uint8_t data[];		/* Data for all messages concatenated here */
+} __packed;
+
+
+/*****************************************************************************/
 /* Temporary debug commands. TODO: remove this crosbug.com/p/13849 */
 
 /*
@@ -1257,7 +1308,16 @@ struct ec_response_ldo_get {
 #define EC_CMD_CHARGE_CURRENT_LIMIT 0xa1
 
 struct ec_params_current_limit {
-	uint32_t limit;
+	uint32_t limit; /* in mA */
+} __packed;
+
+/*
+ * Set maximum external power current.
+ */
+#define EC_CMD_EXT_POWER_CURRENT_LIMIT 0xa2
+
+struct ec_params_ext_power_current_limit {
+	uint32_t limit; /* in mA */
 } __packed;
 
 /*****************************************************************************/
