@@ -449,4 +449,19 @@ int cros_ec_set_ldo(struct cros_ec_dev *dev, uint8_t index, uint8_t state);
  * @return 0 if ok, -1 on error
  */
 int cros_ec_get_ldo(struct cros_ec_dev *dev, uint8_t index, uint8_t *state);
+
+/**
+ * Tunnel an I2C transfer to the EC
+ *
+ * @param dev		CROS-EC device
+ * @param chip		Chip address (7-bit I2C address)
+ * @param addr		Register address to read/write
+ * @param alen		Length of register address in bytes
+ * @param buffer	Buffer containing data to read/write
+ * @param len		Length of buffer
+ * @param is_read	1 if this is a read, 0 if this is a write
+ */
+int cros_ec_i2c_xfer(struct cros_ec_dev *dev, uchar chip, uint addr,
+		     int alen, uchar *buffer, int len, int is_read);
+
 #endif
