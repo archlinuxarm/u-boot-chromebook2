@@ -341,11 +341,10 @@ static int spi_rx_tx(struct exynos_spi_slave *spi_slave, int todo,
 			temp = readl(&regs->rx_data);
 			rx_lvl -= step;
 			if (hunting) {
-				if ((temp & 0xff) !=
+				if ((temp & 0xff) ==
 				    spi_slave->slave.frame_header)
-					break; /* Restart the outer loop. */
-				else
 					hunting = 0;
+				break; /* Restart the outer loop. */
 			}
 			if (step == 4) {
 				*((uint32_t *)rxp) = temp;
