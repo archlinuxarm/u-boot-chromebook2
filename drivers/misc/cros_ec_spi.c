@@ -37,11 +37,13 @@
  * All fields but <data> and <response> are one byte is size.
  */
 
-#define EC_FRAME_OVERHEAD (MSG_HEADER_BYTES + 1) /* header plus checksum */
-
-#ifdef CONFIG_NEW_SPI_XFER
-#error "CONFIG_NEW_SPI_XFER not supported in CROS_EC"
-#endif
+/*
+ * Technically the frame includes the MSG_HEADER_BYTES header plus the byte of
+ * checksum. However, the SPI driver does not return the framing byte, hence
+ * the framing overhead above the driver is [MSG_HEADER_BYTES + <cs size> -
+ * <framing byte size>], i.e. MSG_HEADER_BYTES
+ */
+#define EC_FRAME_OVERHEAD MSG_HEADER_BYTES
 
 /**
  * Send a command to a SPI CROS_EC device and return the reply.
@@ -62,6 +64,7 @@ int cros_ec_spi_command(struct cros_ec_dev *dev, uint8_t cmd, int cmd_version,
 		     const uint8_t *dout, int dout_len,
 		     uint8_t **dinp, int din_len)
 {
+	/* SPI driver will return the entire frame but the framing byte. */
 	int in_bytes = din_len + EC_FRAME_OVERHEAD;
 	uint8_t *out;
 	uint8_t *p;
@@ -110,10 +113,16 @@ int cros_ec_spi_command(struct cros_ec_dev *dev, uint8_t cmd, int cmd_version,
 	/*
 	 * Send output data and receive input data starting such that the
 	 * message body will be dword aligned.
+	 *
+	 * The framing byte will not be stored, need to align at one less than
+	 * the header size.
 	 */
-	p = dev->din + sizeof(int64_t) - MSG_HEADER_BYTES;
-	len = dout_len + EC_FRAME_OVERHEAD;
+	p = dev->din + sizeof(int64_t) - MSG_HEADER_BYTES + 1;
+
+	/* transmit length includes checksum */
+	len = dout_len + EC_FRAME_OVERHEAD + 1;
 	cros_ec_dump_data("out", cmd, dev->dout, len);
+
 	rv = spi_xfer(dev->u.spi, max(len, in_bytes) * 8, dev->dout, p,
 		      SPI_XFER_BEGIN | SPI_XFER_END);
 
@@ -124,11 +133,9 @@ int cros_ec_spi_command(struct cros_ec_dev *dev, uint8_t cmd, int cmd_version,
 		return -1;
 	}
 
-	p++;	/* Skip the frame start symbol SPI RX synchronized on. */
 	len = min(p[1] + EC_FRAME_OVERHEAD, din_len + EC_FRAME_OVERHEAD);
 
-	/* Include frame start symbol in the dump */
-	cros_ec_dump_data("in", -1, p - 1, len);
+	cros_ec_dump_data("in", -1, p, len);
 
 	/* Response code is first byte of the message after start symbol */
 	if (p[0] != EC_RES_SUCCESS) {
@@ -136,9 +143,9 @@ int cros_ec_spi_command(struct cros_ec_dev *dev, uint8_t cmd, int cmd_version,
 		return -(int)(p[0]);
 	}
 
-	/* Verify checksum, exclude start and checksum from calculations. */
-	csum = cros_ec_calc_checksum(p, len - 2);
-	if (csum != p[len - 2]) {
+	/* Verify checksum, exclude checksum itslef from calculations. */
+	csum = cros_ec_calc_checksum(p, len - 1);
+	if (csum != p[len - 1]) {
 		debug("%s: Invalid checksum rx %#02x, calced %#02x\n", __func__,
 		      p[len - 1], csum);
 		return -1;
@@ -147,7 +154,11 @@ int cros_ec_spi_command(struct cros_ec_dev *dev, uint8_t cmd, int cmd_version,
 	/* Anything else is the response data */
 	*dinp = p + 2;
 
-	return len;
+	/*
+	 * Driver dropped the framing byte, drop the rest of the header and
+	 * the cs here.
+	 */
+	return len - EC_FRAME_OVERHEAD;
 }
 
 int cros_ec_spi_decode_fdt(struct cros_ec_dev *dev, const void *blob)
