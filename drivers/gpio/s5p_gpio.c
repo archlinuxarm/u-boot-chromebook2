@@ -413,8 +413,8 @@ void s5p_gpio_describe(const char* gpio_name)
 
 	bank = s5p_gpio_get_bank(index);
 
-	printf("%s: index %d, config 0x%x at %p\n",
-	       gpio_name, index,
-	       (readl(&bank->con) & CON_MASK(pin)) >> (0xf << pin),
+	printf("%s: pin %d, index %d, config 0x%x at %p\n",
+	       gpio_name, pin, index,
+	       ((readl(&bank->con) & CON_MASK(pin)) >> (pin << 2)) & 0xf,
 	       &bank->con);
 }
