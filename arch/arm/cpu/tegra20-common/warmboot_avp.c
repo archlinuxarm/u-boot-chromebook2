@@ -1,5 +1,5 @@
 /*
- * (C) Copyright 2010 - 2011
+ * (C) Copyright 2010 - 2013
  * NVIDIA Corporation <www.nvidia.com>
  *
  * See file CREDITS for list of people who contributed to this
@@ -30,7 +30,7 @@
 #include <asm/arch-tegra/ap.h>
 #include <asm/arch-tegra/clk_rst.h>
 #include <asm/arch-tegra/pmc.h>
-#include <asm/arch-tegra/warmboot.h>
+#include <asm/arch/warmboot.h>
 #include "warmboot_avp.h"
 
 #define DEBUG_RESET_CORESIGHT

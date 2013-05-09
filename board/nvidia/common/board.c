@@ -41,7 +41,9 @@
 #include <asm/arch-tegra/pmc.h>
 #include <asm/arch-tegra/sys_proto.h>
 #include <asm/arch-tegra/uart.h>
-#include <asm/arch-tegra/warmboot.h>
+#ifdef CONFIG_TEGRA_LP0
+#include <asm/arch/warmboot.h>
+#endif
 #ifdef CONFIG_TEGRA_CLOCK_SCALING
 #include <asm/arch/emc.h>
 #endif
