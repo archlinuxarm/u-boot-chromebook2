@@ -348,10 +348,11 @@ int board_is_processor_reset(void)
 }
 
 #ifdef CONFIG_OF_CONTROL
+#define MAX_REV_GPIO_COUNT	5
 int board_get_revision(void)
 {
-	struct fdt_gpio_state gpios[CONFIG_BOARD_REV_GPIO_COUNT];
-	unsigned gpio_list[CONFIG_BOARD_REV_GPIO_COUNT];
+	struct fdt_gpio_state gpios[MAX_REV_GPIO_COUNT];
+	unsigned gpio_list[MAX_REV_GPIO_COUNT];
 	int board_rev = -1;
 	int count = 0;
 	int node;
@@ -360,8 +361,8 @@ int board_get_revision(void)
 				      COMPAT_GOOGLE_BOARD_REV);
 	if (node >= 0) {
 		count = fdtdec_decode_gpios(gd->fdt_blob, node,
-				"google,board-rev-gpios", gpios,
-				CONFIG_BOARD_REV_GPIO_COUNT);
+					    "google,board-rev-gpios", gpios,
+					    MAX_REV_GPIO_COUNT);
 	}
 	if (count > 0) {
 		int i;
