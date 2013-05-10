@@ -25,6 +25,14 @@
 		};
 	};
 
+	board-rev {
+		compatible = "google,board-revision";
+		google,board-rev-gpios = <&gpio 76 0>,
+					 <&gpio 75 0>,
+					 <&gpio 74 0>,
+					 <&gpio 73 0>;
+	};
+
 	i2c@12ca0000 {
 		#address-cells = <1>;
 		#size-cells = <0>;
