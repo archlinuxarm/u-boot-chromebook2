@@ -295,11 +295,11 @@ void gpio_set_drv(int gpio, int drv)
 int gpio_decode_number(unsigned gpio_list[], int count)
 {
 	int result = 0;
-	int multiplier = 1;
 	int value, high, low;
 	int gpio, i;
 
 	for (i = 0; i < count; i++) {
+		result *= 3;
 		gpio = gpio_list[i];
 
 		/* TODO(SLSI): Fix this up to check correctly:
@@ -316,13 +316,12 @@ int gpio_decode_number(unsigned gpio_list[], int count)
 		low = gpio_get_value(gpio);
 
 		if (high && low)
-			value = 2;
-		else if (!high && !low)
 			value = 1;
-		else
+		else if (!high && !low)
 			value = 0;
-		result += value * multiplier;
-		multiplier *= 3;
+		else
+			value = 2;
+		result += value;
 	}
 
 	return result;

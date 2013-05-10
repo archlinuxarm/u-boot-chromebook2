@@ -1076,15 +1076,15 @@ int gpio_set_value(unsigned gpio, int value);
  *
  * TODO(sjg@chromium.org): This could perhaps become a generic function?
  *
- * Each GPIO pin can be put into three states using external resistors:
- *	- pulled up
- *	- pulled down
- *	- not connected
+ * Each GPIO pin can be put into three states using external resistors, which
+ * can be interpreted as a ternary digit:
+ *	- pulled down    (0)
+ *	- pulled up      (1)
+ *	- not connected  (2)
  *
- * Read each GPIO in turn to produce an integer value. The first GPIO
- * produces a number 1 * (0 to 2), the second produces 3 * (0 to 2), etc.
- * In this way, each GPIO increases the number of possible states by a
- * factor of 3.
+ * Read each GPIO in turn to produce an integer value. The first GPIO produces
+ * a digit in the highest order (most significant) of the ternary result, the
+ * next GPIO goes to the lower ternary order, etc.
  *
  * @param gpio_list	List of GPIO numbers to decode
  * @param count		Number of GPIOs in list
