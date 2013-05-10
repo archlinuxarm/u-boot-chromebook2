@@ -292,36 +292,73 @@ void gpio_set_drv(int gpio, int drv)
  */
 #define GPIO_DELAY_US 5
 
+/**
+ * Report the state of a GPIO input as a ternary digit:
+ *
+ * 0 (pulled low)
+ * 1 (pulled high)
+ * 2 (not connected)
+ *
+ * the utility of this function is limited to pins which are not actually
+ * driven by a powerful external source.
+ *
+ * It is possible to tell apart three distinct states because Exynos
+ * architecture provides internal pull ups/pull downs which can be used to
+ * move pin reading to zero or one provided there is no stronger external
+ * resistor. Use this function with caution, as in case of the wrong external
+ * ressistor value the result could be inconclusive.
+ *
+ * Returns the perceived pin state or -1 if the pin is not cconfigured as an
+ * input.
+ */
+
+static int get_ternary_digit(int gpio)
+{
+	struct s5p_gpio_bank *bank;
+	int high, low, conf, saved_pull, pin;
+
+	/* TODO(SLSI): Fix this up to check correctly:
+	 *
+	 * if (gpio >= GPIO_MAX_PORT)
+	 *	return -1;
+	 */
+
+	bank = s5p_gpio_get_bank(gpio);
+	pin = s5p_gpio_get_pin(gpio);
+
+	conf = ((readl(&bank->con) & CON_MASK(pin)) >> (4 * pin)) & 0xf;
+	if (conf != S5P_GPIO_INPUT)
+		return -1;
+
+	/* Preserve current internal pull up/pull down setting. */
+	saved_pull = (readl(&bank->pull) >> (2 * pin)) & 0x3;
+
+	gpio_set_pull(gpio, S5P_GPIO_PULL_UP);
+	udelay(GPIO_DELAY_US);
+	high = gpio_get_value(gpio);
+	gpio_set_pull(gpio, S5P_GPIO_PULL_DOWN);
+	udelay(GPIO_DELAY_US);
+	low = gpio_get_value(gpio);
+
+	/* Restore internal pull up/pull down setting */
+	gpio_set_pull(gpio, saved_pull);
+
+	if (high && low)
+		return 1;
+	if (!high && !low)
+		return 0;
+
+	return 2;
+}
+
 int gpio_decode_number(unsigned gpio_list[], int count)
 {
 	int result = 0;
-	int value, high, low;
-	int gpio, i;
+	int i;
 
 	for (i = 0; i < count; i++) {
 		result *= 3;
-		gpio = gpio_list[i];
-
-		/* TODO(SLSI): Fix this up to check correctly:
-		 *
-		 * if (gpio >= GPIO_MAX_PORT)
-		 *	return -1;
-		 */
-		gpio_direction_input(gpio);
-		gpio_set_pull(gpio, S5P_GPIO_PULL_UP);
-		udelay(GPIO_DELAY_US);
-		high = gpio_get_value(gpio);
-		gpio_set_pull(gpio, S5P_GPIO_PULL_DOWN);
-		udelay(GPIO_DELAY_US);
-		low = gpio_get_value(gpio);
-
-		if (high && low)
-			value = 1;
-		else if (!high && !low)
-			value = 0;
-		else
-			value = 2;
-		result += value;
+		result += get_ternary_digit(gpio_list[i]);
 	}
 
 	return result;
@@ -404,6 +441,7 @@ void s5p_gpio_describe(const char* gpio_name)
 	struct s5p_gpio_bank *bank;
 	int index = s5p_name_to_gpio(gpio_name);
 	int pin = s5p_gpio_get_pin(index);
+	int conf;
 
 	if (index < 0) {
 		printf ("%s is not a valid GPIO name\n", gpio_name);
@@ -411,9 +449,26 @@ void s5p_gpio_describe(const char* gpio_name)
 	}
 
 	bank = s5p_gpio_get_bank(index);
+	conf = ((readl(&bank->con) & CON_MASK(pin)) >> (pin << 2)) & 0xf;
+	printf("%s: pin %d, index %d, config 0x%x at %p",
+	       gpio_name, pin, index, conf, &bank->con);
 
-	printf("%s: pin %d, index %d, config 0x%x at %p\n",
-	       gpio_name, pin, index,
-	       ((readl(&bank->con) & CON_MASK(pin)) >> (pin << 2)) & 0xf,
-	       &bank->con);
+	/* If the pin is an input, print its ternary value */
+	if (conf == S5P_GPIO_INPUT) {
+		char value = '?';
+
+		switch (get_ternary_digit(index)) {
+		case 0:
+			value = '0';
+			break;
+		case 1:
+			value = '1';
+			break;
+		case 2:
+			value = 'z';
+			break;
+		}
+		printf(" value %c", value);
+	}
+	printf("\n");
 }
