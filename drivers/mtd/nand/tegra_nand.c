@@ -28,7 +28,7 @@
 #include <nand.h>
 #include <asm/arch/clock.h>
 #include <asm/arch/funcmux.h>
-#include <asm/arch-tegra/clk_rst.h>
+#include <asm/arch/clk_rst.h>
 #include <asm/errno.h>
 #include <asm/gpio.h>
 #include <fdtdec.h>

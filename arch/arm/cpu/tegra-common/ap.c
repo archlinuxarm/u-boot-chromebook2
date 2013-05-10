@@ -29,7 +29,7 @@
 #include <asm/arch-tegra/ap.h>
 #include <asm/arch-tegra/clock.h>
 #include <asm/arch-tegra/fuse.h>
-#include <asm/arch-tegra/pmc.h>
+#include <asm/arch/pmc.h>
 #include <asm/arch-tegra/scu.h>
 #include <asm/arch-tegra/tegra.h>
 #include <asm/arch-tegra/warmboot.h>

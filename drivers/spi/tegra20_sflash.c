@@ -28,7 +28,7 @@
 #include <asm/gpio.h>
 #include <asm/arch/clock.h>
 #include <asm/arch/pinmux.h>
-#include <asm/arch-tegra/clk_rst.h>
+#include <asm/arch/clk_rst.h>
 #include <asm/arch-tegra20/tegra20_sflash.h>
 #include <spi.h>
 #include <fdtdec.h>

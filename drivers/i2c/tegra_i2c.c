@@ -30,7 +30,7 @@
 #include <asm/arch/funcmux.h>
 #include <asm/arch/gpio.h>
 #include <asm/arch/pinmux.h>
-#include <asm/arch-tegra/clk_rst.h>
+#include <asm/arch/clk_rst.h>
 #include <asm/arch-tegra/tegra_i2c.h>
 
 DECLARE_GLOBAL_DATA_PTR;

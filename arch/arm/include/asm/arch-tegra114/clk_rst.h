@@ -120,8 +120,8 @@ struct clk_rst_ctlr {
 
 	uint crc_ccplex_pg_sm_ovrd;	/* _CCPLEX_PG_SM_OVRD_0,    0x33c */
 
-	uint crc_cpu_cmplx_set;		/* _RST_CPU_CMPLX_SET_0,    0x340 */
-	uint crc_cpu_cmplx_clr;		/* _RST_CPU_CMPLX_CLR_0,    0x344 */
+	uint crc_rst_cpu_cmplx_set;	/* _RST_CPU_CMPLX_SET_0,    0x340 */
+	uint crc_rst_cpu_cmplx_clr;	/* _RST_CPU_CMPLX_CLR_0,    0x344 */
 	uint crc_clk_cpu_cmplx_set;	/* _CLK_CPU_CMPLX_SET_0,    0x348 */
 	uint crc_clk_cpu_cmplx_clr;	/* _CLK_CPU_CMPLX_SET_0,    0x34c */
 

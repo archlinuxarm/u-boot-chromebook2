@@ -19,8 +19,8 @@
 #include <asm/arch/clock.h>
 #include <asm/arch/flow.h>
 #include <asm/arch/tegra.h>
-#include <asm/arch-tegra/clk_rst.h>
-#include <asm/arch-tegra/pmc.h>
+#include <asm/arch/clk_rst.h>
+#include <asm/arch/pmc.h>
 #include <asm/arch-tegra/tegra_i2c.h>
 #include "../tegra-common/cpu.h"
 

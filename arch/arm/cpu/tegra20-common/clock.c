@@ -25,7 +25,7 @@
 #include <asm/io.h>
 #include <asm/arch/clock.h>
 #include <asm/arch/tegra.h>
-#include <asm/arch-tegra/clk_rst.h>
+#include <asm/arch/clk_rst.h>
 #include <asm/arch-tegra/timer.h>
 #include <div64.h>
 #include <fdtdec.h>

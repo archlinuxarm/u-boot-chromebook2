@@ -28,8 +28,8 @@
 #include <asm/arch/pinmux.h>
 #include <asm/arch/tegra.h>
 #include <asm/arch-tegra/ap.h>
-#include <asm/arch-tegra/clk_rst.h>
-#include <asm/arch-tegra/pmc.h>
+#include <asm/arch/clk_rst.h>
+#include <asm/arch/pmc.h>
 #include <asm/arch/warmboot.h>
 #include "warmboot_avp.h"
 
@@ -102,7 +102,7 @@ void wb_start(void)
 	/* Hold both CPUs in reset */
 	reg = CPU_CMPLX_CPURESET0 | CPU_CMPLX_CPURESET1 | CPU_CMPLX_DERESET0 |
 	      CPU_CMPLX_DERESET1 | CPU_CMPLX_DBGRESET0 | CPU_CMPLX_DBGRESET1;
-	writel(reg, &clkrst->crc_cpu_cmplx_set);
+	writel(reg, &clkrst->crc_rst_cpu_cmplx_set);
 
 	/* Halt CPU1 at the flow controller for uni-processor configurations */
 	writel(EVENT_MODE_STOP, &flow->halt_cpu1_events);
@@ -210,7 +210,7 @@ void wb_start(void)
 	writel(0, flow->halt_cpu_events);
 
 	reg = CPU_CMPLX_CPURESET0 | CPU_CMPLX_DBGRESET0 | CPU_CMPLX_DERESET0;
-	writel(reg, &clkrst->crc_cpu_cmplx_clr);
+	writel(reg, &clkrst->crc_rst_cpu_cmplx_clr);
 
 	reg = PLLM_OUT1_RSTN_RESET_DISABLE | PLLM_OUT1_CLKEN_ENABLE |
 	      PLLM_OUT1_RATIO_VAL_8;

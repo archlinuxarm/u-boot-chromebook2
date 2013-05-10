@@ -20,7 +20,7 @@
 #include <asm/io.h>
 #include <asm/arch/clock.h>
 #include <asm/arch/tegra.h>
-#include <asm/arch-tegra/clk_rst.h>
+#include <asm/arch/clk_rst.h>
 #include <asm/arch-tegra/timer.h>
 #include <div64.h>
 #include <fdtdec.h>
@@ -409,9 +409,9 @@ void reset_cmplx_set_enable(int cpu, int which, int reset)
 
 	/* either enable or disable those reset for that CPU */
 	if (reset)
-		writel(mask, &clkrst->crc_cpu_cmplx_set);
+		writel(mask, &clkrst->crc_rst_cpu_cmplx_set);
 	else
-		writel(mask, &clkrst->crc_cpu_cmplx_clr);
+		writel(mask, &clkrst->crc_rst_cpu_cmplx_clr);
 }
 
 unsigned clock_get_rate(enum clock_id clkid)

@@ -21,9 +21,9 @@
 #include <asm/arch/flow.h>
 #include <asm/arch/pinmux.h>
 #include <asm/arch/tegra.h>
-#include <asm/arch-tegra/clk_rst.h>
+#include <asm/arch/clk_rst.h>
 #include <asm/arch-tegra/ap.h>
-#include <asm/arch-tegra/pmc.h>
+#include <asm/arch/pmc.h>
 #include "../tegra-common/cpu.h"
 
 /* Tegra114-specific CPU init code */
@@ -284,8 +284,7 @@ static int is_clamp_enabled(u32 mask)
 	struct pmc_ctlr *pmc = (struct pmc_ctlr *)NV_PA_PMC_BASE;
 	u32 reg;
 
-	/* Get clamp status. TODO: Add pmc_clamp_status alias to pmc.h */
-	reg = readl(&pmc->pmc_pwrgate_timer_on);
+	reg = readl(&pmc->pmc_clamp_status);
 	return (reg & mask) == mask;
 }
 

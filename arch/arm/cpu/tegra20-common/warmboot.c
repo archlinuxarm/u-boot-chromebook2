@@ -31,8 +31,8 @@
 #include <asm/arch/sdram_param.h>
 #include <asm/arch/tegra.h>
 #include <asm/arch-tegra/ap.h>
-#include <asm/arch-tegra/clk_rst.h>
-#include <asm/arch-tegra/pmc.h>
+#include <asm/arch/clk_rst.h>
+#include <asm/arch/pmc.h>
 #include <asm/arch-tegra/fuse.h>
 #include <asm/arch/warmboot.h>
 

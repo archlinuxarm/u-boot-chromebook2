@@ -32,7 +32,7 @@
 #include <asm/arch/pinmux.h>
 #include <asm/arch/tegra.h>
 #include <asm/arch-tegra/board.h>
-#include <asm/arch-tegra/clk_rst.h>
+#include <asm/arch/clk_rst.h>
 #include <asm/arch-tegra/sys_proto.h>
 #include <asm/arch-tegra/uart.h>
 

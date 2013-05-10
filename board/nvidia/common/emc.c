@@ -27,7 +27,7 @@
 #include <asm/arch/pmu.h>
 #include <asm/arch/tegra.h>
 #include <asm/arch-tegra/ap.h>
-#include <asm/arch-tegra/clk_rst.h>
+#include <asm/arch/clk_rst.h>
 #include <asm/arch-tegra/sys_proto.h>
 
 DECLARE_GLOBAL_DATA_PTR;

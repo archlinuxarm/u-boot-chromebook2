@@ -27,7 +27,7 @@
 #include <asm/arch/funcmux.h>
 #include <asm/arch/tegra.h>
 #include <asm/arch-tegra/board.h>
-#include <asm/arch-tegra/pmc.h>
+#include <asm/arch/pmc.h>
 #include <asm/arch-tegra/sys_proto.h>
 #include <asm/arch-tegra/warmboot.h>
 
