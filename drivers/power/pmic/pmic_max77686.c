@@ -43,6 +43,7 @@ int pmic_init(unsigned char bus)
 #ifdef CONFIG_OF_CONTROL
 	const void *blob = gd->fdt_blob;
 	int node, parent;
+	int busnum;
 
 	node = fdtdec_next_compatible(blob, 0, COMPAT_MAXIM_MAX77686_PMIC);
 	if (node < 0) {
@@ -57,11 +58,12 @@ int pmic_init(unsigned char bus)
 		return -1;
 	}
 
-	p->bus = i2c_get_bus_num_fdt(parent);
-	if (p->bus < 0) {
+	busnum = i2c_get_bus_num_fdt(parent);
+	if (busnum < 0) {
 		debug("%s: Cannot find I2C bus\n", __func__);
 		return -1;
 	}
+	p->bus = busnum;
 	p->hw.i2c.addr = fdtdec_get_int(blob, node, "reg", 9);
 #else
 	p->bus = bus;
