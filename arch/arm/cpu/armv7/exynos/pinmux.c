@@ -55,6 +55,8 @@ static void exynos5_uart_config(int peripheral)
 		start = 4;
 		count = 2;
 		break;
+	default:
+		return;
 	}
 	for (i = start; i < start + count; i++) {
 		s5p_gpio_set_pull(bank, i, GPIO_PULL_NONE);
@@ -90,6 +92,8 @@ static int exynos5_mmc_config(int peripheral, int flags)
 		bank = &gpio1->c4;
 		bank_ext = NULL;
 		break;
+	default:
+		return -1;
 	}
 	if ((flags & PINMUX_FLAG_8BIT_MODE) && !bank_ext) {
 		debug("SDMMC device %d does not support 8bit mode",
@@ -229,6 +233,8 @@ static void exynos5_i2c_config(int peripheral, int flags)
 		s5p_gpio_cfg_pin(&gpio1->b2, 2, GPIO_FUNC(0x3));
 		s5p_gpio_cfg_pin(&gpio1->b2, 3, GPIO_FUNC(0x3));
 		break;
+	default:
+		return;
 	}
 }
 
@@ -278,6 +284,8 @@ void exynos5_spi_config(int peripheral)
 			s5p_gpio_cfg_pin(&gpio2->e0, i + 4, GPIO_FUNC(0x4));
 		}
 		break;
+	default:
+		return;
 	}
 	if (peripheral != PERIPH_ID_SPI4) {
 		for (i = pin; i < pin + 4; i++)
