@@ -553,7 +553,7 @@ struct spi_slave *spi_setup_slave_fdt(const void *blob,
 	for (i = 0, bus = spi_bus; i < bus_count; i++, bus++) {
 		uint32_t max_freq;
 		unsigned cs;
-		unsigned mode;
+		unsigned mode = 0;
 
 		if (bus->node != spi_node)
 			continue;
@@ -561,7 +561,12 @@ struct spi_slave *spi_setup_slave_fdt(const void *blob,
 		/* Decode slave-specific params, providing sendible defaults */
 		max_freq = fdtdec_get_int(blob, slave_node,
 					  "spi-max-frequency", 500000);
-		mode = fdtdec_get_int(blob, slave_node, "spi-mode", 0);
+		if (fdtdec_get_bool(blob, slave_node, "spi-cpol"))
+			mode |= SPI_CPOL;
+		if (fdtdec_get_bool(blob, slave_node, "spi-cpha"))
+			mode |= SPI_CPHA;
+		if (fdtdec_get_bool(blob, slave_node, "spi-cs-high"))
+			mode |= SPI_CS_HIGH;
 		cs = fdtdec_get_int(blob, slave_node, "reg", 0);
 		if (fdtdec_get_bool(blob, slave_node, "spi-half-duplex")) {
 			unsigned timeout;

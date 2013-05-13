@@ -1,0 +1,37 @@
+SPI (Serial Peripheral Interface) busses
+
+SPI busses can be described with a node for the SPI master device
+and a set of child nodes for each SPI slave on the bus.  For this
+discussion, it is assumed that the system's SPI controller is in
+SPI master mode.  This binding does not describe SPI controllers
+in slave mode.
+
+The SPI master node requires the following properties:
+- #address-cells  - number of cells required to define a chip select
+		    address on the SPI bus.
+- #size-cells     - should be zero.
+- compatible      - name of SPI bus controller following generic names
+		    recommended practice.
+
+SPI slave nodes must be children of the SPI master node and can
+contain the following properties.
+- reg             - (required) chip select address of device.
+- compatible      - (required) name of SPI device following generic names
+		    recommended practice
+- spi-max-frequency - (required) Maximum SPI clocking speed of device in Hz
+- spi-cpol        - (optional) Empty property indicating device requires
+		    inverse clock polarity (CPOL) mode
+- spi-cpha        - (optional) Empty property indicating device requires
+		    shifted clock phase (CPHA) mode
+- spi-cs-high     - (optional) Empty property indicating device requires
+		    chip select active high
+
+SPI example for an SPI flash chip on the SPI bus:
+
+	spi@12d30000 { /* spi1 */
+		compatible = "gigaflash,gd25lq";
+		firmware_storage_spi: flash@0 {
+			reg = <0>;
+			spi-max-frequency = <50000000>;
+		};
+	};
