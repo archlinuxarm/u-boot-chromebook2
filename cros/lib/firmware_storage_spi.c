@@ -203,9 +203,8 @@ static int close_spi(firmware_storage_t *file)
 int firmware_storage_open_spi(firmware_storage_t *file)
 {
 	const void *blob = gd->fdt_blob;
-	int node;
-	unsigned int bus, chip_select, max_frequency, mode;
 	struct spi_flash *flash;
+	int parent, node;
 
 	node = cros_fdtdec_config_node(blob);
 	if (node < 0)
@@ -215,21 +214,16 @@ int firmware_storage_open_spi(firmware_storage_t *file)
 		VBDEBUG("fail to look up phandle: %d\n", node);
 		return -1;
 	}
+	parent = fdt_parent_offset(blob, node);
+	if (parent < 0) {
+		VBDEBUG("fail to look up SPI parent: %d\n", parent);
+		return -1;
+	}
 
-	bus = fdtdec_get_int(blob, node, "bus", 0);
-	chip_select = fdtdec_get_int(blob, node, "reg", 0);
-	max_frequency = fdtdec_get_int(blob, node, "spi-max-frequency",
-			SF_DEFAULT_SPEED);
-	mode = 0;
-	if (fdtdec_get_bool(blob, node, "spi-cpol"))
-		mode |= SPI_CPOL;
-	if (fdtdec_get_bool(blob, node, "spi-cpha"))
-		mode |= SPI_CPHA;
-	if (fdtdec_get_bool(blob, node, "spi-cs-high"))
-		mode |= SPI_CS_HIGH;
-	flash = spi_flash_probe(bus, chip_select, max_frequency, mode);
+	flash = spi_flash_probe_fdt(blob, node, parent);
 	if (!flash) {
-		VBDEBUG("fail to init SPI flash at %u:%u\n", bus, chip_select);
+		VBDEBUG("fail to init SPI flash at %s\n",
+			fdt_get_name(blob, node, NULL));
 		return -1;
 	}
 
