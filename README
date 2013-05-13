@@ -967,6 +967,12 @@ The following options need to be configured:
 		still use the individual files if you need something more
 		exotic.
 
+		CONFIG_OF_SPI_FLASH
+		This enables selection of SPI flash attachment from the
+		device tree. The function spi_flash_probe_fdt() then becomes
+		available to set up a SPI slave for a particular device tree
+		node, with the correct speed, bus, chip select, etc.
+
 - Watchdog:
 		CONFIG_WATCHDOG
 		If this variable is defined, it enables watchdog

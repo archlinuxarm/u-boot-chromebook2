@@ -400,15 +400,12 @@ static const struct {
 };
 #define IDCODE_LEN (IDCODE_CONT_LEN + IDCODE_PART_LEN)
 
-struct spi_flash *spi_flash_probe(unsigned int bus, unsigned int cs,
-		unsigned int max_hz, unsigned int spi_mode)
+static struct spi_flash *spi_flash_probe_slave(struct spi_slave *spi)
 {
-	struct spi_slave *spi;
 	struct spi_flash *flash = NULL;
 	int ret, i, shift;
 	u8 idcode[IDCODE_LEN], *idp;
 
-	spi = spi_setup_slave(bus, cs, max_hz, spi_mode);
 	if (!spi) {
 		printf("SF: Failed to set up slave\n");
 		return NULL;
@@ -474,6 +471,26 @@ err_claim_bus:
 	spi_free_slave(spi);
 	return NULL;
 }
+
+struct spi_flash *spi_flash_probe(unsigned int bus, unsigned int cs,
+		unsigned int max_hz, unsigned int spi_mode)
+{
+	struct spi_slave *spi;
+
+	spi = spi_setup_slave(bus, cs, max_hz, spi_mode);
+	return spi_flash_probe_slave(spi);
+}
+
+#ifdef CONFIG_OF_SPI_FLASH
+struct spi_flash *spi_flash_probe_fdt(const void *blob, int slave_node,
+				      int spi_node)
+{
+	struct spi_slave *spi;
+
+	spi = spi_setup_slave_fdt(blob, slave_node, spi_node);
+	return spi_flash_probe_slave(spi);
+}
+#endif
 
 void *spi_flash_do_alloc(int offset, int size, struct spi_slave *spi,
 			 const char *name)
