@@ -27,10 +27,8 @@
 #include <fdtdec.h>
 #include <i2c.h>
 #include <malloc.h>
-#ifdef CONFIG_POWER_TPS65090
-#include <power/tps65090_pmic.h>
-#endif
 #include <asm/gpio.h>
+#include <power/tps65090_pmic.h>
 #include <cros/common.h>
 #include <cros/firmware_storage.h>
 
@@ -126,10 +124,10 @@ static int setup_i2c(int *nodep)
 		printf("Error: Cannot claim bus\n");
 		return -1;
 	}
-	err = gpio_request(GPIO_A20, "i2creset");
-	err |= gpio_request(GPIO_A21, "i2creset");
-	err |= gpio_direction_output(GPIO_A20, 0);
-	err |= gpio_direction_output(GPIO_A21, 0);
+	err = gpio_request(EXYNOS5_GPIO_A20, "i2creset");
+	err |= gpio_request(EXYNOS5_GPIO_A21, "i2creset");
+	err |= gpio_direction_output(EXYNOS5_GPIO_A20, 0);
+	err |= gpio_direction_output(EXYNOS5_GPIO_A21, 0);
 	if (err) {
 		printf("Error: Could not set up GPIOs\n");
 		return -1;
@@ -143,8 +141,8 @@ static int restore_i2c(int node)
 {
 	int err;
 
-	err = gpio_direction_output(GPIO_A20, 1);
-	err |= gpio_direction_output(GPIO_A21, 1);
+	err = gpio_direction_output(EXYNOS5_GPIO_A20, 1);
+	err |= gpio_direction_output(EXYNOS5_GPIO_A21, 1);
 	if (err) {
 		printf("Error: Could not restore GPIOs\n");
 		return -1;
@@ -209,9 +207,9 @@ static int do_cros_test_i2cfiddle(cmd_tbl_t *cmdtp, int flag,
 		return 1;
 
 	for (i = 0; i < 100; i++) {
-		gpio_set_value(GPIO_A20, get_fiddle_value(i));
+		gpio_set_value(EXYNOS5_GPIO_A20, get_fiddle_value(i));
 		udelay(1);
-		gpio_set_value(GPIO_A21, get_fiddle_value(100 - i));
+		gpio_set_value(EXYNOS5_GPIO_A21, get_fiddle_value(100 - i));
 		udelay(1);
 	}
 
