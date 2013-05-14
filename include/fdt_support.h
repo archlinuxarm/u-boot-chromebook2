@@ -115,6 +115,9 @@ int fdt_verify_alias_address(void *fdt, int anode, const char *alias,
 			      u64 addr);
 u64 fdt_get_base_address(void *fdt, int node);
 
+/* Print an FDT on the console */
+void fdt_print(void *fdt);
+
 enum fdt_status {
 	FDT_STATUS_OKAY,
 	FDT_STATUS_DISABLED,

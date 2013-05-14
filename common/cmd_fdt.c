@@ -46,7 +46,7 @@ DECLARE_GLOBAL_DATA_PTR;
 
 static int fdt_valid(struct fdt_header **blobp);
 static int fdt_parse_prop(char *const*newval, int count, char *data, int *len);
-static int fdt_print(const char *pathp, char *prop, int depth);
+static int fdt_print_path(const char *pathp, char *prop, int depth);
 static int is_printable_string(const void *data, int len);
 
 /*
@@ -62,6 +62,17 @@ void set_working_fdt_addr(void *addr)
 	working_fdt = buf;
 	setenv_addr("fdtaddr", addr);
 }
+
+void fdt_print(void *fdt)
+{
+	struct fdt_header *saved_fdt = working_fdt;
+
+	working_fdt = fdt;
+	fdt_print_path("/", NULL, MAX_LEVEL);
+
+	working_fdt = saved_fdt;
+}
+
 
 /*
  * Get a value from the fdt and format it to be set in the environment
@@ -437,7 +448,7 @@ static int do_fdt(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[])
 		else
 			prop = NULL;
 
-		ret = fdt_print(pathp, prop, depth);
+		ret = fdt_print_path(pathp, prop, depth);
 		if (ret != 0)
 			return ret;
 
@@ -872,7 +883,7 @@ static void print_data(const void *data, int len)
  * Recursively print (a portion of) the working_fdt.  The depth parameter
  * determines how deeply nested the fdt is printed.
  */
-static int fdt_print(const char *pathp, char *prop, int depth)
+static int fdt_print_path(const char *pathp, char *prop, int depth)
 {
 	static char tabs[MAX_LEVEL+1] =
 		"\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t"
