@@ -34,6 +34,11 @@
 	config {
 		hwid = "peach TEST A-A 9382";
 	};
+
+	chromeos-config {
+		textbase = <0x23e00000>;/* Address where U-Boot loads */
+	};
+
 	/* override SPL size to match BL1 expectations */
 	flash@0 {
 		spl {
