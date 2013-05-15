@@ -229,4 +229,7 @@
 		interrupts = <0 54 0>;
 		id = <3>;
 	};
+
+	gpio: gpio {
+	};
 };
