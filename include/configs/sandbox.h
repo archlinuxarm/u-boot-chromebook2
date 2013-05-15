@@ -52,12 +52,18 @@
 #define CONFIG_CMD_FAT
 #define CONFIG_CMD_EXT4
 #define CONFIG_CMD_EXT4_WRITE
+#define CONFIG_CMD_PART
+#define CONFIG_DOS_PARTITION
+#define CONFIG_PARTITION_UUIDS
+#define CONFIG_EFI_PARTITION
+#define CONFIG_HOST_MAX_DEVICES 4
 
 #define CONFIG_SYS_VSNPRINTF
 
 #define CONFIG_CMD_GPIO
 #define CONFIG_SANDBOX_GPIO
 #define CONFIG_SANDBOX_GPIO_COUNT	20
+
 
 /*
  * Size of malloc() pool, although we don't actually use this yet.

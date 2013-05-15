@@ -49,7 +49,8 @@
 	defined(CONFIG_CMD_USB) || \
 	defined(CONFIG_CMD_PART) || \
 	defined(CONFIG_MMC) || \
-	defined(CONFIG_SYSTEMACE)
+	defined(CONFIG_SYSTEMACE) || \
+	defined(CONFIG_SANDBOX)
 #define HAVE_BLOCK_DEVICE
 #endif
 
