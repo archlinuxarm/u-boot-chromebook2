@@ -76,7 +76,6 @@ static const char * const compat_names[COMPAT_COUNT] = {
 	COMPAT(GOOGLE_BOARD_REV, "google,board-revision"),
 	COMPAT(NXP_PTN3460, "nxp,ptn3460"),
 	COMPAT(GOOGLE_ARBITRATOR, "google,arbitrator"),
-	COMPAT(GOOGLE_CHROME_EC, "google,chrome-ec"),
 	COMPAT(GOOGLE_CONST_FLAG, "google,const-flag"),
 	COMPAT(GOOGLE_GPIO_FLAG, "google,gpio-flag"),
 	COMPAT(GOOGLE_CROS_EC_FLAG, "google,cros-ec-flag"),

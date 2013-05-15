@@ -328,7 +328,7 @@ int cros_fdtdec_chrome_ec(const void *blob, struct fdt_chrome_ec *config)
 {
 	int flash_node, node;
 
-	node = fdtdec_next_compatible(blob, 0, COMPAT_GOOGLE_CHROME_EC);
+	node = fdtdec_next_compatible(blob, 0, COMPAT_GOOGLE_CROS_EC);
 	if (node < 0) {
 		VBDEBUG("Failed to find chrome-ec node'\n");
 		return -1;
