@@ -54,6 +54,8 @@ static u16 event_count;
 static int elog_initialized;
 static struct spi_flash *elog_spi;
 
+static void elog_log_panic_events(uint32_t panic_start, uint32_t panic_size);
+
 #endif
 
 /*
@@ -219,17 +221,16 @@ static int elog_is_header_valid(struct elog_header *header)
 /*
  * Validate the event header and data.
  */
-static int elog_is_event_valid(u32 offset)
+static int elog_is_event_valid(struct event_header *event, int max_size)
 {
-	struct event_header *event;
-
-	event = elog_get_event_base(offset);
-	if (!event)
+	if (!event) {
+		printf("NULL event pointer.\n");
 		return 0;
+	}
 
 	/* Validate event length */
-	if ((offsetof(struct event_header, type) +
-	     sizeof(event->type) - 1 + offset) >= log_size)
+	if (offsetof(struct event_header, type) +
+	    sizeof(event->type) - 1 >= max_size)
 		return 0;
 
 	/* End of event marker has been found */
@@ -237,15 +238,15 @@ static int elog_is_event_valid(u32 offset)
 		return 0;
 
 	/* Check if event fits in area */
-	if ((offsetof(struct event_header, length) +
-	     sizeof(event->length) - 1 + offset) >= log_size)
+	if (offsetof(struct event_header, length) +
+	    sizeof(event->length) - 1 >= max_size)
 		return 0;
 
 	/*
 	 * If the current event length + the current offset exceeds
 	 * the area size then the event area is corrupt.
 	 */
-	if ((event->length + offset) >= log_size)
+	if (event->length >= max_size)
 		return 0;
 
 	/* Event length must be at least header size + checksum */
@@ -277,7 +278,7 @@ static void elog_update_event_buffer_state(void)
 
 		/* Do not de-reference anything past the area length */
 		if ((offsetof(struct event_header, type) +
-		     sizeof(event->type) - 1 + offset) >= log_size) {
+		    sizeof(event->type) - 1 + offset) >= log_size) {
 			event_buffer_state = ELOG_EVENT_BUFFER_CORRUPTED;
 			break;
 		}
@@ -287,7 +288,7 @@ static void elog_update_event_buffer_state(void)
 			break;
 
 		/* Validate the event */
-		if (!elog_is_event_valid(offset)) {
+		if (!elog_is_event_valid(event, log_size - offset)) {
 			event_buffer_state = ELOG_EVENT_BUFFER_CORRUPTED;
 			break;
 		}
@@ -425,14 +426,18 @@ int elog_clear(void)
 	return 0;
 }
 
-static struct spi_flash *elog_find_flash(void)
+static struct spi_flash *elog_fdt_decode(uint32_t *panic_start,
+					 uint32_t *panic_size)
 {
 	static struct twostop_fmap fmap;
 	firmware_storage_t file;
 	const void *blob = gd->fdt_blob;
 	int node;
+	uint32_t panic_event[2];
 
 	debug("elog_find_flash()\n");
+
+	*panic_start = *panic_size = (uint32_t)(-1);
 
 	node = cros_fdtdec_config_node(blob);
 	if (node < 0) {
@@ -447,6 +452,12 @@ static struct spi_flash *elog_find_flash(void)
 	shrink_size = fdtdec_get_int(blob, node, "elog-shrink-size", 0x400);
 	full_threshold = fdtdec_get_int(blob, node, "elog-full-threshold",
 					0xc00);
+	if (!fdtdec_get_int_array(blob, node, "elog-panic-event-offset",
+				  panic_event, ARRAY_SIZE(panic_event))) {
+		/* Convert offset into the real DRAM address. */
+		*panic_start = panic_event[0] + CONFIG_SYS_SDRAM_BASE;
+		*panic_size = panic_event[1];
+	}
 
 	if (firmware_storage_open_spi(&file)) {
 		debug("Failed to open firmware storage.\n");
@@ -474,13 +485,14 @@ static struct spi_flash *elog_find_flash(void)
  */
 int elog_init(void)
 {
+	uint32_t panic_start, panic_size;
 	if (elog_initialized)
 		return 0;
 
 	debug("elog_init()\n");
 
 	/* Prepare SPI */
-	elog_spi = elog_find_flash();
+	elog_spi = elog_fdt_decode(&panic_start, &panic_size);
 	if (elog_spi == 0) {
 		printf("ELOG: Unable to find SPI flash\n");
 		return -1;
@@ -522,6 +534,12 @@ int elog_init(void)
 	printf("ELOG: area is %d bytes, full threshold %d, shrink size %d\n",
 	       total_size, full_threshold, shrink_size);
 
+	/* Log panic events left for us by the kernel. */
+	if (panic_start) {
+		elog_log_panic_events(panic_start, panic_size);
+		memset((void *)(uintptr_t)panic_start, 0, panic_size);
+	}
+
 	/* Log a clear event if necessary */
 	if (event_count == 0)
 		elog_add_event_word(ELOG_TYPE_LOG_CLEAR, total_size);
@@ -536,36 +554,33 @@ int elog_init(void)
 /*
  * Add an event to the log
  */
-void elog_add_event_raw(u8 event_type, void *data, u8 data_size)
+static void elog_add_this_event(struct event_header *event, u8 event_size)
 {
-	struct event_header *event;
-	u8 event_size;
+	struct event_header *new_event;
 	int offset;
 
-	debug("elog_add_event_raw(type=%X)\n", event_type);
+	debug("elog_add_this_event(event = %p, event_size = %d)\n",
+	      event, event_size);
 
 	/* Make sure ELOG structures are initialized */
 	if (elog_init() < 0)
 		return;
 
-	/* Header + Data + Checksum */
-	event_size = sizeof(*event) + data_size + 1;
 	if (event_size > MAX_EVENT_SIZE) {
 		printf("ELOG: Event(%X) data size too big (%d)\n",
-		       event_type, event_size);
+		       event->type, event_size);
 		return;
 	}
 
 	/* Make sure event data can fit */
 	if ((next_event_offset + event_size) >= log_size) {
-		printf("ELOG: Event(%X) does not fit\n",
-		       event_type);
+		printf("ELOG: Event(%X) does not fit\n", event->type);
 		return;
 	}
 
 	/* Fill out event data */
-	event = elog_get_event_base(next_event_offset);
-	elog_prepare_event(event, event_type, data, data_size);
+	new_event = elog_get_event_base(next_event_offset);
+	memcpy(new_event, event, event_size);
 
 	/* Update the ELOG state */
 	event_count++;
@@ -575,11 +590,32 @@ void elog_add_event_raw(u8 event_type, void *data, u8 data_size)
 
 	next_event_offset += event_size;
 
-	printf("ELOG: Event(%X) added with size %d\n", event_type, event_size);
+	printf("ELOG: Event(%X) added with size %d\n",
+	       event->type, event_size);
 
 	/* Shrink the log if we are getting too full */
 	if (next_event_offset >= full_threshold)
 		elog_shrink();
+}
+
+/*
+ * Create an event and add it to the log
+ */
+void elog_add_event_raw(u8 event_type, void *data, u8 data_size)
+{
+	/* Header + Data + Checksum */
+	u8 event_size = sizeof(struct event_header) + data_size + 1;
+	u8 event_buf[event_size];
+	struct event_header *event = (struct event_header *)event_buf;
+
+	debug("elog_add_event_raw(type=%X)\n", event_type);
+
+	/* Make sure ELOG structures are initialized */
+	if (elog_init() < 0)
+		return;
+
+	elog_prepare_event(event, event_type, data, data_size);
+	elog_add_this_event(event, event_size);
 }
 
 void elog_add_event(u8 event_type)
@@ -609,6 +645,32 @@ void elog_add_event_wake(u8 source, u32 instance)
 		.instance = instance
 	};
 	elog_add_event_raw(ELOG_TYPE_WAKE_SOURCE, &wake, sizeof(wake));
+}
+
+/*
+ * Copy events left for us by the kernel into the log.
+ */
+static void elog_log_panic_events(uint32_t panic_start, uint32_t panic_size)
+{
+	u32 offset = 0;
+
+	while (1) {
+		struct event_header *event =
+			(struct event_header *)(panic_start + offset);
+
+		if ((offsetof(struct event_header, type) +
+		    sizeof(event->type) - 1 + offset) >= panic_size)
+			return;
+
+		if (event->type == ELOG_TYPE_EOL)
+			return;
+
+		if (!elog_is_event_valid(event, panic_size - offset))
+			return;
+
+		elog_add_this_event(event, event->length);
+		offset += event->length;
+	}
 }
 
 #endif
