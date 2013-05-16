@@ -50,7 +50,13 @@ int get_num_cpus(void)
  */
 struct clk_pll_table tegra_pll_x_table[TEGRA_SOC_CNT][CLOCK_OSC_FREQ_COUNT] = {
 	/* T20: 1 GHz */
-	/*  n,  m, p, cpcon */
+	/*
+	 * Field Bits Width
+	 *  n    17:8  10
+	 *  m     4:0   5
+	 *  p    22:20  3
+	 */
+	 /*  n,  m, p, cpcon */
 	{{ 1000, 13, 0, 12},	/* OSC 13M */
 	 { 625,  12, 0, 8},	/* OSC 19.2M */
 	 { 1000, 12, 0, 12},	/* OSC 12M */
@@ -58,6 +64,12 @@ struct clk_pll_table tegra_pll_x_table[TEGRA_SOC_CNT][CLOCK_OSC_FREQ_COUNT] = {
 	},
 
 	/* T25: 1.2 GHz */
+	/*
+	 * Field Bits Width
+	 *  n    17:8  10
+	 *  m     4:0   5
+	 *  p    22:20  3
+	 */
 	{{ 923, 10, 0, 12},
 	 { 750, 12, 0, 8},
 	 { 600,  6, 0, 12},
@@ -65,17 +77,29 @@ struct clk_pll_table tegra_pll_x_table[TEGRA_SOC_CNT][CLOCK_OSC_FREQ_COUNT] = {
 	},
 
 	/* T30: 1.4 GHz */
+	/*
+	 * Field Bits Width
+	 *  n    17:8  10
+	 *  m     4:0   5
+	 *  p    22:20  3
+	 */
 	{{ 862, 8, 0, 8},
 	 { 583, 8, 0, 4},
 	 { 700, 6, 0, 8},
 	 { 700, 13, 0, 8},
 	},
 
-	/* T114: 1.4 GHz */
-	{{ 862, 8, 0, 8},
-	 { 583, 8, 0, 4},
-	 { 696, 12, 0, 8},
-	 { 700, 13, 0, 8},
+	/* T114: 1.9 GHz    */
+	/*
+	 * Field Bits Width
+	 *  n    15:8   8
+	 *  m     7:0   8
+	 *  p    23:20  4
+	 */
+	{{ 108, 1, 1, 8},	/* actual: 702.0 MHz */
+	 { 73, 1, 1, 4},	/* actual: 700.8 MHz */
+	 { 116, 1, 1, 8},	/* actual: 696.0 MHz */
+	 { 108, 2, 1, 8},	/* actual: 702.0 MHz */
 	},
 };
 
