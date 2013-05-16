@@ -9,17 +9,22 @@
  */
 
 #include <common.h>
+#include <malloc.h>
 #include <part.h>
 #include <linux/compiler.h>
 #include <cros/boot_kernel.h>
 #include <cros/common.h>
 #include <cros/crossystem_data.h>
 #include <i8042.h>
+#include <cros/cros_fdtdec.h>
+#include <cros/fmap.h>
 #ifdef CONFIG_X86
 #include <asm/zimage.h>
 #endif
 
 #include <vboot_api.h>
+
+DECLARE_GLOBAL_DATA_PTR;
 
 enum { CROS_32BIT_ENTRY_ADDR = 0x100000 };
 
@@ -302,6 +307,153 @@ __weak int ft_system_setup(void *blob, bd_t *bd)
 	return 0;
 }
 
+static int ft_board_add_elog(void *fdt)
+{
+#ifdef CONFIG_ELOG
+	int res, node, config, elog, len, new_len, i, j;
+	uint32_t panic_event[2];
+	uint32_t elog_area[2];
+	uint32_t panic_start, panic_size;
+	const uint32_t *reg;
+	uint32_t *new_reg;
+	struct twostop_fmap fmap;
+
+	res = fdt_ensure_subnode(fdt, 0, "firmware");
+	if (res < 0) {
+		VBDEBUG("Failed to add /firmware\n");
+		return res;
+	}
+	res = fdt_ensure_subnode(fdt, res, "chromeos");
+	if (res < 0) {
+		VBDEBUG("Failed to add /firmware/chromeos\n");
+		return res;
+	}
+	node = res;
+
+	res = fdt_setprop_string(fdt, node, "compatible", "chromeos-firmware");
+	if (res < 0) {
+		VBDEBUG("Failed to set the compatible property\n");
+		return res;
+	}
+
+	config = cros_fdtdec_config_node(gd->fdt_blob);
+	if (config < 0) {
+		VBDEBUG("Couldn't find config node.\n");
+		return config;
+	}
+	elog = fdtdec_lookup_phandle(gd->fdt_blob, config, "firmware-storage");
+	if (elog < 0) {
+		VBDEBUG("Couldn't find elog info in firmware-storage\n");
+		return elog;
+	}
+
+	/* fdtdec_get_int_array already does endian conversion for us */
+	res = fdtdec_get_int_array(gd->fdt_blob, elog,
+				   "elog-panic-event-offset",
+				   panic_event, 2);
+	if (res < 0) {
+		VBDEBUG("Can't find panic event\n");
+		return res;
+	}
+
+	/* Convert offset into a real DRAM address. */
+	panic_start = panic_event[0] + CONFIG_SYS_SDRAM_BASE;
+	panic_size = panic_event[1];
+
+	panic_event[0] = cpu_to_fdt32(panic_start);
+	panic_event[1] = cpu_to_fdt32(panic_size);
+
+	res = fdt_setprop(fdt, node, "elog-panic-event", panic_event,
+			  sizeof(panic_event));
+	if (res < 0) {
+		VBDEBUG("Failed to set up elog-panic-event property\n");
+		return res;
+	}
+
+	if (cros_fdtdec_flashmap(gd->fdt_blob, &fmap)) {
+		VBDEBUG("Unable to find RW_ELOG in FMAP\n");
+		return -1;
+	}
+
+	elog_area[0] = cpu_to_fdt32(fmap.elog.offset);
+	elog_area[1] = cpu_to_fdt32(fmap.elog.length);
+	res = fdt_setprop(fdt, node, "elog-area", elog_area,
+			  sizeof(elog_area));
+	if (res < 0) {
+		VBDEBUG("Failed to set elog-area property\n");
+		return res;
+	}
+
+	node = fdt_subnode_offset(fdt, 0, "memory");
+	if (node < 0) {
+		VBDEBUG("Couldn't find /memory node\n");
+		return node;
+	}
+
+	reg = fdt_getprop(fdt, node, "reg", &len);
+	if (!reg) {
+		VBDEBUG("Failed to read the /memory/reg property\n");
+		return -1;
+	}
+
+	new_reg = malloc(3 * len);
+	if (!new_reg) {
+		VBDEBUG("Failed to allocate space for new_reg\n");
+		return -1;
+	}
+
+	/* Subtract the panic buffer from the memory regions */
+	for (i = 0, j = 0, new_len = 0; i < len / sizeof(*reg);
+			i += 2, j += 2, new_len += 2 * sizeof(*reg)) {
+		uint32_t start = fdt32_to_cpu(reg[i]);
+		uint32_t size = fdt32_to_cpu(reg[i + 1]);
+		uint32_t end = start + size;
+
+		uint32_t panic_end = panic_start + panic_size;
+
+		if (panic_start >= end || panic_end <= start) {
+			/* No overlap, pass the range through */
+			new_reg[j] = cpu_to_fdt32(start);
+			new_reg[j + 1] = cpu_to_fdt32(size);
+		} else if (panic_start <= start && panic_end >= end) {
+			/* Total overlap, drop the range entirely */
+			j -= 2;
+			new_len -= 2 * sizeof(*reg);
+		} else if (panic_start > start && panic_end < end) {
+			/* Partial interior overlap, cut the range in two */
+			new_reg[j] = cpu_to_fdt32(start);
+			new_reg[j + 1] = cpu_to_fdt32(panic_start - start);
+			j += 2;
+			new_len += 2 * sizeof(*reg);
+			new_reg[j] = cpu_to_fdt32(panic_end);
+			new_reg[j + 1] = cpu_to_fdt32(end - panic_end);
+		} else if (panic_start <= start) {
+			/* Overlap on the low end, trim the region */
+			new_reg[j] = cpu_to_fdt32(panic_end);
+			new_reg[j + 1] = cpu_to_fdt32(end - panic_end);
+		} else if (panic_end >= end) {
+			/* Overlap on the high end, trim the region */
+			new_reg[j] = cpu_to_fdt32(start);
+			new_reg[j + 1] = cpu_to_fdt32(panic_start - start);
+		} else {
+			free(new_reg);
+			return -1;
+		}
+	}
+
+	res = fdt_setprop(fdt, node, "reg", new_reg, new_len);
+	if (res < 0) {
+		VBDEBUG("Failed to set trimmed /memory/reg property\n");
+		free(new_reg);
+		return res;
+	}
+
+	free(new_reg);
+
+#endif
+	return 0;
+}
+
 /*
  * This function does the last chance FDT update before booting to kernel.
  * Currently we modify the FDT by embedding crossystem data. So before
@@ -326,6 +478,13 @@ int ft_board_setup(void *fdt, bd_t *bd)
 		VBDEBUG("crossystem_data_embed_into_fdt() failed\n");
 		return err;
 	}
+
+	err = ft_board_add_elog(fdt);
+	if (err) {
+		VBDEBUG("Failed to add elog information\n");
+		return err;
+	}
+
 	VBDEBUG("Completed setting up fdt information for kerrnel\n");
 
 	return 0;
