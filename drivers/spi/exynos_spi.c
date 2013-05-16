@@ -560,7 +560,7 @@ struct spi_slave *spi_setup_slave_fdt(const void *blob,
 
 		/* Decode slave-specific params, providing sendible defaults */
 		max_freq = fdtdec_get_int(blob, slave_node,
-					  "spi-max-frequency", 500000);
+					  "spi-max-frequency", 0);
 		if (fdtdec_get_bool(blob, slave_node, "spi-cpol"))
 			mode |= SPI_CPOL;
 		if (fdtdec_get_bool(blob, slave_node, "spi-cpha"))
