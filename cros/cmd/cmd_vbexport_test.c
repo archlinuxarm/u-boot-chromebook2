@@ -662,6 +662,28 @@ static int do_vbexport_test_image(cmd_tbl_t *cmdtp, int flag,
 	return 0;
 }
 
+static int do_vbexport_test_flags(cmd_tbl_t *cmdtp, int flag,
+				  int argc, char * const argv[])
+{
+	struct vboot_flag_details details;
+	int ret;
+	int i;
+
+	for (i = 0; i < VBOOT_FLAG_MAX_FLAGS; i++) {
+		ret = vboot_flag_fetch(i, &details);
+		printf("%s: ", vboot_flag_node_name(i));
+		if (ret)
+			printf("Error %d\n", ret);
+		else {
+			printf("value=%d, port=%d, active_high=%d, prev_value=%d\n",
+			       details.value, details.port, details.active_high,
+			       details.prev_value);
+		}
+	}
+
+	return 0;
+}
+
 static int do_vbexport_test_all(cmd_tbl_t *cmdtp, int flag,
 		int argc, char * const argv[])
 {
@@ -676,6 +698,7 @@ static int do_vbexport_test_all(cmd_tbl_t *cmdtp, int flag,
 	ret |= do_vbexport_test_key(cmdtp, flag, argc, argv);
 	ret |= do_vbexport_test_display(cmdtp, flag, argc, argv);
 	ret |= do_vbexport_test_isshutdown(cmdtp, flag, argc, argv);
+	ret |= do_vbexport_test_flags(cmdtp, flag, argc, argv);
 	if (!ret)
 		VbExDebug("All tests passed!\n");
 	return ret;
@@ -703,6 +726,7 @@ static cmd_tbl_t cmd_vbexport_test_sub[] = {
 	U_BOOT_CMD_MKENT(display, 0, 1, do_vbexport_test_display, "", ""),
 	U_BOOT_CMD_MKENT(isshutdown, 0, 1, do_vbexport_test_isshutdown, "", ""),
 	U_BOOT_CMD_MKENT(image, 0, 1, do_vbexport_test_image, "", ""),
+	U_BOOT_CMD_MKENT(flags, 0, 1, do_vbexport_test_flags, "", ""),
 };
 
 static int do_vbexport_test(cmd_tbl_t *cmdtp, int flag,
@@ -740,5 +764,6 @@ U_BOOT_CMD(vbexport_test, CONFIG_SYS_MAXARGS, 1, do_vbexport_test,
 	"vbexport_test display [screen [locale]] - test display functions\n"
 	"vbexport_test isshutdown - check if shutdown requested\n"
 	"vbexport_test image [locale] - show bmp images\n"
+	"vbexport_test flags - show vboot flags"
 );
 
