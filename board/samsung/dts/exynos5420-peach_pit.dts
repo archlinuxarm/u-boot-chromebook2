@@ -178,4 +178,38 @@
 			/* UP      LEFT    */
 			0x070b0067 0x070c0069>;
 	};
+
+	chromeos-config {
+		virtual-dev-switch;
+		firmware-storage = <&firmware_storage_spi>;
+
+		vboot-flag-write-protect {
+			compatible = "google,gpio-flag";
+			/* APU1_SPI_WP#, XEINT_24 aka gpx30 */
+			gpio = <&gpio 104 1>;
+		};
+		vboot-flag-developer {
+			compatible = "google,const-flag";
+			value = <0>;
+		};
+		vboot-flag-lid-open {
+			compatible = "google,gpio-flag";
+			/* APU1_LID_OPEN, XEINT_28, aka gpx34. */
+			gpio = <&gpio 108 0>;
+		};
+		vboot-flag-power-off {
+			compatible = "google,gpio-flag";
+			/* PMC1_ONO#,  XEINT_10 aka gpx12 */
+			gpio = <&gpio 90 1>;
+		};
+		vboot-flag-oprom-loaded {
+			compatible = "google,const-flag";
+			value = <0>;
+		};
+		vboot-flag-ec-in-rw {
+			compatible = "google,gpio-flag";
+			/* APU1_EC_EN_RW, XEINT_19 aka gpx23 */
+			gpio = <&gpio 99 0>;
+		};
+	};
 };
