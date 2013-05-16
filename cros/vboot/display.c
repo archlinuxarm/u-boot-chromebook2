@@ -285,6 +285,27 @@ VbError_t VbExDisplayImage(uint32_t x, uint32_t y,
 	return VBERROR_SUCCESS;
 }
 
+/**
+ * show_cdata_string() - Display a prompt followed a checked string
+ *
+ * This is used to show string information from crossystem_data. if this is
+ * not set up correctly then we need to make sure we don't print garbage.
+ *
+ * @prompt:	Prompt string to show
+ * @str:	String to print. If the length if > 200 then we assume it is
+ *		corrupted
+ */
+static void show_cdata_string(const char *prompt, const unsigned char *ustr)
+{
+	const char *str = (const char *)ustr;
+
+	display_callbacks_.dc_puts(prompt);
+	if (strlen(str) > 200)
+		str = "corrupted";
+	display_callbacks_.dc_puts(str);
+	display_callbacks_.dc_puts("\n");
+}
+
 VbError_t VbExDisplayDebugInfo(const char *info_str)
 {
 #ifdef HAVE_DISPLAY
@@ -303,11 +324,10 @@ VbError_t VbExDisplayDebugInfo(const char *info_str)
 		return VBERROR_UNKNOWN;
 	}
 
-	display_callbacks_.dc_puts("read-only firmware id: ");
-	display_callbacks_.dc_puts((char *)cdata->readonly_firmware_id);
-	display_callbacks_.dc_puts("\nactive firmware id: ");
-	display_callbacks_.dc_puts((char *)cdata->firmware_id);
-	display_callbacks_.dc_puts("\n");
+	/* Sanity check in case this memory is not yet set up */
+	show_cdata_string("read-only firmware id: ",
+			  cdata->readonly_firmware_id);
+	show_cdata_string("active firmware id: ", cdata->firmware_id);
 #endif
 	return VBERROR_SUCCESS;
 }
