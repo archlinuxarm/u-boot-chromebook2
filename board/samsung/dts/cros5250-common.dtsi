@@ -61,9 +61,6 @@
 			compatible = "google,gpio-flag";
 			gpio = <&gpio 102 1>;
 		};
-		vboot-flag-recovery {
-			compatible = "google,cros-ec-flag";
-		};
 		vboot-flag-developer {
 			compatible = "google,const-flag";
 			value = <0>;

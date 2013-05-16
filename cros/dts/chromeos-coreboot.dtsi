@@ -29,10 +29,6 @@
 			compatible = "google,sysinfo-flag";
 			google,name = "write protect";
 		};
-		vboot-flag-recovery {
-			compatible = "google,sysinfo-flag";
-			google,name = "recovery";
-		};
 		vboot-flag-developer {
 			compatible = "google,sysinfo-flag";
 			google,name = "developer";

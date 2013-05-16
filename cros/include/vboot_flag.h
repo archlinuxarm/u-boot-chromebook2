@@ -17,7 +17,6 @@
 
 #define VBOOT_FLAGS							\
 	VBF(VBOOT_FLAG_WRITE_PROTECT = 0, "vboot-flag-write-protect")	\
-	VBF(VBOOT_FLAG_RECOVERY, "vboot-flag-recovery")			\
 	VBF(VBOOT_FLAG_DEVELOPER, "vboot-flag-developer")		\
 	VBF(VBOOT_FLAG_LID_OPEN, "vboot-flag-lid-open")			\
 	VBF(VBOOT_FLAG_POWER_OFF, "vboot-flag-power-off")		\
