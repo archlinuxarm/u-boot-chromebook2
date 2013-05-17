@@ -89,6 +89,51 @@ static void set_l2cache(void)
 }
 
 /*
+ * Start cluster switching.
+ */
+static void switch_cluster(void)
+{
+	uint32_t val, cpu_id, cluster_id;
+
+	enable_smp();
+	svc32_mode_en();
+
+	/* Get cluster and CPU id */
+	mrc_mpafr(cpu_id);
+	cluster_id = (cpu_id >> 8);
+	cluster_id &= 0xf;
+	cpu_id &= 0xf;
+
+	/*
+	 * While carrying out a switch, outbound cluster should disable
+	 * interrupts till the time inbound cluster sets the GICD_IGROUPR0
+	 * to '1', hence, memory flag for waiting and moving on to the
+	 * next step.
+	 */
+	writel(0x1, CONFIG_GIC_STATE + (cpu_id << 2));
+
+	/* All cores enter WFE and wait for primary core */
+	while (readl(CONFIG_CPU_STATE + (cpu_id << 2)) & (1 << 5)) {
+		if (cluster_id == 1 && cpu_id != 0) {
+			wfe();
+		} else {
+			val = 0;
+			while (val != 100)
+				val++;
+		}
+	}
+
+	/* Primary core send event */
+	if  (cluster_id == 1 && cpu_id == 0) {
+		sev();
+	}
+
+	svc32_mode_en();
+	set_pc(CONFIG_IROM_WORKAROUND_BASE);
+	while (1);
+}
+
+/*
  * Power up secondary CPUs.
  */
 static void secondary_cpu_start(void)
@@ -146,6 +191,12 @@ static void low_power_start(void)
 
 	/* Disable MMU stuff and caches */
 	mrc_sctlr(val);
+	mrc_mpafr(reg_val);
+	reg_val &= 0xf;
+
+	/* If CPU State if Switch, Start cluster switching */
+	if ((readl(CONFIG_CPU_STATE + (reg_val << 2)) & (1 << 4)))
+		switch_cluster();
 
 	val &= ~((0x2 << 12) | 0x7);
 	val |= ((0x1 << 12) | (0x8 << 8) | 0x2);
