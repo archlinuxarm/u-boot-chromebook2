@@ -365,7 +365,7 @@ static int dwmci_init(struct mmc *mmc)
 	return 0;
 }
 
-int add_dwmci(struct dwmci_host *host, u32 max_clk, u32 min_clk)
+int add_dwmci(struct dwmci_host *host, u32 max_clk, u32 min_clk, int removable)
 {
 	struct mmc *mmc;
 	int err = 0;
@@ -375,6 +375,8 @@ int add_dwmci(struct dwmci_host *host, u32 max_clk, u32 min_clk)
 		printf("mmc malloc fail!\n");
 		return -1;
 	}
+
+	memset(mmc, 0, sizeof(*mmc));
 
 	mmc->priv = host;
 	host->mmc = mmc;
@@ -401,5 +403,10 @@ int add_dwmci(struct dwmci_host *host, u32 max_clk, u32 min_clk)
 
 	err = mmc_register(mmc);
 
+	/*
+	 * Overwrite device 'removable' property, because mmc_register() does
+	 * not yet provide an interface to specify it.
+	 */
+	mmc->block_dev.removable = removable;
 	return err;
 }

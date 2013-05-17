@@ -202,5 +202,5 @@ static inline u8 dwmci_readb(struct dwmci_host *host, int reg)
 	return readb(host->ioaddr + reg);
 }
 
-int add_dwmci(struct dwmci_host *host, u32 max_clk, u32 min_clk);
+int add_dwmci(struct dwmci_host *host, u32 max_clk, u32 min_clk, int removable);
 #endif	/* __DWMMC_HW_H */
