@@ -45,6 +45,28 @@ enum {
 
 #ifdef CONFIG_EXYNOS5420
 /*
+ * Set L2ACTLR[7] to reissue any memory transaction in the L2 that has been
+ * stalled for 1024 cycles to verify that its hazard condition still exists.
+ */
+void set_l2cache(void)
+{
+	uint32_t val;
+
+	/* Read MIDR for Primary Part Number*/
+	mrc_midr(val);
+	val = (val >> 4);
+	val &= 0xf;
+
+	/* L2ACTLR[7]: Enable hazard detect timeout for A15 */
+	if (val == 0xf) {
+		mrc_l2_aux_ctlr(val);
+		val |= (1 << 7);
+		mcr_l2_aux_ctlr(val);
+		mrc_l2_ctlr(val);
+	}
+}
+
+/*
  * Pointer to this function is stored in iRam which is used
  * for jump and power down of a specific core.
  */
