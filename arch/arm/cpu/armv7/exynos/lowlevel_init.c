@@ -31,6 +31,7 @@
 #include <asm/arch/periph.h>
 #include <asm/arch/pinmux.h>
 #include <asm/arch/power.h>
+#include <asm/arch/system.h>
 #include "setup.h"
 
 /* These are the things we can do during low-level init */
@@ -42,12 +43,73 @@ enum {
 	DO_POWER	= 1 << 4,
 };
 
+#ifdef CONFIG_EXYNOS5420
+/*
+ * Pointer to this function is stored in iRam which is used
+ * for jump and power down of a specific core.
+ */
+static void power_down_core(void)
+{
+	uint32_t tmp, core_id, core_config;
+
+	/* Get the core id */
+	mrc_mpafr(core_id);
+	tmp = core_id & 0x3;
+	core_id = (core_id >> 6) & ~3;
+	core_id |= tmp;
+
+	/* Set the status of the core to low */
+	core_config = (core_id * CORE_CONFIG_OFFSET);
+	core_config += ARM_CORE0_CONFIG;
+	writel(0x0, core_config);
+
+	/* Core enter WFI */
+	wfi();
+}
+
+/*
+ * Configurations for secondary cores are inapt at this stage.
+ * Reconfigure secondary cores. Shutdown and change the status
+ * of all cores except the primary core.
+ */
+static void secondary_cores_configure(void)
+{
+	uint32_t core_id;
+
+	/* Store jump address for power down of secondary cores */
+	writel((uint32_t)&power_down_core, CONFIG_PHY_IRAM_BASE + 0x4);
+
+	/* Need all core power down check */
+	dsb();
+	sev();
+
+	/*
+	 * Power down all cores(secondary) while primary core must
+	 * wait for all cores to go down.
+	 */
+	for (core_id = 1; core_id != CORE_COUNT; core_id++) {
+		while ((readl(ARM_CORE0_STATUS
+			+ (core_id * CORE_CONFIG_OFFSET))
+			& 0xff) != 0x0) {
+			isb();
+			sev();
+		}
+		isb();
+	}
+}
+#endif
+
 int do_lowlevel_init(void)
 {
 	uint32_t reset_status;
 	int actions = 0;
 
 	arch_cpu_init();
+
+#ifdef CONFIG_EXYNOS5420
+	/* Reconfigure secondary cores */
+	secondary_cores_configure();
+#endif
 
 	reset_status = get_reset_status();
 
