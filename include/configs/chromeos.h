@@ -21,7 +21,6 @@
 /* Enable verified boot */
 #define CONFIG_CHROMEOS
 #define CONFIG_CHROMEOS_TEST
-#define CONFIG_CHROMEOS_VBEX_TEST
 
 /* Enable test codes */
 #ifdef VBOOT_DEBUG
