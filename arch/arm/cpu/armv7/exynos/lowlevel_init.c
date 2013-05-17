@@ -45,6 +45,28 @@ enum {
 
 #ifdef CONFIG_EXYNOS5420
 /*
+ * Ensure that the L2 logic has been used within the previous 256 cycles
+ * before modifying the ACTLR.SMP bit. This is required during boot before
+ * MMU has been enabled, or during a specified reset or power down sequence.
+ */
+void enable_smp(void)
+{
+	uint32_t temp, val;
+
+	/* Enable SMP mode */
+	mrc_auxr(temp);
+	temp |= (1 << 6);
+
+	/* Dummy read to assure L2 access */
+	val = readl(INF_REG_BASE);
+	val &= 0;
+	temp |= val;
+	mcr_auxr(temp);
+	dsb();
+	isb();
+}
+
+/*
  * Set L2ACTLR[7] to reissue any memory transaction in the L2 that has been
  * stalled for 1024 cycles to verify that its hazard condition still exists.
  */
