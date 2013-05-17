@@ -49,7 +49,7 @@ enum {
  * before modifying the ACTLR.SMP bit. This is required during boot before
  * MMU has been enabled, or during a specified reset or power down sequence.
  */
-void enable_smp(void)
+static void enable_smp(void)
 {
 	uint32_t temp, val;
 
@@ -70,7 +70,7 @@ void enable_smp(void)
  * Set L2ACTLR[7] to reissue any memory transaction in the L2 that has been
  * stalled for 1024 cycles to verify that its hazard condition still exists.
  */
-void set_l2cache(void)
+static void set_l2cache(void)
 {
 	uint32_t val;
 
@@ -86,6 +86,77 @@ void set_l2cache(void)
 		mcr_l2_aux_ctlr(val);
 		mrc_l2_ctlr(val);
 	}
+}
+
+/*
+ * Power up secondary CPUs.
+ */
+static void secondary_cpu_start(void)
+{
+	uint32_t temp, val;
+
+	svc32_mode_en();
+	mrc_mpafr(temp);
+
+	/* No need to reset if current cluster is Eagle */
+	if (!(temp & 0xf00))
+		goto no_reset;
+
+	/* Check reset status and jump if not reset */
+	val = readl(PMU_SPARE_2);
+	if (val == 0)
+		goto reset;
+
+	/* Clear reset flag */
+	writel(0x0, PMU_SPARE_2);
+no_reset:
+	enable_smp();
+	svc32_mode_en();
+	set_pc(CONFIG_IROM_WORKAROUND_BASE);
+reset:
+	/* Set reset flag */
+	writel(0x1, PMU_SPARE_2);
+
+	/* Clear secondary boot iRAM base */
+	writel(0x0, (CONFIG_IROM_WORKAROUND_BASE + 0x1C));
+}
+
+/*
+ * This is the entry point of hotplug-in and
+ * cluster switching.
+ */
+static void low_power_start(void)
+{
+	uint32_t val, reg_val;
+
+	reg_val = readl(RST_FLAG_REG);
+	if (reg_val != RST_FLAG_VAL) {
+		writel(0x0, CONFIG_LOWPOWER_FLAG);
+		set_pc(0x0);
+	}
+
+	/* Set the CPU to SVC32 mode */
+	svc32_mode_en();
+	set_l2cache();
+
+	/* Invalidate L1 & TLB */
+	val = 0x0;
+	mcr_tlb(val);
+	mcr_icache(val);
+
+	/* Disable MMU stuff and caches */
+	mrc_sctlr(val);
+
+	val &= ~((0x2 << 12) | 0x7);
+	val |= ((0x1 << 12) | (0x8 << 8) | 0x2);
+	mcr_sctlr(val);
+
+	/* CPU state is hotplug or reset */
+	secondary_cpu_start();
+
+	/* Core should not enter into WFI here */
+	wfi();
+
 }
 
 /*
@@ -118,7 +189,7 @@ static void power_down_core(void)
  */
 static void secondary_cores_configure(void)
 {
-	uint32_t core_id;
+	uint32_t i, core_id;
 
 	/* Store jump address for power down of secondary cores */
 	writel((uint32_t)&power_down_core, CONFIG_PHY_IRAM_BASE + 0x4);
@@ -140,6 +211,20 @@ static void secondary_cores_configure(void)
 		}
 		isb();
 	}
+
+	/* set lowpower flag and address */
+	writel(CONFIG_LOWPOWER_EN, CONFIG_LOWPOWER_FLAG);
+	for (i = 0; i < 0x20; i += 0x4)
+		writel((uint32_t)&low_power_start, CONFIG_PHY_IRAM_BASE + i);
+
+	/* Setup L2 cache */
+	set_l2cache();
+
+	/* Clear secondary boot iRAM base */
+	writel(0x0, (CONFIG_IROM_WORKAROUND_BASE + 0x1C));
+
+	/* Set reset flag */
+	writel(RST_FLAG_VAL, RST_FLAG_REG);
 }
 #endif
 
