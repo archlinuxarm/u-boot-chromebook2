@@ -357,6 +357,26 @@ void wb_start(void)
 	reg |= TSC_CNTCR_ENABLE | TSC_CNTCR_HDBG;
 	writel(reg, &sysctr->cntcr);
 
+	/*
+	 * Reprogram PMC_CPUPWRGOOD_TIMER register:
+	 *
+	 * Kernel prepares PMC_CPUPWRGOOD_TIMER based on 32768Hz clock.
+	 * Note that PMC_CPUPWRGOOD_TIMER is running at pclk.
+	 *
+	 * Need to reprogram PMC_CPUPWRGOOD_TIMER based on the current pclk,
+	 * which is @408Mhz (pclk = sclk = pllp_out0) after reset.
+	 *
+	 * So, just multiply a factor = (408M/32K) to PMC_CPUPWRGOOD_TIMER.
+	 *
+	 * Save the original PMC_CPUPWRGOOD_TIMER register, need to restore
+	 * it after CPU is powered up.
+	 */
+	reg = readl(&pmc->pmc_cpupwrgood_timer);
+	reg_saved = reg;
+
+	reg *= (408000000 / 32768);
+	writel(reg, &pmc->pmc_cpupwrgood_timer);
+
 	/* Find out which cluster (slow or fast) to power on */
 	reg = readl(&pmc->pmc_scratch4);
 	if (reg & CPU_WAKEUP_CLUSTER) {
@@ -437,6 +457,9 @@ void wb_start(void)
 				;
 		}
 	}
+
+	/* restore the original PMC_CPUPWRGOOD_TIMER register */
+	writel(reg_saved, &pmc->pmc_cpupwrgood_timer);
 
 avp_halt:
 	reg = EVENT_MODE_STOP | EVENT_JTAG;
