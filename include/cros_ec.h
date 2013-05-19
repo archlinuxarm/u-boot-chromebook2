@@ -464,4 +464,21 @@ int cros_ec_get_ldo(struct cros_ec_dev *dev, uint8_t index, uint8_t *state);
 int cros_ec_i2c_xfer(struct cros_ec_dev *dev, uchar chip, uint addr,
 		     int alen, uchar *buffer, int len, int is_read);
 
+/**
+ * Initialize the Chrome OS EC at board initialization time.
+ *
+ * @return 0 if ok, -ve on error
+ */
+int cros_ec_board_init(void);
+
+/**
+ * Get access to the error reported when cros_ec_board_init() was called
+ *
+ * This permits delayed reporting of the EC error if it failed during
+ * early init.
+ *
+ * @return error (0 if there was no error, -ve if there was an error)
+ */
+int cros_ec_get_error(void);
+
 #endif

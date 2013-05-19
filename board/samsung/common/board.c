@@ -43,13 +43,6 @@
 
 DECLARE_GLOBAL_DATA_PTR;
 
-struct local_info {
-	struct cros_ec_dev *cros_ec_dev;	/* Pointer to cros_ec device */
-	int cros_ec_err;			/* Error for cros_ec, 0 if ok */
-};
-
-static struct local_info local;
-
 #if defined CONFIG_EXYNOS_TMU
 /*
  * Boot Time Thermal Analysis for SoC temperature threshold breach
@@ -162,22 +155,6 @@ int board_early_init_f(void)
 #ifdef CONFIG_EXYNOS_FB
 	exynos_lcd_early_init(gd->fdt_blob);
 #endif
-	return 0;
-}
-#endif
-
-struct cros_ec_dev *board_get_cros_ec_dev(void)
-{
-	return local.cros_ec_dev;
-}
-
-#ifdef CONFIG_CROS_EC
-static int board_init_cros_ec_devices(const void *blob)
-{
-	local.cros_ec_err = cros_ec_init(blob, &local.cros_ec_dev);
-	if (local.cros_ec_err)
-		return -1;  /* Will report in board_late_init() */
-
 	return 0;
 }
 #endif
@@ -300,12 +277,12 @@ int board_late_init(void)
 {
 	stdio_print_current_devices();
 
-	if (local.cros_ec_err) {
+	if (cros_ec_get_error()) {
 		/* Force console on */
 		gd->flags &= ~GD_FLG_SILENT;
 
 		printf("cros-ec communications failure %d\n",
-		       local.cros_ec_err);
+		       cros_ec_get_error());
 		puts("\nPlease reset with Power+Refresh\n\n");
 		panic("Cannot init cros-ec device");
 		return -1;
@@ -479,7 +456,7 @@ __weak int ft_board_setup(void *blob, bd_t *bd)
 int arch_early_init_r(void)
 {
 #ifdef CONFIG_CROS_EC
-	if (board_init_cros_ec_devices(gd->fdt_blob)) {
+	if (cros_ec_board_init()) {
                 printf("%s: Failed to init EC\n", __func__);
                 return 0;
         }
