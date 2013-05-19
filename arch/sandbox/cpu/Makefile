@@ -38,8 +38,10 @@ $(LIB):	$(OBJS)
 	$(call cmd_link_o_target, $(OBJS))
 
 # os.c is build in the system environment, so needs standard includes
-$(obj)os.o: ALL_CFLAGS := $(filter-out -nostdinc,$(ALL_CFLAGS))
-$(obj).depend.os: CPPFLAGS := $(filter-out -nostdinc,$(CPPFLAGS))
+$(obj)os.o: ALL_CFLAGS := $(BASE_CPPFLAGS) \
+	$(patsubst %, -idirafter %, $(BASE_INCLUDE_DIRS))
+$(obj).depend.os: CPPFLAGS := $(BASE_CPPFLAGS) \
+	$(patsubst %, -idirafter %, $(BASE_INCLUDE_DIRS))
 
 #########################################################################
 

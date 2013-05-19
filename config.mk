@@ -242,11 +242,16 @@ ifneq ($(RESET_VECTOR_ADDRESS),)
 CPPFLAGS += -DRESET_VECTOR_ADDRESS=$(RESET_VECTOR_ADDRESS)
 endif
 
+# Sandbox needs the base flags and includes, so keep them around
+BASE_CPPFLAGS := $(CPPFLAGS)
+
 ifneq ($(OBJTREE),$(SRCTREE))
-CPPFLAGS += -I$(OBJTREE)/include2 -I$(OBJTREE)/include
+BASE_INCLUDE_DIRS := $(OBJTREE)/include2 $(OBJTREE)/include
 endif
 
-CPPFLAGS += -I$(TOPDIR)/include
+BASE_INCLUDE_DIRS += $(TOPDIR)/include
+
+CPPFLAGS += $(patsubst %, -I%, $(BASE_INCLUDE_DIRS))
 CPPFLAGS += -fno-builtin -ffreestanding -nostdinc	\
 	-isystem $(gccincdir) -pipe $(PLATFORM_CPPFLAGS)
 
