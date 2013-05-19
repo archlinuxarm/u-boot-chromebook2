@@ -134,25 +134,6 @@ void *spi_do_alloc_slave(int offset, int size, unsigned int bus,
 struct spi_slave *spi_setup_slave(unsigned int bus, unsigned int cs,
 		unsigned int max_hz, unsigned int mode);
 
-/**
- * Setup the driver private data for half duplex slaves
- *
- * @param bus		ID of the bus that the slave is attached to
- * @param cs		ID of the chip select connected to the slave
- * @param max_hz	Required spi frequency
- * @param mode		Required spi mode (clk polarity, clk phase and
- *			master or slave)
- * @param timeout	timeout, in milliseconds, to wait for slave responses
- * @param frame_header  the first byte sent by the slave in the response frame
- * @return new device or NULL
- */
-struct spi_slave *spi_setup_half_duplex_slave(unsigned busnum,
-					      unsigned cs,
-					      unsigned max_hz,
-					      unsigned mode,
-					      uint16_t timeout,
-					      uint8_t frame_header);
-
 /*-----------------------------------------------------------------------
  * Free any memory associated with a SPI slave.
  *
@@ -281,5 +262,15 @@ static inline int spi_w8r8(struct spi_slave *slave, unsigned char byte)
 struct spi_slave *spi_setup_slave_fdt(const void *blob,
 				      int slave_node,
 				      int spi_node);
+
+/**
+ * Given the device tree node of a SPI bus, return SPI interface index
+ * associated with this node.
+ *
+ * @param blob          pointer to the device tree containing the node
+ * @param spi_node	device tree node describing this SPI interface
+ * @return non negative index if ok, -1 on error
+ */
+int spi_get_bus_by_node(const void *blob, unsigned spi_node);
 
 #endif	/* _SPI_H_ */

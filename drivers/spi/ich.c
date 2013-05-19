@@ -752,3 +752,9 @@ int spi_write_protect_region(uint32_t lower_limit, uint32_t length, int hint)
 
 	return 0;
 }
+
+int spi_get_bus_by_node(const void *blob, unsigned spi_node)
+{
+	/* ICH supports a single SPI bus */
+	return 0;
+}

@@ -55,6 +55,7 @@
 #define CONFIG_OF_CONTROL
 #define CONFIG_OF_SEPARATE
 #define CONFIG_OF_SPI_FLASH
+#define CONFIG_OF_SPI
 
 /* Keep L2 Cache Disabled */
 #define CONFIG_SYS_DCACHE_OFF

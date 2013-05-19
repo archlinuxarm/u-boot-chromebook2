@@ -119,37 +119,6 @@ struct spi_slave *spi_setup_slave(unsigned int busnum, unsigned int cs,
 }
 
 /**
- * Setup the driver private data for half duplex slaves
- *
- * @param bus		ID of the bus that the slave is attached to
- * @param cs		ID of the chip select connected to the slave
- * @param max_hz	Required spi frequency
- * @param mode		Required spi mode (clk polarity, clk phase and
- *			master or slave)
- * @param timeout	timeout, in milliseconds, to wait for slave responses
- * @param frame_header  the first byte sent by the slave in the response frame
- * @return new device or NULL
- */
-struct spi_slave *spi_setup_half_duplex_slave(unsigned busnum,
-					      unsigned cs,
-					      unsigned max_hz,
-					      unsigned mode,
-					      uint16_t timeout,
-					      uint8_t frame_header)
-{
-	struct spi_slave *slave;
-
-
-	slave = spi_setup_slave(busnum, cs, max_hz, mode);
-	if (slave) {
-		slave->half_duplex = 1;
-		slave->frame_header = frame_header;
-		slave->max_timeout_ms = timeout;
-	}
-	return slave;
-}
-
-/**
  * Free spi controller
  *
  * @param slave	Pointer to spi_slave to which controller has to
@@ -535,64 +504,17 @@ static int process_nodes(const void *blob, int node_list[], int count)
 	return 0;
 }
 
-/**
- * Set up a new SPI slave for an fdt node
- *
- * @param blob		Device tree blob
- * @param slave_node	pointer to this SPI slave node in the device tree
- * @param spi_node	cached pointer to the SPI interface this node belongs to
- * @return 0 if ok, -1 on error
- */
-struct spi_slave *spi_setup_slave_fdt(const void *blob,
-				      int slave_node,
-				      int spi_node)
+int spi_get_bus_by_node(const void *blob, unsigned spi_node)
 {
+	int i;
 	struct spi_bus *bus;
-	unsigned int i;
 
-	for (i = 0, bus = spi_bus; i < bus_count; i++, bus++) {
-		uint32_t max_freq;
-		unsigned cs;
-		unsigned mode = 0;
-
-		if (bus->node != spi_node)
-			continue;
-
-		/* Decode slave-specific params, providing sendible defaults */
-		max_freq = fdtdec_get_int(blob, slave_node,
-					  "spi-max-frequency", 0);
-		if (fdtdec_get_bool(blob, slave_node, "spi-cpol"))
-			mode |= SPI_CPOL;
-		if (fdtdec_get_bool(blob, slave_node, "spi-cpha"))
-			mode |= SPI_CPHA;
-		if (fdtdec_get_bool(blob, slave_node, "spi-cs-high"))
-			mode |= SPI_CS_HIGH;
-		cs = fdtdec_get_int(blob, slave_node, "reg", 0);
-		if (fdtdec_get_bool(blob, slave_node, "spi-half-duplex")) {
-			unsigned timeout;
-			unsigned frame_header;
-
-			timeout = fdtdec_get_int(blob,
-						 slave_node,
-						 "spi-max-timeout-ms", 1000);
-			frame_header = fdtdec_get_int(blob, slave_node,
-						      "spi-frame-header",
-						      0x100);
-			if (frame_header >= 0x100) {
-				debug("%s: frame header not defined "
-				      "or invalid!\n", __func__);
-				return NULL;
-			}
-			return spi_setup_half_duplex_slave(i, cs, max_freq,
-							   mode, timeout,
-							   frame_header);
-		}
-		return spi_setup_slave(i, cs, max_freq, mode);
-	}
-
-	debug("%s: Failed to find bus node %d\n", __func__, spi_node);
-	return NULL;
+	for (i = 0, bus = spi_bus; i < bus_count; i++, bus++)
+		if (bus->node == spi_node)
+			return i;
+	return -1;
 }
+
 #endif /* ^^^^^^^ CONFIG_OF_CONTROL defined */
 
 /* Sadly there is no error return from this function */

@@ -973,6 +973,14 @@ The following options need to be configured:
 		available to set up a SPI slave for a particular device tree
 		node, with the correct speed, bus, chip select, etc.
 
+		CONFIG_OF_SPI
+		This enables selection of a SPI bus from the device tree,
+		in spi_setup_slave_fdt(). This function requires FDT support
+		in the SPI driver, and not all drivers have it, so for now
+		this option is used to build in this support. At some point
+		(perhaps when driver model is implemented) this option can be
+		removed.
+
 - Watchdog:
 		CONFIG_WATCHDOG
 		If this variable is defined, it enables watchdog
