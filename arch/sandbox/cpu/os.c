@@ -24,6 +24,7 @@
 #include <fcntl.h>
 #include <getopt.h>
 #include <stdio.h>
+#include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
 #include <termios.h>
@@ -152,7 +153,7 @@ void os_usleep(unsigned long usec)
 	usleep(usec);
 }
 
-u64 os_get_nsec(void)
+uint64_t os_get_nsec(void)
 {
 #if defined(CLOCK_MONOTONIC) && defined(_POSIX_MONOTONIC_CLOCK)
 	struct timespec tp;
