@@ -113,7 +113,7 @@ int do_elf_reloc_fixups(void)
 					" limit %lx\n", re_src,
 					re_src->r_offset, offset_ptr_ram,
 					*offset_ptr_ram,
-					CONFIG_SYS_TEXT_BASE + size);
+					(ulong)(CONFIG_SYS_TEXT_BASE + size));
 			}
 		} else {
 			debug("   %p: rom reloc %x, last %p\n", re_src,
