@@ -1,6 +1,11 @@
 /dts-v1/;
 
 /include/ ARCH_CPU_DTS
+#ifdef CONFIG_CHROMEOS
+/include/ "chromeos-coreboot.dtsi"
+/include/ "flashmap-coreboot-8mb_1mb_rom.dtsi"
+/include/ "flashmap-coreboot-8mb-ec.dtsi"
+#endif
 
 / {
         #address-cells = <1>;
@@ -9,7 +14,9 @@
 	compatible = "google,link", "intel,celeron-ivybridge";
 
 	config {
-	       silent_console = <0>;
+		hwid = "X86 LINK TEST 6638";
+		hda_codec_beep = <1>;
+		silent_console = <0>;
 	};
 
         gpio: gpio {};
