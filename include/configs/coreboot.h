@@ -67,6 +67,8 @@
 #undef CONFIG_WATCHDOG
 #undef CONFIG_HW_WATCHDOG
 
+#define CONFIG_SYS_TEXT_BASE		0x01110000
+
 /* SATA AHCI storage */
 
 #define CONFIG_SCSI_AHCI
