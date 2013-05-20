@@ -297,6 +297,9 @@
  */
 #define CONFIG_PCI
 
+#define CONFIG_CROS_EC
+#define CONFIG_CROS_LPC
+
 /*-----------------------------------------------------------------------
  * USB configuration
  */
@@ -320,6 +323,7 @@
 #define CONFIG_CROS_EC		/* CROS_EC protocol */
 #define CONFIG_CROS_EC_LPC		/* Support CROS_EC over LPC */
 #define CONFIG_CMD_CROS_EC
+#define CONFIG_ARCH_EARLY_INIT_R
 
 #define CONFIG_EXTRA_ENV_SETTINGS \
 	CONFIG_STD_DEVICES_SETTINGS
