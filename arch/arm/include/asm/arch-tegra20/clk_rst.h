@@ -185,6 +185,11 @@ struct clk_rst_ctlr {
 #define PLL_DIVM_SHIFT		0
 #define PLL_DIVM_MASK		(0x1f << PLL_DIVM_SHIFT)
 
+/* SPECIAL CASE: PLLM, PLLC and PLLX aliases due to T114 differences */
+#define PLLCMX_DIVP_MASK	PLL_DIVP_MASK
+#define PLLCMX_DIVN_MASK	PLL_DIVN_MASK
+#define PLLCMX_DIVM_MASK	PLL_DIVM_MASK
+
 /* CLK_RST_CONTROLLER_PLLx_OUTx_0 */
 #define PLL_OUT_RSTN		(1 << 0)
 #define PLL_OUT_CLKEN		(1 << 1)

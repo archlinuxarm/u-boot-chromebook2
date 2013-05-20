@@ -337,4 +337,23 @@ void arch_timer_init(void);
  */
 int clock_periph_enable(enum periph_id pid, int src, int divisor);
 
+/**
+ * Check PLL divisors against the HW's bit field length.
+ *
+ * @param divm	input divider
+ * @param divn	feedback divider
+ * @param divp	post divider 2^n
+ *
+ * @returns 0 if the divisors are valid, else -1
+ */
+int check_mnp_divisors(u32 divn, u32 divm, u32 divp);
+
+/*
+ * returns the SoC ID (CHIPID field from APB_MISC_GP_HIDREV reg:
+ *  CHIPID_TEGRA20      0x20
+ *  CHIPID_TEGRA30      0x30
+ *  CHIPID_TEGRA114     0x35
+ */
+int tegra_get_chip_type(void);
+
 #endif  /* _TEGRA_CLOCK_H_ */

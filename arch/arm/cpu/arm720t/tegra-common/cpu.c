@@ -134,6 +134,9 @@ int pllx_set_rate(struct clk_pll_simple *pll , u32 divn, u32 divm,
 
 	debug(" pllx_set_rate entry\n");
 
+	if (check_mnp_divisors(divn, divm, divp) == -1)
+		printf("pllx_set_rate: PLLX divisor out of range!\n");
+
 	/* Set BYPASS, m, n and p to PLLX_BASE */
 	reg = PLL_BYPASS_MASK | (divm << PLL_DIVM_SHIFT);
 	reg |= ((divn << PLL_DIVN_SHIFT) | (divp << PLL_DIVP_SHIFT));

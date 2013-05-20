@@ -231,6 +231,11 @@ struct clk_rst_ctlr {
 #define PLL_DIVM_SHIFT			0
 #define PLL_DIVM_MASK			(0x1f << PLL_DIVM_SHIFT)
 
+/* SPECIAL CASE: PLLM, PLLC and PLLX use different-sized fields here */
+#define PLLCMX_DIVP_MASK		(0xfU << PLL_DIVP_SHIFT)
+#define PLLCMX_DIVN_MASK		(0xffU << PLL_DIVN_SHIFT)
+#define PLLCMX_DIVM_MASK		(0xffU << PLL_DIVM_SHIFT)
+
 /* CLK_RST_CONTROLLER_PLLx_OUTx_0 */
 #define PLL_OUT_RSTN			(1 << 0)
 #define PLL_OUT_CLKEN			(1 << 1)

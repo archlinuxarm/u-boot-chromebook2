@@ -21,6 +21,8 @@
 #include <asm/arch/clock.h>
 #include <asm/arch/tegra.h>
 #include <asm/arch/clk_rst.h>
+#include <asm/arch-tegra/ap.h>
+#include <asm/arch-tegra/gp_padctrl.h>
 #include <asm/arch-tegra/timer.h>
 #include <div64.h>
 #include <fdtdec.h>
@@ -63,6 +65,10 @@ static const u8 pll_num_clkouts[] = {
 	0,	/* PLLD */
 };
 
+/* return 1 if PLLC/PLLM/PLLX (m,n,p divisor widths vary from other PLLs) */
+#define pll_div_width_needs_check(id) ((id) == CLOCK_ID_CGENERAL || \
+		(id) == CLOCK_ID_MEMORY || (id) == CLOCK_ID_XCPU)
+
 int clock_get_osc_bypass(void)
 {
 	struct clk_rst_ctlr *clkrst =
@@ -94,13 +100,74 @@ int clock_ll_read_pll(enum clock_id clkid, u32 *divm, u32 *divn,
 	/* Safety check, adds to code size but is small */
 	if (!clock_id_is_pll(clkid) || clkid == CLOCK_ID_USB)
 		return -1;
+
 	data = readl(&pll->pll_base);
-	*divm = (data & PLL_DIVM_MASK) >> PLL_DIVM_SHIFT;
-	*divn = (data & PLL_DIVN_MASK) >> PLL_DIVN_SHIFT;
-	*divp = (data & PLL_DIVP_MASK) >> PLL_DIVP_SHIFT;
+
+	/* Newer SoCs may have changed some MNP bit field sizes */
+	if (pll_div_width_needs_check(clkid)) {
+		*divm = (data & PLLCMX_DIVM_MASK) >> PLL_DIVM_SHIFT;
+		*divn = (data & PLLCMX_DIVN_MASK) >> PLL_DIVN_SHIFT;
+		*divp = (data & PLLCMX_DIVP_MASK) >> PLL_DIVP_SHIFT;
+	} else	{
+		*divm = (data & PLL_DIVM_MASK) >> PLL_DIVM_SHIFT;
+		*divn = (data & PLL_DIVN_MASK) >> PLL_DIVN_SHIFT;
+		*divp = (data & PLL_DIVP_MASK) >> PLL_DIVP_SHIFT;
+	}
 	data = readl(&pll->pll_misc);
 	*cpcon = (data & PLL_CPCON_MASK) >> PLL_CPCON_SHIFT;
 	*lfcon = (data & PLL_LFCON_MASK) >> PLL_LFCON_SHIFT;
+
+	return 0;
+}
+
+int check_mnp_divisors(u32 divn, u32 divm, u32 divp)
+{
+	int soc_type;
+	char bad_div = '?';
+
+	/*
+	 * Check M, N, and P values to ensure they do not
+	 * exceed the bits available in the PLL?_BASE regs.
+	 * Only PLLC, M and X were changed on T114 vs T30.
+	 *
+	 * T114: M and N = 8 bits, P = 4 bits for PLLC, M and X.
+	 * T30: M = 5 bits, N = 10 bits, P = 3 bits for PLLC, M and X.
+	 * T20: no checks implemented.
+	 */
+
+	/* get SOC (chip) type */
+	soc_type = tegra_get_chip();
+	debug("%s: SoC = 0x%02X\n", __func__, soc_type);
+
+	switch (soc_type) {
+	case CHIPID_TEGRA114:
+		if (divm > 255)
+			bad_div = 'M';
+		if (divn > 255)
+			bad_div = 'N';
+		if (divp > 15)
+			bad_div = 'P';
+		break;
+
+	case CHIPID_TEGRA30:
+		if (divm > 31)
+			bad_div = 'M';
+		if (divn > 1023)
+			bad_div = 'N';
+		if (divp > 7)
+			bad_div = 'P';
+		break;
+
+	case CHIPID_TEGRA20:
+	default:
+		break;
+	}
+
+	if (bad_div != '?') {
+		printf("%s: ERROR: DIV%c exceeds field width!\n",
+			__func__, bad_div);
+		return -1;
+	}
 
 	return 0;
 }
@@ -120,6 +187,11 @@ unsigned long clock_start_pll(enum clock_id clkid, u32 divm, u32 divn,
 	 */
 	data = (cpcon << PLL_CPCON_SHIFT) | (lfcon << PLL_LFCON_SHIFT);
 	writel(data, &pll->pll_misc);
+
+	/* Newer SoCs may have changed some MNP bit field sizes */
+	if (pll_div_width_needs_check(clkid))
+		if (check_mnp_divisors(divn, divm, divp) == -1)
+			printf("clock_start_pll: divisor(s) out of range!\n");
 
 	data = (divm << PLL_DIVM_SHIFT) | (divn << PLL_DIVN_SHIFT) |
 			(0 << PLL_BYPASS_SHIFT) | (1 << PLL_ENABLE_SHIFT);
@@ -417,7 +489,7 @@ void reset_cmplx_set_enable(int cpu, int which, int reset)
 unsigned clock_get_rate(enum clock_id clkid)
 {
 	struct clk_pll *pll;
-	u32 base;
+	u32 base, basem, basen, basep;
 	u32 divm;
 	u64 parent_rate;
 	u64 rate;
@@ -429,13 +501,24 @@ unsigned clock_get_rate(enum clock_id clkid)
 	pll = get_pll(clkid);
 	base = readl(&pll->pll_base);
 
-	/* Oh for bf_unpack()... */
-	rate = parent_rate * ((base & PLL_DIVN_MASK) >> PLL_DIVN_SHIFT);
-	divm = (base & PLL_DIVM_MASK) >> PLL_DIVM_SHIFT;
+	/* Newer SoCs may have changed some MNP bit field sizes */
+	if (pll_div_width_needs_check(clkid)) {
+		basem = (base & PLLCMX_DIVM_MASK) >> PLL_DIVM_SHIFT;
+		basen = (base & PLLCMX_DIVN_MASK) >> PLL_DIVN_SHIFT;
+		basep = (base & PLLCMX_DIVP_MASK) >> PLL_DIVP_SHIFT;
+	} else {
+		basem = (base & PLL_DIVM_MASK) >> PLL_DIVM_SHIFT;
+		basen = (base & PLL_DIVN_MASK) >> PLL_DIVN_SHIFT;
+		basep = (base & PLL_DIVP_MASK) >> PLL_DIVP_SHIFT;
+	}
+
+	rate = parent_rate * basen;
+	divm = basem;
 	if (clkid == CLOCK_ID_USB)
 		divm <<= (base & PLLU_VCO_FREQ_MASK) >> PLLU_VCO_FREQ_SHIFT;
 	else
-		divm <<= (base & PLL_DIVP_MASK) >> PLL_DIVP_SHIFT;
+		divm <<= basep;
+
 	do_div(rate, divm);
 	return rate;
 }
@@ -468,14 +551,30 @@ int clock_set_rate(enum clock_id clkid, u32 n, u32 m, u32 p, u32 cpcon)
 	base_reg = readl(&pll->pll_base);
 
 	/* Set BYPASS, m, n and p to PLL_BASE */
-	base_reg &= ~PLL_DIVM_MASK;
-	base_reg |= m << PLL_DIVM_SHIFT;
 
-	base_reg &= ~PLL_DIVN_MASK;
-	base_reg |= n << PLL_DIVN_SHIFT;
+	/* Newer SoCs may have changed some MNP bit field sizes */
+	if (pll_div_width_needs_check(clkid)) {
+		if (check_mnp_divisors(n, m, p) == -1)
+			printf("clock_set_rate: divisor(s) out of range!\n");
 
-	base_reg &= ~PLL_DIVP_MASK;
-	base_reg |= p << PLL_DIVP_SHIFT;
+		base_reg &= ~PLLCMX_DIVM_MASK;
+		base_reg |= m << PLL_DIVM_SHIFT;
+
+		base_reg &= ~PLLCMX_DIVN_MASK;
+		base_reg |= n << PLL_DIVN_SHIFT;
+
+		base_reg &= ~PLLCMX_DIVP_MASK;
+		base_reg |= p << PLL_DIVP_SHIFT;
+	} else {
+		base_reg &= ~PLL_DIVM_MASK;
+		base_reg |= m << PLL_DIVM_SHIFT;
+
+		base_reg &= ~PLL_DIVN_MASK;
+		base_reg |= n << PLL_DIVN_SHIFT;
+
+		base_reg &= ~PLL_DIVP_MASK;
+		base_reg |= p << PLL_DIVP_SHIFT;
+	}
 
 	if (clkid == CLOCK_ID_PERIPH) {
 		/*
