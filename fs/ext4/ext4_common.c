@@ -85,7 +85,7 @@ void put_ext4(uint64_t off, void *buf, uint32_t size)
 	if ((startblock + (size >> log2blksz)) >
 	    (part_offset + fs->total_sect)) {
 		printf("part_offset is %lu\n", part_offset);
-		printf("total_sector is %llu\n", fs->total_sect);
+		printf("total_sector is %llu\n", (unsigned long long)fs->total_sect);
 		printf("error: overflow occurs\n");
 		return;
 	}

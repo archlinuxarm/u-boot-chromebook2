@@ -1088,7 +1088,7 @@ unsigned long usb_stor_read(int device, unsigned long blknr,
 	blks = blkcnt;
 
 	debug("\nusb_read: dev %d startblk " LBAF ", blccnt " LBAF
-	      " buffer %lx\n", device, start, blks, buf_addr);
+	      " buffer %lx\n", device, start, blks, (ulong)buf_addr);
 
 	do {
 		/* XXX need some comment here */
@@ -1119,7 +1119,7 @@ retry_it:
 
 	debug("usb_read: end startblk " LBAF
 	      ", blccnt %x buffer %lx\n",
-	      start, smallblks, buf_addr);
+	      start, smallblks, (ulong)buf_addr);
 
 	usb_disable_asynch(0); /* asynch transfer allowed */
 	if (blkcnt >= USB_MAX_XFER_BLK)
@@ -1162,7 +1162,7 @@ unsigned long usb_stor_write(int device, unsigned long blknr,
 	blks = blkcnt;
 
 	debug("\nusb_write: dev %d startblk " LBAF ", blccnt " LBAF
-	      " buffer %lx\n", device, start, blks, buf_addr);
+	      " buffer %lx\n", device, start, blks, (ulong)buf_addr);
 
 	do {
 		/* If write fails retry for max retry count else
@@ -1194,7 +1194,7 @@ retry_it:
 	ss->flags &= ~USB_READY;
 
 	debug("usb_write: end startblk " LBAF ", blccnt %x buffer %lx\n",
-	      start, smallblks, buf_addr);
+	      start, smallblks, (ulong)buf_addr);
 
 	usb_disable_asynch(0); /* asynch transfer allowed */
 	if (blkcnt >= USB_MAX_XFER_BLK)
