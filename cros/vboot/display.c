@@ -285,6 +285,7 @@ VbError_t VbExDisplayImage(uint32_t x, uint32_t y,
 	return VBERROR_SUCCESS;
 }
 
+#ifdef HAVE_DISPLAY
 /**
  * show_cdata_string() - Display a prompt followed a checked string
  *
@@ -305,6 +306,7 @@ static void show_cdata_string(const char *prompt, const unsigned char *ustr)
 	display_callbacks_.dc_puts(str);
 	display_callbacks_.dc_puts("\n");
 }
+#endif
 
 VbError_t VbExDisplayDebugInfo(const char *info_str)
 {
