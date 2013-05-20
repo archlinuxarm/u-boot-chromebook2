@@ -45,6 +45,7 @@ int pcat_timer_init(void);
 
 /* Architecture specific - can be in arch/x86/cpu/, arch/x86/lib/, or $(BOARD)/ */
 int dram_init_f(void);
+int arch_early_init_r(void);
 
 /* cpu/.../interrupts.c */
 int cpu_init_interrupts(void);
