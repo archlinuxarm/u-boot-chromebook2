@@ -36,6 +36,11 @@ struct timestamp_table {
 
 static struct timestamp_table *ts_table  __attribute__((section(".data")));
 
+uint64_t get_base_timer_value(void)
+{
+	return ts_table->base_time;
+}
+
 void timestamp_init(void)
 {
 	ts_table = lib_sysinfo.tstamp_table;

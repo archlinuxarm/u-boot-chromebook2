@@ -74,5 +74,6 @@ static inline uint64_t rdtsc(void)
 /* board/... */
 void timer_set_tsc_base(uint64_t new_base);
 uint64_t timer_get_tsc(void);
+uint64_t get_base_timer_value(void);
 
 #endif	/* _U_BOOT_I386_H_ */
