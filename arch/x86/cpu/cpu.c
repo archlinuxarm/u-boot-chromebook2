@@ -256,3 +256,8 @@ int icache_status(void)
 {
 	return 1;
 }
+
+int cleanup_before_linux(void)
+{
+	return 0;
+}
