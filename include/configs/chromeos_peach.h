@@ -56,4 +56,7 @@
 #define CONFIG_EXYNOS_DP
 #define LCD_BPP			LCD_COLOR16
 
+/* Actual number of RAM banks is determined at run time */
+#define CONFIG_RUN_TIME_BANK_NUMBER
+
 #endif	/* __CONFIG_CHROMEOS_PEACH_H */
