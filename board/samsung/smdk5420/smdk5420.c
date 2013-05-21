@@ -41,6 +41,7 @@
 #include <power/max77802_pmic.h>
 #include <power/s2mps11_pmic.h>
 #include <power/tps65090_pmic.h>
+#include <asm/arch/board.h>
 
 DECLARE_GLOBAL_DATA_PTR;
 
@@ -209,5 +210,24 @@ void init_panel_info(vidinfo_t *vid)
 	 * Since in u-boot we don't enable MMU, we are disabling FIMD SYSMMU.
 	 */
 	writel(0x0, 0x14640000);
+}
+#endif
+
+#ifdef CONFIG_RUN_TIME_BANK_NUMBER
+/*
+ * This is supported on peach only and presently hardcoded. A more elaborate
+ * way of determining the amount of installed memory could be devised later
+ * when/if required.
+ */
+int board_get_num_dram_banks(void)
+{
+	switch (board_get_revision()) {
+	case 6: /* peach pit rev 1 */
+		return 7;  /* 7 banks of .5 GB, 3.5GB total. */
+	default:
+		break;
+	}
+	/* Default is set to 2 GB. */
+	return 4;
 }
 #endif

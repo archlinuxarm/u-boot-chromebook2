@@ -43,6 +43,19 @@
 
 DECLARE_GLOBAL_DATA_PTR;
 
+/*
+ * If required - get the run time determined number of DRAM banks available on
+ * the device.
+ */
+static int get_num_dram_banks(void)
+{
+#ifdef CONFIG_RUN_TIME_BANK_NUMBER
+	return board_get_num_dram_banks();
+#else
+	return CONFIG_NR_DRAM_BANKS;
+#endif
+}
+
 #if defined CONFIG_EXYNOS_TMU
 /*
  * Boot Time Thermal Analysis for SoC temperature threshold breach
@@ -103,8 +116,9 @@ int dram_init(void)
 {
 	int i;
 	u32 addr;
+	int real_nr_dram_banks = get_num_dram_banks();
 
-	for (i = 0; i < CONFIG_NR_DRAM_BANKS; i++) {
+	for (i = 0; i < real_nr_dram_banks; i++) {
 		addr = CONFIG_SYS_SDRAM_BASE + (i * SDRAM_BANK_SIZE);
 		gd->ram_size += get_ram_size((long *)addr, SDRAM_BANK_SIZE);
 	}
@@ -115,14 +129,21 @@ void dram_init_banksize(void)
 {
 	int i;
 	u32 addr, size;
+	int real_nr_dram_banks = get_num_dram_banks();
 
-	for (i = 0; i < CONFIG_NR_DRAM_BANKS; i++) {
+	for (i = 0; i < real_nr_dram_banks; i++) {
 		addr = CONFIG_SYS_SDRAM_BASE + (i * SDRAM_BANK_SIZE);
 		size = get_ram_size((long *)addr, SDRAM_BANK_SIZE);
 
 		gd->bd->bi_dram[i].start = addr;
 		gd->bd->bi_dram[i].size = size;
 	}
+#ifdef CONFIG_RUN_TIME_BANK_NUMBER
+	if (i < CONFIG_NR_DRAM_BANKS)
+		memset(gd->bd->bi_dram + i, 0,
+		       sizeof(gd->bd->bi_dram[0]
+			      ) * (CONFIG_NR_DRAM_BANKS - 1));
+#endif
 }
 
 static int board_uart_init(void)
