@@ -433,6 +433,9 @@ int fdt_fixup_memory_banks(void *blob, u64 start[], u64 size[], int banks)
 	size_cell_len = get_cells_len(blob, "#size-cells");
 
 	for (bank = 0, len = 0; bank < banks; bank++) {
+		if (size[bank] == 0)
+			continue;
+
 		write_cell(tmp + len, start[bank], addr_cell_len);
 		len += addr_cell_len;
 

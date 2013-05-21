@@ -126,6 +126,14 @@ void mmu_set_region_dcache_behaviour(u32 start, int size,
  */
 void mmu_page_table_flush(unsigned long start, unsigned long stop);
 
+
+/**
+ * Return number of DRAM banks installed on this board. Bank size is defined
+ * as SDRAM_BANK_SIZE. This is necessary on platforms where non-existing
+ * memory accesses cause stalls and/or crashes.
+ */
+extern int board_get_num_dram_banks(void);
+
 #endif /* __ASSEMBLY__ */
 
 #define arch_align_stack(x) (x)

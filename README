@@ -4040,6 +4040,14 @@ Low Level (hardware related) configuration options:
 
 		NOTE : currently only supported on AM335x platforms.
 
+- CONFIG_RUN_TIME_BANK_NUMBER
+		On certain platforms attempts to access non-existing memory
+		cause crashes/hangs. For those platforms code trying to
+		determine amount of memory available at run time should not
+		try accessing unavailable memory, the board_get_num_dram_banks()
+		function must be provided to report number of available memory
+		banks.
+
 Freescale QE/FMAN Firmware Support:
 -----------------------------------
 
