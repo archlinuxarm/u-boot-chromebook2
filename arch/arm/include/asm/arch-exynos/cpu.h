@@ -268,26 +268,63 @@ static inline char *s5p_get_cpu_name(void)
 	return EXYNOS_CPU_NAME;
 }
 
-#define IS_SAMSUNG_TYPE(type, id)			\
-static inline int __attribute__((no_instrument_function)) cpu_is_##type(void) \
-{							\
-	return (s5p_cpu_id >> 12) == id;		\
+#define IS_SAMSUNG_TYPE(type, id)				\
+static inline int __attribute__((no_instrument_function))	\
+	cpu_is_##type##_(void)					\
+{								\
+	return (s5p_cpu_id >> 12) == id;			\
 }
 
 IS_SAMSUNG_TYPE(exynos4, 0x4)
 IS_SAMSUNG_TYPE(exynos5, 0x5)
 
-#define IS_EXYNOS_TYPE(type, id)			\
-static inline int __attribute__((no_instrument_function)) \
-	proid_is_##type(void)				\
-{							\
-	return s5p_cpu_id == id;			\
+#define IS_EXYNOS_TYPE(type, id)				\
+static inline int __attribute__((no_instrument_function))	\
+	proid_is_##type##_(void)				\
+{								\
+	return s5p_cpu_id == id;				\
 }
 
 IS_EXYNOS_TYPE(exynos4210, 0x4210)
 IS_EXYNOS_TYPE(exynos4412, 0x4412)
 IS_EXYNOS_TYPE(exynos5250, 0x5250)
 IS_EXYNOS_TYPE(exynos5420, 0x5420)
+
+#if defined(CONFIG_EXYNOS5)
+#define cpu_is_exynos5() cpu_is_exynos5_()
+#else
+#define cpu_is_exynos5() (0)
+#endif
+
+#if defined(CONFIG_EXYNOS4)
+#define cpu_is_exynos4() cpu_is_exynos4_()
+#else
+#define cpu_is_exynos4() (0)
+#endif
+
+#if defined(CONFIG_EXYNOS5420)
+#define proid_is_exynos5420()	proid_is_exynos5420_()
+#else
+#define proid_is_exynos5420()	(0)
+#endif
+
+#if defined(CONFIG_EXYNOS5250)
+#define proid_is_exynos5250()	proid_is_exynos5250_()
+#else
+#define proid_is_exynos5250()	(0)
+#endif
+
+#if defined(CONFIG_EXYNOS5250)
+#define proid_is_exynos5250()	proid_is_exynos5250_()
+#else
+#define proid_is_exynos5250()	(0)
+#endif
+
+#if defined(CONFIG_EXYNOS4412)
+#define proid_is_exynos4412()	proid_is_exynos4412_()
+#else
+#define proid_is_exynos4412()	(0)
+#endif
 
 #define SAMSUNG_BASE(device, base)				\
 static inline unsigned int __attribute__((no_instrument_function)) \
@@ -336,4 +373,9 @@ SAMSUNG_BASE(spi, SPI_BASE)
 SAMSUNG_BASE(spi_isp, SPI_ISP_BASE)
 #endif
 
+#if defined(CONFIG_EXYNOS5250)
+# define soc_is_exynos5250()        is_samsung_exynos5250()
+#else
+# define soc_is_exynos5250()        0
+#endif
 #endif	/* _EXYNOS4_CPU_H */
