@@ -688,11 +688,11 @@ static int exynos4_pinmux_config(int peripheral, int flags)
 
 int exynos_pinmux_config(int peripheral, int flags)
 {
-	if (cpu_is_exynos5()) {
-		if (proid_is_exynos5420())
-			return exynos5420_pinmux_config(peripheral, flags);
+	if (proid_is_exynos5420())
+		return exynos5420_pinmux_config(peripheral, flags);
+	else if (proid_is_exynos5250())
 		return exynos5_pinmux_config(peripheral, flags);
-	} else if (cpu_is_exynos4()) {
+	else if (cpu_is_exynos4()) {
 		return exynos4_pinmux_config(peripheral, flags);
 	} else {
 		debug("pinmux functionality not supported\n");
