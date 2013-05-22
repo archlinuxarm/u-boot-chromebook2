@@ -33,8 +33,10 @@
 		#address-cells = <1>;
 		#size-cells = <0>;
 		compatible = "intel,ich9";
-		spi-flash@0 {
+		firmware_storage_spi: spi-flash@0 {
 			reg = <0>;
+			spi-cpol;
+			spi-cpha;
 			compatible = "winbond,w25q64", "spi-flash";
 			memory-map = <0xff800000 0x00800000>;
 		};
