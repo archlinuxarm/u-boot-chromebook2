@@ -48,6 +48,7 @@ struct i2c_bus {
 	int			is_dvc;	/* DVC type, rather than I2C */
 	int			is_scs;	/* single clock source (T114+) */
 	int			inited;	/* bus is inited */
+	int			node;	/* fdt node */
 };
 
 static struct i2c_bus i2c_controllers[TEGRA_I2C_NUM_CONTROLLERS];
@@ -392,6 +393,7 @@ static int process_nodes(const void *blob, int node_list[], int count,
 
 		i2c_bus = &i2c_controllers[i];
 		i2c_bus->id = i;
+		i2c_bus->node = node;
 
 		if (i2c_get_config(blob, node, i2c_bus)) {
 			printf("i2c_init_board: failed to decode bus %d\n", i);
@@ -617,7 +619,15 @@ int tegra_i2c_get_dvc_bus_num(void)
 #ifdef CONFIG_OF_CONTROL
 int i2c_get_bus_num_fdt(int node)
 {
-	/* TODO: add board specific supporting code */
+	int i;
+
+	debug("%s: node = %d\n", __func__, node);
+	for (i = 0; i < TEGRA_I2C_NUM_CONTROLLERS; i++) {
+		struct i2c_bus *bus = &i2c_controllers[i];
+		debug("%s: i = %d, bus->node = %d\n", __func__, i, bus->node);
+		if (bus->node == node)
+			return i;
+	}
 
 	debug("%s: Can't find any matched I2C bus\n", __func__);
 	return -1;
