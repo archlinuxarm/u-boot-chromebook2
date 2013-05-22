@@ -25,13 +25,13 @@
 #ifndef __CONFIG_SMDK5420_H
 #define __CONFIG_SMDK5420_H
 
-#include <configs/exynos5-dt.h>
-
 /*
  * For now we have to hard-code some additional settings for Exynos5420.
  * Eventually these should move to the FDT.
  */
 #include <configs/exynos5420.h>
+
+#include <configs/exynos5-dt.h>
 
 #undef CONFIG_DEFAULT_DEVICE_TREE
 #define CONFIG_DEFAULT_DEVICE_TREE	exynos5420-smdk5420
