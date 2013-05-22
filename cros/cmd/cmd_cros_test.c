@@ -316,7 +316,7 @@ static int do_ssync(struct ssync_info *ssync, uint32_t offset, uint32_t size,
 	int ret;
 
 	if (ssync->file.read(&ssync->file, entry->offset,
-			entry->length, BT_EXTRA ssync->new_data)) {
+			entry->length, ssync->new_data)) {
 		debug("%s: Cannot read firmware storage\n", __func__);
 		return -1;
 	}

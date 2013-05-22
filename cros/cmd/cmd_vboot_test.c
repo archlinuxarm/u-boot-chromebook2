@@ -55,11 +55,9 @@ static int do_vboot_test_fwrw(cmd_tbl_t *cmdtp,
 		return cmd_usage(cmdtp);
 	}
 
-#ifndef CONFIG_HARDWARE_MAPPED_SPI
 	/* Allocate the buffer and fill the target test pattern. */
 	original_buf = VbExMalloc(test_length);
 	verify_buf = VbExMalloc(test_length);
-#endif
 	target_buf = VbExMalloc(test_length);
 
 	/* Fill the target test pattern. */
@@ -73,8 +71,7 @@ static int do_vboot_test_fwrw(cmd_tbl_t *cmdtp,
 	}
 
 	t0 = VbExGetTimer();
-	if (file.read(&file, TEST_FW_START,
-		      test_length, BT_EXTRA original_buf)) {
+	if (file.read(&file, TEST_FW_START, test_length, original_buf)) {
 		VbExDebug("Failed to read firmware!\n");
 		goto out;
 	}
@@ -93,8 +90,7 @@ static int do_vboot_test_fwrw(cmd_tbl_t *cmdtp,
 		ret = 1;
 	} else {
 		/* Read back and verify the data. */
-		file.read(&file, TEST_FW_START, test_length,
-			  BT_EXTRA verify_buf);
+		file.read(&file, TEST_FW_START, test_length, verify_buf);
 		if (memcmp(target_buf, verify_buf, test_length) != 0) {
 			VbExDebug("Verify failed. The target data wrote "
 				  "wrong.\n");
@@ -112,10 +108,8 @@ static int do_vboot_test_fwrw(cmd_tbl_t *cmdtp,
 out:
 	file.close(&file);
 
-#ifndef CONFIG_HARDWARE_MAPPED_SPI
 	VbExFree(original_buf);
 	VbExFree(verify_buf);
-#endif
 	VbExFree(target_buf);
 
 	if (ret == 0)

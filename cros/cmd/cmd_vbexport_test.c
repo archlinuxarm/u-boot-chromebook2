@@ -413,14 +413,12 @@ static uint8_t *read_gbb_from_firmware(void)
 	void *gbb;
 	size_t gbb_size;
 
-#ifndef CONFIG_HARDWARE_MAPPED_SPI
 	gbb = cros_fdtdec_alloc_region(gd->fdt_blob,
 			"google-binary-block", &gbb_size);
 	if (!gbb) {
 		VbExDebug("Failed to find gbb region!\n");
 		return NULL;
 	}
-#endif
 
 	if (cros_fdtdec_flashmap(fdt_ptr, &fmap)) {
 		VbExDebug("Failed to load fmap config from fdt!\n");
@@ -433,23 +431,10 @@ static uint8_t *read_gbb_from_firmware(void)
 		return NULL;
 	}
 
-#ifdef CONFIG_HARDWARE_MAPPED_SPI
-	{
-		void *gbbp;
-
-		if (gbb_init(&gbbp, &file, fmap.readonly.gbb.offset, 0)) {
-			VbExDebug("Failed to read GBB!\n");
-			return NULL;
-		}
-		gbb = gbbp;
-		gbb_size = fmap.readonly.gbb.length;
-	}
-#else
 	if (gbb_init(gbb, &file, fmap.readonly.gbb.offset, gbb_size)) {
 		VbExDebug("Failed to read GBB!\n");
 		return NULL;
 	}
-#endif
 
 	if (gbb_read_bmp_block(gbb, &file, fmap.readonly.gbb.offset,
 			       gbb_size)) {

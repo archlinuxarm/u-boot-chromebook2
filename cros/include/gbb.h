@@ -25,10 +25,9 @@
  * @param gbb_size	Size of the buffer holding GBB
  * @return zero if this succeeds, non-zero if this fails
  */
-int gbb_init(read_buf_type gbb, firmware_storage_t *file, uint32_t gbb_offset,
+int gbb_init(void *gbb, firmware_storage_t *file, uint32_t gbb_offset,
 	     size_t gbb_size);
 
-#ifndef CONFIG_HARDWARE_MAPPED_SPI
 /**
  * This loads the BMP block of GBB from flashrom.
  *
@@ -38,7 +37,7 @@ int gbb_init(read_buf_type gbb, firmware_storage_t *file, uint32_t gbb_offset,
  * @param gbb_size	Size of the buffer holding GBB
  * @return zero if this succeeds, non-zero if this fails
  */
-int gbb_read_bmp_block(read_buf_type gbb, firmware_storage_t *file,
+int gbb_read_bmp_block(void *gbb, firmware_storage_t *file,
 		       uint32_t gbb_offset, size_t gbb_size);
 
 /*
@@ -50,15 +49,9 @@ int gbb_read_bmp_block(read_buf_type gbb, firmware_storage_t *file,
  * @param gbb_size	Size of the buffer holding GBB
  * @return zero if this succeeds, non-zero if this fails
  */
-int gbb_read_recovery_key(read_buf_type gbb, firmware_storage_t *file,
+int gbb_read_recovery_key(void *gbb, firmware_storage_t *file,
 			  uint32_t gbb_offset, size_t gbb_size);
 
-#else
-
-#define gbb_read_bmp_block gbb_init
-#define gbb_read_recovery_key gbb_init
-
-#endif
 /**
  * This is a sanity check of GBB blob.
  *

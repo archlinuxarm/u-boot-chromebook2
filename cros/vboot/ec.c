@@ -249,7 +249,7 @@ VbError_t VbExEcGetExpectedRW(enum VbSelectFirmware_t select,
 		return VBERROR_UNKNOWN;
 	}
 
-	if (file.read(&file, offset, size, BT_EXTRA(buf))) {
+	if (file.read(&file, offset, size, buf)) {
 		free(buf);
 		VBDEBUG("Failed to read the EC from flash.\n");
 		return VBERROR_UNKNOWN;
