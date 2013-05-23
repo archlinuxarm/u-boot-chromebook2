@@ -418,7 +418,7 @@ struct mem_timings *clock_get_mem_timings(void)
 	return NULL;
 }
 
-void exynos5250_system_clock_init(void)
+static void exynos5250_system_clock_init(void)
 {
 	struct exynos5_clock *clk = (struct exynos5_clock *)EXYNOS5_CLOCK_BASE;
 	struct mem_timings *mem;
@@ -658,7 +658,7 @@ void exynos5250_system_clock_init(void)
 	writel(val, &clk->div_fsys2);
 }
 
-void exynos5420_system_clock_init(void)
+static void exynos5420_system_clock_init(void)
 {
 	struct exynos5420_clock *clk =
 		(struct exynos5420_clock *)EXYNOS5_CLOCK_BASE;
@@ -818,9 +818,11 @@ void exynos5420_system_clock_init(void)
 
 void system_clock_init(void)
 {
-	if (proid_is_exynos5420())
+	if (proid_is_exynos5420()) {
 		exynos5420_system_clock_init();
-	else
+		return;
+	}
+	if (proid_is_exynos5250())
 		exynos5250_system_clock_init();
 }
 
