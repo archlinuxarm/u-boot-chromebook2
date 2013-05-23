@@ -366,16 +366,7 @@ static void wipe_unused_memory(crossystem_data_t *cdata,
 	setup_arch_unused_memory(&wipe, cdata, cparams);
 
 	/* Exclude relocated u-boot structures. */
-	memory_wipe_sub(&wipe, get_current_sp() - STACK_MARGIN,
-#if defined(CONFIG_SYS_COREBOOT)
-			(uintptr_t)(gd->fdt_blob + fdt_size)
-#elif defined(CONFIG_OF_CONTROL) && defined(CONFIG_ARM)
-			gd->relocaddr + (&__bss_end - &_start)
-#else
-#error Unknown compilation mode: text start & end unknown.
-			0
-#endif
-			);
+	memory_wipe_sub(&wipe, get_current_sp() - STACK_MARGIN, gd->ram_top);
 
 	/* Exclude the shared data between bootstub and main firmware. */
 	memory_wipe_sub(&wipe, (uintptr_t)cdata,
