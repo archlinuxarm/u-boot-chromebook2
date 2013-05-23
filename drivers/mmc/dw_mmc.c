@@ -356,6 +356,7 @@ static int dwmci_init(struct mmc *mmc)
 	} else {
 		fifoth_val = MSIZE(0x2) | RX_WMARK(fifo_size / 2 - 1) |
 			TX_WMARK(fifo_size / 2);
+		host->fifoth_val = fifoth_val;
 	}
 	dwmci_writel(host, DWMCI_FIFOTH, fifoth_val);
 
