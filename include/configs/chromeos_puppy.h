@@ -48,6 +48,7 @@
 #define CONFIG_CROS_EC
 #define CONFIG_TPM
 #define CONFIG_INFINEON_TPM_I2C
+#define CONFIG_CMD_TIME
 
 #define CONFIG_OF_SPI_FLASH
 #define CONFIG_OF_SPI
