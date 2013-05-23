@@ -36,64 +36,6 @@
 #define RATE_MASK(x)		(0x1 << (x + 16))
 #define RATE_SET(x)		(0x1 << (x + 16))
 
-/*
- * This structure helps mapping symbolic GPIO names into indices from
- * exynos5_gpio_pin/exynos5420_gpio_pin enums.
- *
- * By convention, symbolic GPIO name is defined as follows:
- *
- * g[p]<bank><set><bit>, where
- *   p is optional
- *   <bank> - a single character bank name, as defined by the SOC
- *   <set> - a single digit set number
- *   <bit> - bit number within the set (in 0..7 range).
- *
- * <set><bit> essentially form an octal number of the GPIO pin within the bank
- * space. On the 5420 architecture some banks' sets do not start not from zero
- * ('d' starts from 1 and 'j' starts from 4). To compensate for that and
- * maintain flat number space withoout holes, those banks use offsets to be
- * deducted from the pin number.
- */
-struct gpio_name_num_table {
-	char bank;		/* bank name symbol */
-	u8 bank_size;		/* total number of pins in the bank */
-	char bank_offset;	/* offset of the first bank's pin */
-	unsigned int base;	/* index of the first bank's pin in the enum */
-};
-
-#define GPIO_ENTRY(name, base, top, offset) { name, top - base, offset, base }
-static const struct gpio_name_num_table exynos5_gpio_table[] = {
-	GPIO_ENTRY('a', EXYNOS5_GPIO_A00, EXYNOS5_GPIO_B00, 0),
-        GPIO_ENTRY('b', EXYNOS5_GPIO_B00, EXYNOS5_GPIO_C00, 0),
-	GPIO_ENTRY('c', EXYNOS5_GPIO_C00, EXYNOS5_GPIO_D00, 0),
-	GPIO_ENTRY('d', EXYNOS5_GPIO_D00, EXYNOS5_GPIO_Y00, 0),
-	GPIO_ENTRY('y', EXYNOS5_GPIO_Y00, EXYNOS5_GPIO_C40, 0),
-	GPIO_ENTRY('x', EXYNOS5_GPIO_X00, EXYNOS5_GPIO_E00, 0),
-	GPIO_ENTRY('e', EXYNOS5_GPIO_E00, EXYNOS5_GPIO_F00, 0),
-	GPIO_ENTRY('f', EXYNOS5_GPIO_F00, EXYNOS5_GPIO_G00, 0),
-	GPIO_ENTRY('g', EXYNOS5_GPIO_G00, EXYNOS5_GPIO_H00, 0),
-	GPIO_ENTRY('h', EXYNOS5_GPIO_H00, EXYNOS5_GPIO_V00, 0),
-	GPIO_ENTRY('v', EXYNOS5_GPIO_V00, EXYNOS5_GPIO_Z0, 0),
-	GPIO_ENTRY('z', EXYNOS5_GPIO_Z0, EXYNOS5_GPIO_MAX_PORT, 0),
-	{ 0 }
-};
-
-static const struct gpio_name_num_table exynos5420_gpio_table[] = {
-	GPIO_ENTRY('a', EXYNOS5420_GPIO_A00, EXYNOS5420_GPIO_B00, 0),
-	GPIO_ENTRY('b', EXYNOS5420_GPIO_B00, EXYNOS5420_GPIO_H00, 0),
-	GPIO_ENTRY('h', EXYNOS5420_GPIO_H00, EXYNOS5420_GPIO_Y70, 0),
-	GPIO_ENTRY('x', EXYNOS5420_GPIO_X00, EXYNOS5420_GPIO_C00, 0),
-	GPIO_ENTRY('c', EXYNOS5420_GPIO_C00, EXYNOS5420_GPIO_D10, 0),
-	GPIO_ENTRY('d', EXYNOS5420_GPIO_D10, EXYNOS5420_GPIO_Y00, 010),
-	GPIO_ENTRY('y', EXYNOS5420_GPIO_Y00, EXYNOS5420_GPIO_E00, 0),
-	GPIO_ENTRY('e', EXYNOS5420_GPIO_E00, EXYNOS5420_GPIO_F00, 0),
-	GPIO_ENTRY('f', EXYNOS5420_GPIO_F00, EXYNOS5420_GPIO_G00, 0),
-	GPIO_ENTRY('g', EXYNOS5420_GPIO_G00, EXYNOS5420_GPIO_J40, 0),
-	GPIO_ENTRY('j', EXYNOS5420_GPIO_J40, EXYNOS5420_GPIO_Z0, 040),
-	GPIO_ENTRY('z', EXYNOS5420_GPIO_Z0, EXYNOS5420_GPIO_MAX_PORT, 0),
-	{ 0 }
-};
-
 void s5p_gpio_cfg_pin(struct s5p_gpio_bank *bank, int gpio, int cfg)
 {
 	unsigned int value;
@@ -364,6 +306,65 @@ int gpio_decode_number(unsigned gpio_list[], int count)
 	return result;
 }
 
+#ifndef CONFIG_SPL_BUILD
+/*
+ * This structure helps mapping symbolic GPIO names into indices from
+ * exynos5_gpio_pin/exynos5420_gpio_pin enums.
+ *
+ * By convention, symbolic GPIO name is defined as follows:
+ *
+ * g[p]<bank><set><bit>, where
+ *   p is optional
+ *   <bank> - a single character bank name, as defined by the SOC
+ *   <set> - a single digit set number
+ *   <bit> - bit number within the set (in 0..7 range).
+ *
+ * <set><bit> essentially form an octal number of the GPIO pin within the bank
+ * space. On the 5420 architecture some banks' sets do not start not from zero
+ * ('d' starts from 1 and 'j' starts from 4). To compensate for that and
+ * maintain flat number space withoout holes, those banks use offsets to be
+ * deducted from the pin number.
+ */
+struct gpio_name_num_table {
+	char bank;		/* bank name symbol */
+	u8 bank_size;		/* total number of pins in the bank */
+	char bank_offset;	/* offset of the first bank's pin */
+	unsigned int base;	/* index of the first bank's pin in the enum */
+};
+
+#define GPIO_ENTRY(name, base, top, offset) { name, top - base, offset, base }
+static const struct gpio_name_num_table exynos5_gpio_table[] = {
+	GPIO_ENTRY('a', EXYNOS5_GPIO_A00, EXYNOS5_GPIO_B00, 0),
+	GPIO_ENTRY('b', EXYNOS5_GPIO_B00, EXYNOS5_GPIO_C00, 0),
+	GPIO_ENTRY('c', EXYNOS5_GPIO_C00, EXYNOS5_GPIO_D00, 0),
+	GPIO_ENTRY('d', EXYNOS5_GPIO_D00, EXYNOS5_GPIO_Y00, 0),
+	GPIO_ENTRY('y', EXYNOS5_GPIO_Y00, EXYNOS5_GPIO_C40, 0),
+	GPIO_ENTRY('x', EXYNOS5_GPIO_X00, EXYNOS5_GPIO_E00, 0),
+	GPIO_ENTRY('e', EXYNOS5_GPIO_E00, EXYNOS5_GPIO_F00, 0),
+	GPIO_ENTRY('f', EXYNOS5_GPIO_F00, EXYNOS5_GPIO_G00, 0),
+	GPIO_ENTRY('g', EXYNOS5_GPIO_G00, EXYNOS5_GPIO_H00, 0),
+	GPIO_ENTRY('h', EXYNOS5_GPIO_H00, EXYNOS5_GPIO_V00, 0),
+	GPIO_ENTRY('v', EXYNOS5_GPIO_V00, EXYNOS5_GPIO_Z0, 0),
+	GPIO_ENTRY('z', EXYNOS5_GPIO_Z0, EXYNOS5_GPIO_MAX_PORT, 0),
+	{ 0 }
+};
+
+static const struct gpio_name_num_table exynos5420_gpio_table[] = {
+	GPIO_ENTRY('a', EXYNOS5420_GPIO_A00, EXYNOS5420_GPIO_B00, 0),
+	GPIO_ENTRY('b', EXYNOS5420_GPIO_B00, EXYNOS5420_GPIO_H00, 0),
+	GPIO_ENTRY('h', EXYNOS5420_GPIO_H00, EXYNOS5420_GPIO_Y70, 0),
+	GPIO_ENTRY('x', EXYNOS5420_GPIO_X00, EXYNOS5420_GPIO_C00, 0),
+	GPIO_ENTRY('c', EXYNOS5420_GPIO_C00, EXYNOS5420_GPIO_D10, 0),
+	GPIO_ENTRY('d', EXYNOS5420_GPIO_D10, EXYNOS5420_GPIO_Y00, 010),
+	GPIO_ENTRY('y', EXYNOS5420_GPIO_Y00, EXYNOS5420_GPIO_E00, 0),
+	GPIO_ENTRY('e', EXYNOS5420_GPIO_E00, EXYNOS5420_GPIO_F00, 0),
+	GPIO_ENTRY('f', EXYNOS5420_GPIO_F00, EXYNOS5420_GPIO_G00, 0),
+	GPIO_ENTRY('g', EXYNOS5420_GPIO_G00, EXYNOS5420_GPIO_J40, 0),
+	GPIO_ENTRY('j', EXYNOS5420_GPIO_J40, EXYNOS5420_GPIO_Z0, 040),
+	GPIO_ENTRY('z', EXYNOS5420_GPIO_Z0, EXYNOS5420_GPIO_MAX_PORT, 0),
+	{ 0 }
+};
+
 int s5p_name_to_gpio(const char *name)
 {
 	unsigned num, irregular_set_number, irregular_bank_base;
@@ -472,3 +473,4 @@ void s5p_gpio_describe(const char* gpio_name)
 	}
 	printf("\n");
 }
+#endif
