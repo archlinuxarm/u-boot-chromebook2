@@ -265,8 +265,7 @@
 #define CONFIG_SYS_CAR_SIZE			(16 * 1024)
 #define CONFIG_SYS_MONITOR_BASE		CONFIG_SYS_TEXT_BASE
 #define CONFIG_SYS_MONITOR_LEN			(256 * 1024)
-#define CONFIG_SYS_MALLOC_LEN			(0x20000 + 128 * 1024)
-
+#define CONFIG_SYS_MALLOC_LEN			(16 * 1024 * 1024)
 
 /* allow to overwrite serial and ethaddr */
 #define CONFIG_ENV_OVERWRITE
