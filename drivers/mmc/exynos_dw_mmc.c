@@ -101,6 +101,20 @@ int exynos_dwmci_add_port(int index, u32 regbase, int bus_width,
 	return 0;
 }
 
+int board_mmc_getcd(struct mmc *mmc)
+{
+	unsigned cdetect;
+
+	if (mmc->block_dev.removable) {
+		struct dwmci_host *host = mmc->priv;
+
+		cdetect = dwmci_readl(host, DWMCI_CDETECT);
+	} else {
+		cdetect = 0; /* zero means present */
+	}
+	return !cdetect;
+}
+
 #ifdef CONFIG_OF_CONTROL
 int exynos_dwmmc_init(const void *blob)
 {
