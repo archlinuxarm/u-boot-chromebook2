@@ -212,7 +212,13 @@ static int dwmci_send_cmd(struct mmc *mmc, struct mmc_cmd *cmd,
 			data_start = (ulong)data->dest;
 			data_end = (ulong)data->dest +
 					data->blocks * data->blocksize;
-			invalidate_dcache_range(data_start, data_end);
+			/*
+			 * The buffer is supposed to have padding to the
+			 * closest cache line boundary.
+			 */
+			invalidate_dcache_range(data_start,
+						ALIGN(data_end,
+						      dcache_get_line_size()));
 		}
 		do {
 			mask = dwmci_readl(host, DWMCI_RINTSTS);
