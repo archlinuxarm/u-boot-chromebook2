@@ -77,6 +77,11 @@
 		samsung,removable = <1>;
 	};
 
+	fimd@14400000 {
+		/* sysmmu is not used in U-Boot */
+		samsung,disable-sysmmu;
+	};
+
 	dp@145b0000 {
 		samsung,lt-status = <0>;
 

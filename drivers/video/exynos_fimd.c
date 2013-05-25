@@ -280,6 +280,16 @@ void exynos_fimd_lcd_init(vidinfo_t *vid)
 								node, "reg");
 	if (fimd_ctrl == NULL)
 		debug("Can't get the FIMD base address\n");
+
+	if (fdtdec_get_bool(gd->fdt_blob, node, "samsung,disable-sysmmu")) {
+		/*
+		* The reset value for FIMD SYSMMU register MMU_CTRL:0x14640000
+		* is 3. * This means FIMD SYSMMU is on by default on
+		* Exynos5420. Since in u-boot we don't enable MMU, we are
+		* disabling FIMD SYSMMU.
+		*/
+		writel(0x0, 0x14640000);
+	}
 #else
 	fimd_ctrl = (struct exynos_fb *)samsung_get_base_fimd();
 #endif

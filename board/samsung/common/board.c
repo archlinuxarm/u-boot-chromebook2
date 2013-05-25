@@ -109,6 +109,7 @@ int board_init(void)
 		return -1;
 	}
 #endif
+
 	return exynos_init();
 }
 

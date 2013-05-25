@@ -204,12 +204,6 @@ void exynos_cfg_lcd_gpio(void)
 
 void init_panel_info(vidinfo_t *vid)
 {
-	/*
-	 * The reset value for FIMD SYSMMU register MMU_CTRL:0x14640000 is 3.
-	 * This means FIMD SYSMMU is on by default on Exynos5420.
-	 * Since in u-boot we don't enable MMU, we are disabling FIMD SYSMMU.
-	 */
-	writel(0x0, 0x14640000);
 }
 #endif
 

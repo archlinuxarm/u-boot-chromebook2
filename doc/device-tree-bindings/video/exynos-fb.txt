@@ -59,6 +59,8 @@ Board(panel specific):
 	samsung,pclk-name: parent clock identifier: 1(MPLL), 2(EPLL), 3(VPLL)
 	samsung,sclk-div: parent_clock/source_clock ratio
 	samsung,dual-lcd-enabled: 1 if you support two LCD, else 0
+	samsung,disable-sysmmu: present if you want to disable the sysmmu
+			(needed for Exynos5420)
 
 Example:
 SOC specific part:
