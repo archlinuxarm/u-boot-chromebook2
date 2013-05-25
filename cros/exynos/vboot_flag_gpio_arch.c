@@ -18,6 +18,6 @@
 int vboot_flag_setup_gpio_arch(enum vboot_flag_id id,
 			       struct vboot_flag_context *context)
 {
-	gpio_set_pull(context->gpio_state.gpio, GPIO_PULL_NONE);
+	gpio_set_pull(context->gpio_state.gpio, S5P_GPIO_PULL_NONE);
 	return 0;
 }
