@@ -34,7 +34,7 @@ static struct spl_machine_param machine_param
 		__attribute__((section(".machine_param"))) = {
 	.signature	= SIGNATURE,
 	.version	= 1,
-	.params		= "vmubfasirM",
+	.params		= "vmubfasirRM",
 	.size		= sizeof(machine_param),
 
 	.mem_iv_size	= 0x1f,
@@ -76,8 +76,8 @@ int board_get_revision(void)
 	struct spl_machine_param *params = spl_get_machine_params();
 	unsigned gpio[CONFIG_BOARD_REV_GPIO_COUNT];
 
-	gpio[0] = params->board_rev_gpios & 0xffff;
-	gpio[1] = params->board_rev_gpios >> 16;
+	gpio[0] = params->board_rev_gpios[0] & 0xffff;
+	gpio[1] = params->board_rev_gpios[0] >> 16;
 	return gpio_decode_number(gpio, CONFIG_BOARD_REV_GPIO_COUNT);
 }
 #endif
