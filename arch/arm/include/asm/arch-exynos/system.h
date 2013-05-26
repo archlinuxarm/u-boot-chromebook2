@@ -82,9 +82,14 @@ struct exynos5_sysreg {
 #define wfe() __asm__ __volatile__ ("wfe\n\t" : : );
 
 /* Move 0xd3 value to CPSR register to enable SVC mode */
-#define svc32_mode_en() __asm__ __volatile__				\
-			("@ I&F disable, Mode: 0x13 - SVC\n\t"		\
-			 "msr     cpsr_c, #0x13|0xC0\n\t" : : )
+#define svc32_mode_en()							\
+	({								\
+		unsigned long temp = 0x13 | 0xc0;			\
+		__asm__ __volatile__(					\
+		"msr     cpsr_c, %0"					\
+		:							\
+		:  "r" (temp));						\
+	})
 
 /* Set program counter with the given value */
 #define set_pc(x) __asm__ __volatile__ ("mov     pc, %0\n\t" : : "r"(x))
