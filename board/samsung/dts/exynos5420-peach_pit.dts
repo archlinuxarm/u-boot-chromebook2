@@ -21,6 +21,7 @@
 	aliases {
 		serial0 = "/serial@12C30000";
 		console = "/serial@12C30000";
+		pmic = "/i2c@12ca0000";
 	};
 
 	board-rev {
@@ -37,6 +38,13 @@
 
 	chromeos-config {
 		textbase = <0x23e00000>;/* Address where U-Boot loads */
+	};
+
+	dmc {
+		mem-manuf = "samsung";
+		mem-type = "ddr3";
+		clock-frequency = <800000000>;
+		arm-frequency = <1700000000>;
 	};
 
 	/* override SPL size to match BL1 expectations */
