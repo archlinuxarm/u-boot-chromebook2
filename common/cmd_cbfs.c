@@ -60,7 +60,8 @@ U_BOOT_CMD(
 	"      CBFS is in. It defaults to 0xFFFFFFFF\n"
 );
 
-int do_cbfs_fsload(cmd_tbl_t *cmdtp, int flag, int argc, char *const argv[])
+static int do_cbfs_fsload(cmd_tbl_t *cmdtp, int flag, int argc,
+			  char *const argv[])
 {
 	const struct cbfs_cachenode *file;
 	unsigned long offset;

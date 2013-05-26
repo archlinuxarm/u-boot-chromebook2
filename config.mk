@@ -398,9 +398,13 @@ $(obj)%.s:	%.c
 
 #########################################################################
 
+ifeq ($(CONFIG_FINAL_LINK),y)
+cmd_link_o_target = $(AR) rcs $@ $1
+else
 # If the list of objects to link is empty, just create an empty built-in.o
 cmd_link_o_target = $(if $(strip $1),\
 		      $(LD) $(LDFLAGS) -r -o $@ $1,\
 		      rm -f $@; $(AR) rcs $@ )
+endif
 
 #########################################################################

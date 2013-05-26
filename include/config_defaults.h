@@ -19,4 +19,6 @@
 #define CONFIG_ZLIB 1
 #define CONFIG_PARTITIONS 1
 
+#define CONFIG_CMDLINE
+
 #endif

@@ -286,7 +286,9 @@ static int abortboot(int bootdelay)
 #if defined(CONFIG_BOOTDELAY) && defined(CONFIG_OF_CONTROL)
 static void secure_boot_cmd(char *cmd)
 {
+#ifdef CONFIG_CMDLINE
 	cmd_tbl_t *cmdtp;
+#endif
 	int rc;
 
 	if (!cmd) {
@@ -298,6 +300,7 @@ static void secure_boot_cmd(char *cmd)
 	disable_ctrlc(1);
 
 	/* Find the command directly. */
+#ifdef CONFIG_CMDLINE
 	cmdtp = find_cmd(cmd);
 	if (!cmdtp) {
 		printf("## Error: \"%s\" not defined\n", cmd);
@@ -306,6 +309,9 @@ static void secure_boot_cmd(char *cmd)
 
 	/* Run the command, forcing no flags and faking argc and argv. */
 	rc = (cmdtp->cmd)(cmdtp, 0, 1, &cmd);
+#else
+	rc = board_run_command(cmd);
+#endif
 
 	/* Shouldn't ever return from boot command. */
 	printf("## Error: \"%s\" returned (code %d)\n", cmd, rc);

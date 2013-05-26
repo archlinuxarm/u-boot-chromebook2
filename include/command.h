@@ -191,6 +191,7 @@ int cmd_process(int flag, int argc, char * const argv[],
  *
  * We need to ensure that a command is placed between each entry
  */
+#ifdef CONFIG_CMDLINE
 #define U_BOOT_SUBCMD_START(name)	static cmd_tbl_t name[] = {
 #define U_BOOT_SUBCMD_END		};
 #define U_BOOT_CMD_MKENT_LINE(_name, _maxargs, _rep, _cmd, _usage,	\
@@ -210,6 +211,26 @@ int cmd_process(int flag, int argc, char * const argv[],
 	ll_entry_declare(cmd_tbl_t, _name, cmd) =			\
 		U_BOOT_CMD_MKENT_LINE(_name, _maxargs, _rep, _cmd,	\
 			_usage, _help, _comp, _info);
+#else
+#define U_BOOT_SUBCMD_START(name)	static cmd_tbl_t name[] = {};
+#define U_BOOT_SUBCMD_END
+
+#define _CMD_REMOVE(_name, _cmd)					\
+	int __remove_ ## _name(void)					\
+	{								\
+		if (0)							\
+			_cmd(NULL, 0, 0, NULL);				\
+		return 0;						\
+	}
+#define U_BOOT_CMD_MKENT_COMPLETE(_name, _maxargs, _rep, _cmd, _usage,	\
+				  _help, _comp, _info)			\
+	_CMD_REMOVE(_name, _cmd)
+
+#define U_BOOT_CMD_COMPLETE(_name, _maxargs, _rep, _cmd, _usage, _help,	\
+			    _comp, _info)				\
+	_CMD_REMOVE(sub_ ## _name, _cmd)
+
+#endif /* CONFIG_CMDLINE */
 
 #define U_BOOT_CMD_MKENT(_name, _maxargs, _rep, _cmd, _usage, _help)	\
 	U_BOOT_CMD_MKENT_COMPLETE(_name, _maxargs, _rep, _cmd,		\
@@ -229,5 +250,14 @@ static inline int cmd_dummy(cmd_tbl_t *cmdtp, int flag, int argc,
 {
 	return 0;
 }
+
+/*
+ * When there is no U-Boot command line, the board must provide a way of
+ * executing commands.
+ *
+ * @cmd:	Command string to execute
+ * @return Result of command, CMD_RET_...
+ */
+int board_run_command(const char *cmd);
 
 #endif	/* __COMMAND_H */

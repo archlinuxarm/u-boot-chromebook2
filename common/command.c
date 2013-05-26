@@ -103,6 +103,7 @@ int _do_help (cmd_tbl_t *cmd_start, int cmd_items, cmd_tbl_t * cmdtp, int
  */
 cmd_tbl_t *find_cmd_tbl (const char *cmd, cmd_tbl_t *table, int table_len)
 {
+#ifdef CONFIG_CMDLINE
 	cmd_tbl_t *cmdtp;
 	cmd_tbl_t *cmdtp_temp = table;	/*Init value */
 	const char *p;
@@ -131,6 +132,7 @@ cmd_tbl_t *find_cmd_tbl (const char *cmd, cmd_tbl_t *table, int table_len)
 	if (n_found == 1) {			/* exactly one match */
 		return cmdtp_temp;
 	}
+#endif /* CONFIG_CMDLINE */
 
 	return NULL;	/* not found or ambiguous command */
 }
