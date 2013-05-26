@@ -39,7 +39,8 @@ PLATFORM_CPPFLAGS += -DREALMODE_BASE=0x7c0
 # Support generic board on x86
 __HAVE_ARCH_GENERIC_BOARD := y
 
-PLATFORM_RELFLAGS += -ffunction-sections -fvisibility=hidden
+PLATFORM_RELFLAGS += -ffunction-sections -fdata-sections -fvisibility=hidden
+PLATFORM_RELFLAGS += -fno-keep-static-consts
 
 PLATFORM_LDFLAGS += --emit-relocs -Bsymbolic -Bsymbolic-functions
 
