@@ -494,9 +494,13 @@ static int reserve_lcd(void)
 #ifdef CONFIG_FB_ADDR
 	gd->fb_base = CONFIG_FB_ADDR;
 #else
+	ulong top = gd->dest_addr;
+
 	/* reserve memory for LCD display (always full pages) */
 	gd->dest_addr = lcd_setmem(gd->dest_addr);
 	gd->fb_base = gd->dest_addr;
+	debug("Reserving %luk for LCD at: %08lx\n",
+	      (top - gd->dest_addr) >> 10, gd->dest_addr);
 #endif /* CONFIG_FB_ADDR */
 	return 0;
 }
