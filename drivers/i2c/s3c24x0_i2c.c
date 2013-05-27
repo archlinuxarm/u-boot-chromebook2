@@ -118,15 +118,25 @@
  */
 static unsigned int g_current_bus __attribute__((section(".data")));
 #ifdef CONFIG_OF_CONTROL
-static int i2c_busses __attribute__((section(".data")));
 static struct s3c24x0_i2c_bus i2c_bus[CONFIG_MAX_I2C_NUM]
 			__attribute__((section(".data")));
 #endif
 
+/**
+ * Get a pointer to the given bus index
+ *
+ * @bus_idx: Bus index to look up
+ * @return pointer to bus, or NULL if invalid or not available
+ */
 static struct s3c24x0_i2c_bus *get_bus(unsigned int bus_idx)
 {
-	if (bus_idx < i2c_busses)
-		return &i2c_bus[bus_idx];
+	if (bus_idx < ARRAY_SIZE(i2c_bus)) {
+		struct s3c24x0_i2c_bus *bus;
+
+		bus = &i2c_bus[bus_idx];
+		if (bus->active)
+			return bus;
+	}
 
 	debug("Undefined bus: %d\n", bus_idx);
 	return NULL;
@@ -360,13 +370,10 @@ int i2c_set_bus_num(unsigned int bus)
 {
 	struct s3c24x0_i2c_bus *i2c_bus;
 
-	if ((bus < 0) || (bus >= CONFIG_MAX_I2C_NUM)) {
-		debug("Bad bus: %d\n", bus);
+	i2c_bus = get_bus(bus);
+	if (!i2c_bus)
 		return -1;
-	}
-
 	g_current_bus = bus;
-	i2c_bus = get_bus(i2c_get_bus_num());
 
 	if (i2c_bus->is_highspeed) {
 		if (hsi2c_get_clk_details(i2c_bus))
@@ -890,6 +897,7 @@ static void process_nodes(const void *blob, int node_list[], int count,
 			continue;
 
 		bus = &i2c_bus[i];
+		bus->active = true;
 		bus->is_highspeed = is_highspeed;
 
 		if (is_highspeed)
@@ -904,7 +912,7 @@ static void process_nodes(const void *blob, int node_list[], int count,
 						      "clock-frequency",
 						      CONFIG_SYS_I2C_SPEED);
 		bus->node = node;
-		bus->bus_num = i2c_busses++;
+		bus->bus_num = i;
 		exynos_pinmux_config(bus->id, 0);
 
 		/* Mark position as used */
@@ -937,7 +945,7 @@ int i2c_get_bus_num_fdt(int node)
 {
 	int i;
 
-	for (i = 0; i < i2c_busses; i++) {
+	for (i = 0; i < ARRAY_SIZE(i2c_bus); i++) {
 		if (node == i2c_bus[i].node)
 			return i;
 	}
