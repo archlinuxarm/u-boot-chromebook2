@@ -55,6 +55,9 @@ COBJS-$(CONFIG_VIDEO_SM501) += sm501.o
 COBJS-$(CONFIG_VIDEO_SMI_LYNXEM) += smiLynxEM.o videomodes.o
 COBJS-$(CONFIG_VIDEO_TEGRA) += tegra.o
 COBJS-$(CONFIG_VIDEO_VCXK) += bus_vcxk.o
+
+# Bridge chips
+COBJS-$(CONFIG_VIDEO_ANALOGIX) += analogix.o
 COBJS-$(CONFIG_VIDEO_PARADE) += parade.o
 
 COBJS	:= $(sort $(COBJS-y))
