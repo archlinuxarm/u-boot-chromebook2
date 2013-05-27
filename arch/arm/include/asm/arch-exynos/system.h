@@ -148,4 +148,13 @@ int exynos_lcd_early_init(const void *blob);
 /* Initialize the Parade dP<->LVDS bridge if present */
 int parade_init(const void *blob);
 
+/*
+ * Initialize the Analogix dP<->LVDS bridge if present
+ *
+ * @blob: Pointer to device tree blob
+ * @return 0 on success, -ENOENT if the bridge was not found in the device
+ * tree, or other -ve value on initialization error.
+ */
+int analogix_init(const void *blob);
+
 #endif	/* _EXYNOS4_SYSTEM_H */
