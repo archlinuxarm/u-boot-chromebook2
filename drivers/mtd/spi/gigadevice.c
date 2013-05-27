@@ -31,6 +31,34 @@ static const struct gigadevice_spi_flash_params gigadevice_spi_flash_table[] = {
 
 };
 
+/**
+ * Get write protection status for a SPI flash device.
+ *
+ * @param flash	    pointer to the structure defining the device
+
+ * @param result    pointer to the location where write protection status needs
+ *                  to be saved. If any part of the flash is protected, the
+ *                  saved value is True.
+ *
+ * @return zero if succeeds, non-zero if fails to read the status.
+ */
+static int gigadevice_read_sw_wp_status(struct spi_flash *flash, u8 *result)
+{
+	int r;
+	u8 status_reg = 0;
+
+	r = spi_flash_cmd_read_status(flash, &status_reg);
+	if (r)					/* couldn't tell, assume no */
+		return r;
+
+	/* Return true if ANY area is protected (BP[2:0] != 000b) */
+	if (status_reg & 0x1c)
+		*result = 1;
+	else
+		*result = 0;
+
+	return 0;
+}
 
 struct spi_flash *spi_flash_probe_gigadevice(struct spi_slave *spi, u8 *idcode)
 {
@@ -61,6 +89,7 @@ struct spi_flash *spi_flash_probe_gigadevice(struct spi_slave *spi, u8 *idcode)
 	flash->sector_size = flash->page_size * 16;
 	/* size = sector_size * sector_per_block * number of blocks */
 	flash->size = flash->sector_size * 16 * params->nr_blocks;
+	flash->read_sw_wp_status = gigadevice_read_sw_wp_status;
 
 	return flash;
 }
