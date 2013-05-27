@@ -86,12 +86,20 @@ void mmu_set_region_dcache_behaviour(u32 start, int size,
 __weak void dram_bank_mmu_setup(int bank)
 {
 	bd_t *bd = gd->bd;
-	int	i;
+	int	i, top;
 
 	debug("%s: bank: %d\n", __func__, bank);
-	for (i = bd->bi_dram[bank].start >> 20;
-	     i < (bd->bi_dram[bank].start + bd->bi_dram[bank].size) >> 20;
-	     i++) {
+
+	/* Data cache configuration is set per 1MB memory sections. */
+	/* Set starting section */
+	i = bd->bi_dram[bank].start >> 20;
+	/*
+	 * Set the top section limit. Note that for banks of size zero the
+	 * boundary is equal to starting section, so the 'for' loop below will
+	 * not be entered.
+	 */
+	top = i + (bd->bi_dram[bank].size >> 20);
+	for (; i < top; i++) {
 #if defined(CONFIG_SYS_ARM_CACHE_WRITETHROUGH)
 		set_section_dcache(i, DCACHE_WRITETHROUGH);
 #else
