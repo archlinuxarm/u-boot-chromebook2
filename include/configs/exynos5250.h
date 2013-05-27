@@ -32,8 +32,6 @@
 #define CONFIG_SPL_TEXT_BASE		0x02023400
 #define CONFIG_IRAM_TOP			0x02050000
 
-#define CONFIG_MAX_I2C_NUM	8
-
 /* Enable Macronix SPI flash support for Spring board */
 #define CONFIG_SPI_FLASH_MACRONIX
 

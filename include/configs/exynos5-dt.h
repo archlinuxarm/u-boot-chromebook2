@@ -433,4 +433,6 @@
 
 #define CONFIG_SPL_SERIAL_SUPPORT
 
+#define CONFIG_MAX_I2C_NUM		11
+
 #endif	/* __CONFIG_EXYNOS5_DT_H */
