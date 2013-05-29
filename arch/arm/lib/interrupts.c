@@ -122,6 +122,10 @@ void show_regs (struct pt_regs *regs)
 	"UK8_32",	"UK9_32",	"UK10_32",	"UND_32",
 	"UK12_32",	"UK13_32",	"UK14_32",	"SYS_32",
 	};
+	unsigned long reloc_ofs = 0;
+
+	if (gd->flags & GD_FLG_RELOC)
+		reloc_ofs = gd->reloc_off;
 
 	flags = condition_codes (regs);
 
@@ -144,6 +148,9 @@ void show_regs (struct pt_regs *regs)
 		fast_interrupts_enabled (regs) ? "on" : "off",
 		processor_modes[processor_mode (regs)],
 		thumb_mode (regs) ? " (T)" : "");
+	printf("pc pre-reloc : [<%08lx>]	lr pre-reloc : [<%08lx>]\n",
+	       instruction_pointer(regs) - reloc_ofs,
+	       regs->ARM_lr  - reloc_ofs);
 }
 
 void do_undefined_instruction (struct pt_regs *pt_regs)
