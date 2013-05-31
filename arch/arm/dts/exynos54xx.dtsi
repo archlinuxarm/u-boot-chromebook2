@@ -132,4 +132,16 @@
 	dmc {
 		mem-type = "ddr3";
 	};
+
+	xhci@12400000 {
+		compatible = "samsung,exynos5250-xhci";
+		reg = <0x12400000 0x10000>;
+		#address-cells = <1>;
+		#size-cells = <1>;
+
+		phy {
+			compatible = "samsung,exynos5250-usb3-phy";
+			reg = <0x12500000 0x100>;
+		};
+	};
 };
