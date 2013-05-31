@@ -75,26 +75,34 @@ void set_usbhost_phy_ctrl(unsigned int enable)
 		exynos5_set_usbhost_phy_ctrl(enable);
 }
 
-static void exynos5_set_usbdrd_phy_ctrl(unsigned int enable)
+static void exynos5_set_usbdrd_phy_ctrl(unsigned int enable, int dev_index)
 {
 	struct exynos5_power *power =
 		(struct exynos5_power *)samsung_get_base_power();
 
+	/*
+	 * Assuming here that the DRD_PHY_CONTROL registers
+	 * are contiguous, so that :
+	 * addressof(DRD_PHY1_CONTROL) = addressof(DRD_PHY_CONTROL) + 0x4;
+	 * which is the case with exynos5420.
+	 * For exynos5250 this should work out of box, since dev_index will
+	 * always be '0' in that case
+	 */
 	if (enable) {
 		/* Enabling USBDRD_PHY */
-		setbits_le32(&power->usbdrd_phy_control,
+		setbits_le32(&power->usbdrd_phy_control + dev_index,
 				POWER_USB_DRD_PHY_CTRL_EN);
 	} else {
 		/* Disabling USBDRD_PHY */
-		clrbits_le32(&power->usbdrd_phy_control,
+		clrbits_le32(&power->usbdrd_phy_control + dev_index,
 				POWER_USB_DRD_PHY_CTRL_EN);
 	}
 }
 
-void set_usbdrd_phy_ctrl(unsigned int enable)
+void set_usbdrd_phy_ctrl(unsigned int enable, int dev_index)
 {
 	if (cpu_is_exynos5())
-		exynos5_set_usbdrd_phy_ctrl(enable);
+		exynos5_set_usbdrd_phy_ctrl(enable, dev_index);
 }
 
 static void exynos5_dp_phy_control(unsigned int enable)

@@ -54,18 +54,31 @@ struct exynos_xhci {
 	struct dwc3 *dwc3_reg;
 };
 
-static struct exynos_xhci exynos;
+static struct exynos_xhci reg_bases[CONFIG_USB_MAX_CONTROLLER_COUNT];
 
 #ifdef CONFIG_OF_CONTROL
-static int exynos_usb3_parse_dt(const void *blob, struct exynos_xhci *exynos)
+static int exynos_usb3_parse_dt(const void *blob,
+				struct exynos_xhci *base,
+				int index)
 {
 	fdt_addr_t addr;
-	unsigned int node;
-	int depth;
+	int depth, count;
+	unsigned int node = 0;
+	int nodes[CONFIG_USB_MAX_CONTROLLER_COUNT];
 
-	node = fdtdec_next_compatible(blob, 0, COMPAT_SAMSUNG_EXYNOS5_XHCI);
+	/* First find all the compatible nodes */
+	for (count = 0; count < CONFIG_USB_MAX_CONTROLLER_COUNT; count++) {
+		node = fdtdec_next_compatible(blob, node,
+						COMPAT_SAMSUNG_EXYNOS5_XHCI);
+		if (node <= 0)
+			break;
+
+		nodes[count] = node;
+	}
+
+	node = nodes[index];
 	if (node <= 0) {
-		debug("XHCI: Can't get device node for xhci\n");
+		printf("XHCI: Can't get device node for xhci\n");
 		return -ENODEV;
 	}
 
@@ -74,26 +87,26 @@ static int exynos_usb3_parse_dt(const void *blob, struct exynos_xhci *exynos)
 	 */
 	addr = fdtdec_get_addr(blob, node, "reg");
 	if (addr == FDT_ADDR_T_NONE) {
-		debug("Can't get the XHCI register base address\n");
+		printf("Can't get the XHCI register base address\n");
 		return -ENXIO;
 	}
-	exynos->hcd = (struct xhci_hccr *)addr;
+	base->hcd = (struct xhci_hccr *)addr;
 
 	depth = 0;
 	node = fdtdec_next_compatible_subnode(blob, node,
 				COMPAT_SAMSUNG_EXYNOS5_USB3_PHY, &depth);
 	if (node <= 0) {
-		debug("XHCI: Can't get device node for usb3-phy controller\n");
+		printf("XHCI: Can't get device node for usb3-phy controller\n");
 		return -ENODEV;
 	}
 
 	/*
 	 * Get the base address for usbphy from the device node
 	 */
-	exynos->usb3_phy = (struct exynos_usb3_phy *)fdtdec_get_addr(blob, node,
+	base->usb3_phy = (struct exynos_usb3_phy *)fdtdec_get_addr(blob, node,
 								"reg");
-	if (exynos->usb3_phy == NULL) {
-		debug("Can't get the usbphy register address\n");
+	if (base->usb3_phy == NULL) {
+		printf("Can't get the usbphy register address\n");
 		return -ENXIO;
 	}
 
@@ -104,9 +117,6 @@ static int exynos_usb3_parse_dt(const void *blob, struct exynos_xhci *exynos)
 static void exynos5_usb3_phy_init(struct exynos_usb3_phy *phy)
 {
 	u32 reg;
-
-	/* enabling usb_drd phy */
-	set_usbdrd_phy_ctrl(POWER_USB_DRD_PHY_CTRL_EN);
 
 	/* Reset USB 3.0 PHY */
 	writel(0x0, &phy->phy_reg0);
@@ -184,9 +194,6 @@ static void exynos5_usb3_phy_exit(struct exynos_usb3_phy *phy)
 	setbits_le32(&phy->phy_test,
 			PHYTEST_POWERDOWN_SSP |
 			PHYTEST_POWERDOWN_HSP);
-
-	/* disabling usb_drd phy */
-	set_usbdrd_phy_ctrl(POWER_USB_DRD_PHY_CTRL_DISABLE);
 }
 
 void dwc3_set_mode(struct dwc3 *dwc3_reg, u32 mode)
@@ -267,43 +274,67 @@ static int dwc3_core_init(struct dwc3 *dwc3_reg)
 	return 0;
 }
 
-static int exynos_xhci_core_init(struct exynos_xhci *exynos)
+static int exynos_xhci_core_init(struct exynos_xhci *base)
 {
 	int ret;
 
-	exynos5_usb3_phy_init(exynos->usb3_phy);
+	exynos5_usb3_phy_init(base->usb3_phy);
 
-	ret = dwc3_core_init(exynos->dwc3_reg);
+	ret = dwc3_core_init(base->dwc3_reg);
 	if (ret) {
 		debug("failed to initialize core\n");
 		return -1;
 	}
 
 	/* We are hard-coding DWC3 core to Host Mode */
-	dwc3_set_mode(exynos->dwc3_reg, DWC3_GCTL_PRTCAP_HOST);
+	dwc3_set_mode(base->dwc3_reg, DWC3_GCTL_PRTCAP_HOST);
 
 	return 0;
 }
 
-static void exynos_xhci_core_exit(struct exynos_xhci *exynos)
+static void exynos_xhci_core_exit(struct exynos_xhci *base)
 {
-	exynos5_usb3_phy_exit(exynos->usb3_phy);
+	exynos5_usb3_phy_exit(base->usb3_phy);
 }
 
 int xhci_hcd_init(int index, struct xhci_hccr **hccr, struct xhci_hcor **hcor)
 {
-	struct exynos_xhci *ctx = &exynos;
+	struct exynos_xhci *ctx = &reg_bases[index];
 
 #ifdef CONFIG_OF_CONTROL
-	exynos_usb3_parse_dt(gd->fdt_blob, ctx);
+	exynos_usb3_parse_dt(gd->fdt_blob, ctx, index);
 #else
-	ctx->usb3_phy = (struct exynos_usb3_phy *)samsung_get_base_usb3_phy();
-	ctx->hcd = (struct xhci_hccr *)samsung_get_base_usb_xhci();
+	/*
+	 * Right now we only have H/W with 2 controllers, so limiting the
+	 * index to two here: either 0 or 1.
+	 */
+	if (index == 0) {
+		ctx->usb3_phy = (struct exynos_usb3_phy *)
+					samsung_get_base_usb3_phy();
+		ctx->hcd = (struct xhci_hccr *)
+					samsung_get_base_usb_xhci();
+	} else if (index == 1) {
+		ctx->usb3_phy = (struct exynos_usb3_phy *)
+					samsung_get_base_usb3_phy_1();
+		ctx->hcd = (struct xhci_hccr *)
+					samsung_get_base_usb_xhci_1();
+	}
 #endif
+
+	if (!ctx->hcd || !ctx->usb3_phy) {
+		printf("XHCI: Unable to find Host controller\n");
+		return -ENODEV;
+	}
 
 	ctx->dwc3_reg = (struct dwc3 *)((char *)(ctx->hcd) + DWC3_REG_OFFSET);
 
-	exynos_xhci_core_init(ctx);
+	/* Power-on usb_drd phy */
+	set_usbdrd_phy_ctrl(POWER_USB_DRD_PHY_CTRL_EN, index);
+
+	if (exynos_xhci_core_init(ctx)) {
+		printf("XHCI: Can't init Host controller\n");
+		return -EINVAL;
+	}
 
 	*hccr = (ctx->hcd);
 	*hcor = (struct xhci_hcor *)((uint32_t) *hccr
@@ -318,7 +349,10 @@ int xhci_hcd_init(int index, struct xhci_hccr **hccr, struct xhci_hcor **hcor)
 
 void xhci_hcd_stop(int index)
 {
-	struct exynos_xhci *ctx = &exynos;
+	struct exynos_xhci *ctx = &reg_bases[index];
 
 	exynos_xhci_core_exit(ctx);
+
+	/* Power-off usb_drd phy */
+	set_usbdrd_phy_ctrl(POWER_USB_DRD_PHY_CTRL_DISABLE, index);
 }
