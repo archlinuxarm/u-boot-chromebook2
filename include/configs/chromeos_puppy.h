@@ -45,17 +45,22 @@
 #include <configs/chromeos.h>
 
 #define CONFIG_PHYSMEM
-#define CONFIG_CROS_EC
 #define CONFIG_TPM
 #define CONFIG_INFINEON_TPM_I2C
 #define CONFIG_CMD_TIME
 
-#define CONFIG_OF_SPI_FLASH
 #define CONFIG_OF_SPI
-#define CONFIG_CROS_EC_SPI
+#define CONFIG_OF_SPI_FLASH
+
+#define CONFIG_CROS_EC			/* CROS_EC protocol */
+#define CONFIG_CROS_EC_SPI		/* Support CROS_EC over SPI */
+#define CONFIG_CMD_CROS_EC
+
+/* Enable keyboard */
+#define CONFIG_CROS_EC_KEYB		/* CROS_EC keyboard input */
+#define CONFIG_KEYBOARD
 
 #endif
-
 #include <configs/dalmore.h>
 
 /* High-level configuration options */

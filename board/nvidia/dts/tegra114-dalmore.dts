@@ -5,6 +5,7 @@
 /include/ "flashmap-tegra-ro.dtsi"
 /include/ "flashmap-tegra-4mb-rw.dtsi"
 /include/ "chromeos-tegra.dtsi"
+/include/ "crostegra-common.dtsi"
 #endif
 
 / {
