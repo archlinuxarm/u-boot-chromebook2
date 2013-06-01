@@ -266,13 +266,13 @@
 	"net_boot=" \
 		"if test ${ethact} != \"\"; then " \
 			"if test ${tftpserverip} != \"0.0.0.0\"; then " \
+				"if test ${nfsserverip} != \"0.0.0.0\"; then " \
+					"run nfsroot_boot; " \
+				"fi; " \
 				"if test ${has_initrd} != \"0\"; then " \
 					"run initrdroot_boot; " \
 				"else " \
 					"run initramfs_boot; " \
-				"fi; " \
-				"if test ${nfsserverip} != \"0.0.0.0\"; then " \
-					"run nfsroot_boot; " \
 				"fi; " \
 			"fi; " \
 		"fi\0" \
