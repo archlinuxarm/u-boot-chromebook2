@@ -38,6 +38,7 @@
 #include <asm/processor.h>
 #include <asm/processor-flags.h>
 #include <asm/interrupt.h>
+#include <asm/arch/timestamp.h>
 #include <linux/compiler.h>
 
 /*
@@ -116,16 +117,6 @@ void setup_gdt(gd_t *id, u64 *gdt_addr)
 	load_gs(X86_GDT_ENTRY_32BIT_DS);
 	load_ss(X86_GDT_ENTRY_32BIT_DS);
 	load_fs(X86_GDT_ENTRY_32BIT_FS);
-}
-
-int __weak x86_cleanup_before_linux(void)
-{
-#ifdef CONFIG_BOOTSTAGE_STASH
-	bootstage_stash((void *)CONFIG_BOOTSTAGE_STASH,
-			CONFIG_BOOTSTAGE_STASH_SIZE);
-#endif
-
-	return 0;
 }
 
 int x86_cpu_init_f(void)
@@ -259,5 +250,12 @@ int icache_status(void)
 
 int cleanup_before_linux(void)
 {
+	if (gd->flags & GD_FLG_COLD_BOOT)
+		timestamp_add_to_bootstage();
+#ifdef CONFIG_BOOTSTAGE_STASH
+	bootstage_stash((void *)CONFIG_BOOTSTAGE_STASH,
+			CONFIG_BOOTSTAGE_STASH_SIZE);
+#endif
+
 	return 0;
 }

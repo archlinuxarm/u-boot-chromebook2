@@ -89,14 +89,6 @@ void show_boot_progress(int val)
 	outb(val, 0x80);
 }
 
-int last_stage_init(void)
-{
-	if (gd->flags & GD_FLG_COLD_BOOT)
-		timestamp_add_to_bootstage();
-
-	return 0;
-}
-
 #ifndef CONFIG_SYS_NO_FLASH
 ulong board_flash_get_legacy(ulong base, int banknum, flash_info_t *info)
 {
