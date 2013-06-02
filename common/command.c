@@ -548,7 +548,8 @@ enum command_ret_t cmd_process(int flag, int argc, char * const argv[],
 		rc = cmd_call(cmdtp, flag, argc, argv);
 		if (ticks)
 			*ticks = get_timer(*ticks);
-		*repeatable &= cmdtp->repeatable;
+		if (!(cmdtp->info & CMD_INFO_REPEATABLE))
+			*repeatable = 0;
 	}
 	if (rc == CMD_RET_USAGE)
 		rc = cmd_usage(cmdtp);

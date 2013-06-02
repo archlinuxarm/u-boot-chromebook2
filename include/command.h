@@ -40,6 +40,12 @@
 #endif
 
 #ifndef	__ASSEMBLY__
+enum {
+	CMD_INFO_MASK		= 0xffffff,	/* user data */
+	CMD_INFO_REPEATABLE_SHIFT = 24,	/* commaand is repeatable */
+	CMD_INFO_REPEATABLE	= 1U << CMD_INFO_REPEATABLE_SHIFT,
+};
+
 /*
  * Monitor Command Table
  */
@@ -47,7 +53,7 @@
 struct cmd_tbl_s {
 	char		*name;		/* Command Name			*/
 	int		maxargs;	/* maximum number of arguments	*/
-	int		repeatable;	/* autorepeat allowed?		*/
+	int		info;		/* CMD_INFO_... flags		*/
 					/* Implementation function	*/
 	int		(*cmd)(struct cmd_tbl_s *, int, int, char * const []);
 	char		*usage;		/* Usage message	(short)	*/
@@ -61,6 +67,12 @@ struct cmd_tbl_s {
 };
 
 typedef struct cmd_tbl_s	cmd_tbl_t;
+
+/* Returns the info word for a command */
+static inline int cmd_get_info(struct cmd_tbl_s *cmd)
+{
+	return cmd->info & CMD_INFO_MASK;
+}
 
 
 #if defined(CONFIG_CMD_RUN)
@@ -166,24 +178,33 @@ int cmd_process(int flag, int argc, char * const argv[],
 #endif
 
 #define U_BOOT_CMD_MKENT_COMPLETE(_name, _maxargs, _rep, _cmd,		\
-				_usage, _help, _comp)			\
-		{ #_name, _maxargs, _rep, _cmd, _usage,			\
-			_CMD_HELP(_help) _CMD_COMPLETE(_comp) }
+				_usage, _help, _comp, _info)		\
+	{ #_name, _maxargs, (_rep) << CMD_INFO_REPEATABLE_SHIFT | (_info), \
+		_cmd, _usage, _CMD_HELP(_help) _CMD_COMPLETE(_comp) }
 
 #define U_BOOT_CMD_MKENT(_name, _maxargs, _rep, _cmd, _usage, _help)	\
 	U_BOOT_CMD_MKENT_COMPLETE(_name, _maxargs, _rep, _cmd,		\
-					_usage, _help, NULL)
+				  _usage, _help, NULL, 0)
 
-#define U_BOOT_CMD_COMPLETE(_name, _maxargs, _rep, _cmd, _usage, _help, _comp) \
+#define U_BOOT_CMD_COMPLETE(_name, _maxargs, _rep, _cmd, _usage, _help,	\
+			    _comp, _info)				\
 	ll_entry_declare(cmd_tbl_t, _name, cmd) =			\
 		U_BOOT_CMD_MKENT_COMPLETE(_name, _maxargs, _rep, _cmd,	\
-						_usage, _help, _comp);
+					  _usage, _help, _comp, _info);
 
 #define U_BOOT_CMD(_name, _maxargs, _rep, _cmd, _usage, _help)		\
-	U_BOOT_CMD_COMPLETE(_name, _maxargs, _rep, _cmd, _usage, _help, NULL)
+	U_BOOT_CMD_COMPLETE(_name, _maxargs, _rep, _cmd, _usage, _help,	\
+			    NULL, 0)
 
 #if defined(CONFIG_NEEDS_MANUAL_RELOC)
 void fixup_cmdtable(cmd_tbl_t *cmdtp, int size);
 #endif
+
+/* Dummy command for use in U_BOOT_CMD_MKENT() when none is needed */
+static inline int cmd_dummy(cmd_tbl_t *cmdtp, int flag, int argc,
+			    char * const argv[])
+{
+	return 0;
+}
 
 #endif	/* __COMMAND_H */

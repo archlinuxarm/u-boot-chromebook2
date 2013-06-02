@@ -507,19 +507,28 @@ static int bootm_start_standalone(int argc, char * const argv[])
 /* we overload the cmd field with our state machine info instead of a
  * function pointer */
 static cmd_tbl_t cmd_bootm_sub[] = {
-	U_BOOT_CMD_MKENT(start, 0, 1, (void *)BOOTM_STATE_START, "", ""),
-	U_BOOT_CMD_MKENT(loados, 0, 1, (void *)BOOTM_STATE_LOADOS, "", ""),
+	U_BOOT_CMD_MKENT_COMPLETE(start, 0, 1, cmd_dummy, "", "", NULL,
+				  BOOTM_STATE_START),
+	U_BOOT_CMD_MKENT_COMPLETE(loados, 0, 1, cmd_dummy, "", "", NULL,
+				  BOOTM_STATE_LOADOS),
 #ifdef CONFIG_SYS_BOOT_RAMDISK_HIGH
-	U_BOOT_CMD_MKENT(ramdisk, 0, 1, (void *)BOOTM_STATE_RAMDISK, "", ""),
+	U_BOOT_CMD_MKENT_COMPLETE(ramdisk, 0, 1, cmd_dummy, "", "", NULL,
+				  BOOTM_STATE_RAMDISK),
 #endif
 #ifdef CONFIG_OF_LIBFDT
-	U_BOOT_CMD_MKENT(fdt, 0, 1, (void *)BOOTM_STATE_FDT, "", ""),
+	U_BOOT_CMD_MKENT_COMPLETE(fdt, 0, 1, cmd_dummy, "", "", NULL,
+				  BOOTM_STATE_FDT),
 #endif
-	U_BOOT_CMD_MKENT(cmdline, 0, 1, (void *)BOOTM_STATE_OS_CMDLINE, "", ""),
-	U_BOOT_CMD_MKENT(bdt, 0, 1, (void *)BOOTM_STATE_OS_BD_T, "", ""),
-	U_BOOT_CMD_MKENT(prep, 0, 1, (void *)BOOTM_STATE_OS_PREP, "", ""),
-	U_BOOT_CMD_MKENT(fake, 0, 1, (void *)BOOTM_STATE_OS_FAKE_GO, "", ""),
-	U_BOOT_CMD_MKENT(go, 0, 1, (void *)BOOTM_STATE_OS_GO, "", ""),
+	U_BOOT_CMD_MKENT_COMPLETE(cmdline, 0, 1, cmd_dummy, "", "", NULL,
+				  BOOTM_STATE_OS_CMDLINE),
+	U_BOOT_CMD_MKENT_COMPLETE(bdt, 0, 1, cmd_dummy, "", "", NULL,
+				  BOOTM_STATE_OS_BD_T),
+	U_BOOT_CMD_MKENT_COMPLETE(prep, 0, 1, cmd_dummy, "", "", NULL,
+				  BOOTM_STATE_OS_PREP),
+	U_BOOT_CMD_MKENT_COMPLETE(fake, 0, 1, cmd_dummy, "", "", NULL,
+				  BOOTM_STATE_OS_FAKE_GO),
+	U_BOOT_CMD_MKENT_COMPLETE(go, 0, 1, cmd_dummy, "", "", NULL,
+				  BOOTM_STATE_OS_GO),
 };
 
 static int boot_selected_os(int argc, char * const argv[], int state,
@@ -723,9 +732,7 @@ static int do_bootm_subcommand(cmd_tbl_t *cmdtp, int flag, int argc,
 	argc--; argv++;
 
 	if (c) {
-		state = (long)c->cmd;
-		if (state == BOOTM_STATE_START)
-			state |= BOOTM_STATE_FINDOS | BOOTM_STATE_FINDOTHER;
+		state = cmd_get_info(c);
 	} else {
 		/* Unrecognized command */
 		return CMD_RET_USAGE;
@@ -736,6 +743,8 @@ static int do_bootm_subcommand(cmd_tbl_t *cmdtp, int flag, int argc,
 		return CMD_RET_USAGE;
 	}
 
+	if (state == BOOTM_STATE_START)
+		state |= BOOTM_STATE_FINDOS | BOOTM_STATE_FINDOTHER;
 	ret = do_bootm_states(cmdtp, flag, argc, argv, state, &images, 0);
 
 	return ret;

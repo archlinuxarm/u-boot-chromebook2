@@ -1193,7 +1193,7 @@ U_BOOT_CMD_COMPLETE(
 	"edit environment variable",
 	"name\n"
 	"    - edit environment variable 'name'",
-	var_complete
+	var_complete, 0
 );
 #endif
 
@@ -1203,7 +1203,7 @@ U_BOOT_CMD_COMPLETE(
 	"[-a]\n    - print [all] values of all environment variables\n"
 	"printenv name ...\n"
 	"    - print value of environment variable 'name'",
-	var_complete
+	var_complete, 0
 );
 
 #ifdef CONFIG_CMD_GREPENV
@@ -1221,7 +1221,7 @@ U_BOOT_CMD_COMPLETE(
 #endif
 	"      \"-n\": search variable names; \"-v\": search values;\n"
 	"      \"-b\": search both names and values (default)",
-	var_complete
+	var_complete, 0
 );
 #endif
 
@@ -1232,7 +1232,7 @@ U_BOOT_CMD_COMPLETE(
 	"    - [forcibly] set environment variable 'name' to 'value ...'\n"
 	"setenv [-f] name\n"
 	"    - [forcibly] delete environment variable 'name'",
-	var_complete
+	var_complete, 0
 );
 
 #if defined(CONFIG_CMD_ASKENV)
@@ -1251,7 +1251,7 @@ U_BOOT_CMD_COMPLETE(
 	"run commands in an environment variable",
 	"var [...]\n"
 	"    - run the commands in the environment variable(s) 'var'",
-	var_complete
+	var_complete, 0
 );
 #endif
 #endif /* CONFIG_SPL_BUILD */
