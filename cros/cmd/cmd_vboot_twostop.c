@@ -1268,6 +1268,16 @@ on_error:
 U_BOOT_CMD(vboot_twostop, 1, 1, do_vboot_twostop,
 		"verified boot twostop firmware", NULL);
 
+int board_run_command(const char *cmd)
+{
+	if (0 == strcmp(cmd, "vboot_twostop"))
+		return do_vboot_twostop(NULL, 0, 0, NULL);
+	else
+		printf("Unknown command '%s'\n", cmd);
+
+	return 1;
+}
+
 static int
 do_vboot_load_oprom(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[])
 {
