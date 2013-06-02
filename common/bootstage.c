@@ -29,6 +29,7 @@
  */
 
 #include <common.h>
+#include <fdtdec.h>
 #include <libfdt.h>
 #include <malloc.h>
 #include <linux/compiler.h>
@@ -286,6 +287,12 @@ void bootstage_report(void)
 	int id;
 	uint32_t prev;
 
+#ifdef CONFIG_OF_CONTROL
+	ulong old_flags = gd->flags;
+
+	if (fdtdec_get_config_int(gd->fdt_blob, "force-bootstage-report", 0))
+		gd->flags &= ~GD_FLG_SILENT;
+#endif
 	puts("Timer summary in microseconds:\n");
 	printf("%11s%11s  %s\n", "Mark", "Elapsed", "Stage");
 
@@ -311,6 +318,9 @@ void bootstage_report(void)
 		if (rec->start_us)
 			prev = print_time_record(id, rec, -1);
 	}
+#ifdef CONFIG_OF_CONTROL
+	gd->flags = old_flags;
+#endif
 }
 /**
  * Append data to a memory buffer

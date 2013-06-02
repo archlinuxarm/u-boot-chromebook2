@@ -185,6 +185,12 @@ fdtdec_get_config_bool() and fdtdec_get_config_string().
 
 Available options are:
 
+force-bootstage-report
+	If present, a boostage report will be printed even on a silent
+	console. The console will be temporarily unsilenced for the report.
+	Since the console can slow down boot, this permits accurate boot
+	timing using a silent console, while still getting a report.
+
 hda-codec-beep-nid
 	Indicates the NID of the HDA audio codec for the current machine.
 	This can save having to search for it and perhaps finding the wrong
