@@ -10,12 +10,10 @@
 
 #include <common.h>
 #ifdef CONFIG_LCD
-#define HAVE_DISPLAY
 #include <lcd.h>
 #endif
 #ifdef CONFIG_CFB_CONSOLE
 #include <video.h>
-#define HAVE_DISPLAY
 #endif
 #include <cros/cros_fdtdec.h>
 #include <cros/common.h>
@@ -34,8 +32,8 @@
 
 DECLARE_GLOBAL_DATA_PTR;
 
-#if defined(HAVE_DISPLAY) && defined(CONFIG_SANDBOX)
-#error HAVE_DISPLAY is not handled for Sandbox configuration
+#if defined(CONFIG_CHROMEOS_DISPLAY) && defined(CONFIG_SANDBOX)
+#error CONFIG_CHROMEOS_DISPLAY is not handled for Sandbox configuration
 #endif
 
 struct display_callbacks {
@@ -49,7 +47,7 @@ struct display_callbacks {
 	void (*dc_display_clear) (void);
 };
 
-#ifdef HAVE_DISPLAY
+#ifdef CONFIG_CHROMEOS_DISPLAY
 static struct display_callbacks display_callbacks_ = {
 #ifdef CONFIG_LCD
 	.dc_get_pixel_width = lcd_get_pixel_width,
@@ -87,7 +85,7 @@ VbError_t VbExDisplayInit(uint32_t *width, uint32_t *height)
 	exynos_lcd_check_next_stage(gd->fdt_blob, 1);
 #endif
 
-#ifdef HAVE_DISPLAY
+#ifdef CONFIG_CHROMEOS_DISPLAY
 	*width = display_callbacks_.dc_get_pixel_width();
 	*height = display_callbacks_.dc_get_pixel_height();
 #else
@@ -103,7 +101,7 @@ VbError_t VbExDisplayBacklight(uint8_t enable)
 	return VBERROR_SUCCESS;
 }
 
-#ifdef HAVE_DISPLAY
+#ifdef CONFIG_CHROMEOS_DISPLAY
 /**
  * Write out a line of characters to the display
  *
@@ -161,7 +159,7 @@ VbError_t VbExDisplayScreen(uint32_t screen_type)
 	switch (screen_type) {
 	case VB_SCREEN_BLANK:
 		/* clear the screen */
-#ifdef HAVE_DISPLAY
+#ifdef CONFIG_CHROMEOS_DISPLAY
 		display_clear();
 #elif defined(CONFIG_SANDBOX)
 		msg = "<screen cleared>";
@@ -192,7 +190,7 @@ VbError_t VbExDisplayScreen(uint32_t screen_type)
 	}
 
 	if (msg != NULL) {
-#ifdef HAVE_DISPLAY
+#ifdef CONFIG_CHROMEOS_DISPLAY
 		print_on_center(msg);
 #elif defined(CONFIG_SANDBOX)
 		VbExDebug("%s", msg);
@@ -205,17 +203,18 @@ VbError_t VbExDecompress(void *inbuf, uint32_t in_size,
                          uint32_t compression_type,
                          void *outbuf, uint32_t *out_size)
 {
-	SizeT input_size = in_size;
-	SizeT output_size = *out_size;
-	int ret;
-
 	switch (compression_type) {
 	case COMPRESS_NONE:
 		memcpy(outbuf, inbuf, in_size);
                 *out_size = in_size;
 		return VBERROR_SUCCESS;
 
-	case COMPRESS_LZMA1:
+#ifdef CONFIG_LZMA
+	case COMPRESS_LZMA1: {
+		SizeT input_size = in_size;
+		SizeT output_size = *out_size;
+		int ret;
+
 		ret = lzmaBuffToBuffDecompress(outbuf, &output_size,
 					       inbuf, input_size);
 		if (ret != SZ_OK) {
@@ -224,12 +223,14 @@ VbError_t VbExDecompress(void *inbuf, uint32_t in_size,
                 *out_size = output_size;
 		return VBERROR_SUCCESS;
 	}
+#endif
+	}
 
 	VBDEBUG("Unsupported compression format: %08x\n", compression_type);
 	return VBERROR_INVALID_PARAMETER;
 }
 
-#ifdef HAVE_DISPLAY
+#ifdef CONFIG_CHROMEOS_DISPLAY
 #include <bmp_layout.h>
 
 static int sanity_check_bitmap(void *buffer, uint32_t buffersize)
@@ -279,7 +280,7 @@ static int sanity_check_bitmap(void *buffer, uint32_t buffersize)
 VbError_t VbExDisplayImage(uint32_t x, uint32_t y,
                            void *buffer, uint32_t buffersize)
 {
-#ifdef HAVE_DISPLAY
+#ifdef CONFIG_CHROMEOS_DISPLAY
 	int ret;
 
 	if (sanity_check_bitmap(buffer, buffersize))
@@ -294,7 +295,7 @@ VbError_t VbExDisplayImage(uint32_t x, uint32_t y,
 	return VBERROR_SUCCESS;
 }
 
-#ifdef HAVE_DISPLAY
+#ifdef CONFIG_CHROMEOS_DISPLAY
 /**
  * show_cdata_string() - Display a prompt followed a checked string
  *
@@ -319,7 +320,7 @@ static void show_cdata_string(const char *prompt, const unsigned char *ustr)
 
 VbError_t VbExDisplayDebugInfo(const char *info_str)
 {
-#ifdef HAVE_DISPLAY
+#ifdef CONFIG_CHROMEOS_DISPLAY
 	crossystem_data_t *cdata;
 	size_t size;
 
@@ -346,7 +347,7 @@ VbError_t VbExDisplayDebugInfo(const char *info_str)
 /* this function is not technically part of the vboot interface */
 int display_clear(void)
 {
-#ifdef HAVE_DISPLAY
+#ifdef CONFIG_CHROMEOS_DISPLAY
 	display_callbacks_.dc_display_clear();
 #endif
 

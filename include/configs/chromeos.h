@@ -31,6 +31,7 @@
 #define CONFIG_LCD_BMP_RLE8
 #define CONFIG_LZMA
 #define CONFIG_SPLASH_SCREEN
+#define CONFIG_CHROMEOS_DISPLAY
 
 /* Enable USB, used for recovery mode */
 #define CONFIG_CHROMEOS_USB
