@@ -35,6 +35,7 @@ enum section_t {
 	SECTION_GBB,
 	SECTION_VBLOCK,
 	SECTION_FMAP,
+	SECTION_EC,
 
 	SECTION_COUNT,
 	SECTION_NONE = -1,
@@ -48,6 +49,7 @@ static const char *section_name[SECTION_COUNT] = {
 	"gbb",
 	"vblock",
 	"fmap",
+	"ec",
 };
 
 /**
@@ -131,7 +133,7 @@ static int process_fmap_node(const void *blob, int node, int depth,
 				rw->ec_hash = fdt_getprop(blob, node, "hash",
 							  &rw->ec_hash_size);
 				entry = &rw->ec_rwbin;
-				offset = rw->boot.offset;
+				offset = rw->ec_rwbin.offset;
 			} else if (0 == strcmp(name, "boot")) {
 				entry = &rw->boot_rwbin;
 				offset = rw->boot.offset;
@@ -212,6 +214,11 @@ static int process_fmap_node(const void *blob, int node, int depth,
 			prop = fdt_getprop(blob, node, "compress", NULL);
 			rw->compress = prop && (0 == strcmp(prop, "lzo")) ?
 				CROS_COMPRESS_LZO : CROS_COMPRESS_NONE;
+			break;
+		case SECTION_EC:
+			rw->ec_hash = fdt_getprop(blob, node, "hash",
+						  &rw->ec_hash_size);
+			rw->ec_rwbin = entry;
 			break;
 		default:
 			return 0;

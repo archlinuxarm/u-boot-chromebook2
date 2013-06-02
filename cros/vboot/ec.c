@@ -202,6 +202,7 @@ VbError_t VbExEcProtectRW(void)
 VbError_t VbExEcGetExpectedRW(enum VbSelectFirmware_t select,
 			      const uint8_t **image, int *image_size)
 {
+	struct fmap_firmware_entry *fw_entry;
 	struct twostop_fmap fmap;
 	uint32_t offset;
 	firmware_storage_t file;
@@ -214,12 +215,10 @@ VbError_t VbExEcGetExpectedRW(enum VbSelectFirmware_t select,
 	cros_fdtdec_flashmap(gd->fdt_blob, &fmap);
 	switch (select) {
 	case VB_SELECT_FIRMWARE_A:
-		offset = fmap.readwrite_a.ec_rwbin.offset;
-		size = fmap.readwrite_a.ec_rwbin.length;
+		fw_entry = &fmap.readwrite_a;
 		break;
 	case VB_SELECT_FIRMWARE_B:
-		offset = fmap.readwrite_b.ec_rwbin.offset;
-		size = fmap.readwrite_b.ec_rwbin.length;
+		fw_entry = &fmap.readwrite_b;
 		break;
 	default:
 		VBDEBUG("Unrecognized EC firmware requested.\n");
@@ -231,7 +230,9 @@ VbError_t VbExEcGetExpectedRW(enum VbSelectFirmware_t select,
 		return VBERROR_UNKNOWN;
 	}
 
-	VBDEBUG("EC-RW image offset %d size %d.\n", offset, size);
+	offset = fw_entry->ec_rwbin.offset;
+	size = fw_entry->ec_rwbin.length;
+	VBDEBUG("EC-RW image offset %#x size %#x.\n", offset, size);
 
 	/* Sanity-check; we don't expect EC images > 1MB */
 	if (size <= 0 || size > 0x100000) {
