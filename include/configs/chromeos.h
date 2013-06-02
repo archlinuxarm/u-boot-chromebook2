@@ -8,6 +8,40 @@
 #define __configs_chromeos_h__
 
 /*
+ * In anticipation of implementing early firmware selection, these defines
+ * signal the features that are required in U-Boot.
+ *
+ * The defines munging is thus kept to one Chrome OS-specific file. The
+ * upstream boards will define all features as normal for their platform.
+ *
+ * It is possible that these will be too broad for some platforms - e.g. we
+ * may have a platform which wants to use MMC in CONFIG_CROS_RO. However,
+ * we can deal with additional needs as we come to them.
+ *
+ * While it is something of an inconvenience, it may improve boot time on
+ * some platforms also.
+ *
+ *   CONFIG_CROS_LARGE
+ *	- Full version as now with factory defined, all features enabled
+ *	- This will operate as factory build, or verified boot
+ *
+ *   CONFIG_CROS_SMALL
+ *	- Minimized for use only with verified boot
+ *	- No command line, filesystems, LCD console, etc.
+ *	- Still has all drivers enabled and can perform verified boot
+ *
+ *   CONFIG_CROS_RO
+ *	- Requires CONFIG_CROS_SMALL. Will only support running RO firmware
+ *	- Set up for running VbLoadFirmware() only
+ *	- Minimal RAM, no display, no USB, no mass storage (SPI flash only)
+ *	- Intended for running in SPL
+ *
+ *   CONFIG_CROS_RW
+ *	- Requires CONFIG_CROS_SMALL. Will only support running RW firmware
+ *	- Set up for running VbSelectAndLoadKernel() only
+ */
+
+/*
  * This config file defines platform-independent settings that a verified boot
  * firmware must have.
  */
