@@ -132,10 +132,10 @@ static int do_bmp_display(cmd_tbl_t * cmdtp, int flag, int argc, char * const ar
 	 return (bmp_display(addr, x, y));
 }
 
-static cmd_tbl_t cmd_bmp_sub[] = {
-	U_BOOT_CMD_MKENT(info, 3, 0, do_bmp_info, "", ""),
-	U_BOOT_CMD_MKENT(display, 5, 0, do_bmp_display, "", ""),
-};
+U_BOOT_SUBCMD_START(cmd_bmp_sub)
+	U_BOOT_CMD_MKENT(info, 3, 0, do_bmp_info, "", "")
+	U_BOOT_CMD_MKENT(display, 5, 0, do_bmp_display, "", "")
+U_BOOT_SUBCMD_END
 
 #ifdef CONFIG_NEEDS_MANUAL_RELOC
 void bmp_reloc(void) {

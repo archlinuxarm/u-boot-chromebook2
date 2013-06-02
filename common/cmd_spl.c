@@ -110,10 +110,10 @@ static int call_bootm(int argc, char * const argv[], const char *subcommand[])
 	return 0;
 }
 
-static cmd_tbl_t cmd_spl_export_sub[] = {
-	U_BOOT_CMD_MKENT(fdt, 0, 1, (void *)SPL_EXPORT_FDT, "", ""),
-	U_BOOT_CMD_MKENT(atags, 0, 1, (void *)SPL_EXPORT_ATAGS, "", ""),
-};
+U_BOOT_SUBCMD_START(cmd_spl_export_sub)
+	U_BOOT_CMD_MKENT(fdt, 0, 1, (void *)SPL_EXPORT_FDT, "", "")
+	U_BOOT_CMD_MKENT(atags, 0, 1, (void *)SPL_EXPORT_ATAGS, "", "")
+U_BOOT_SUBCMD_END
 
 static int spl_export(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[])
 {

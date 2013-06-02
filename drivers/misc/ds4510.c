@@ -254,24 +254,24 @@ static int ds4510_info(uint8_t chip)
 }
 #endif /* CONFIG_CMD_DS4510_INFO */
 
-cmd_tbl_t cmd_ds4510[] = {
-	U_BOOT_CMD_MKENT(device, 3, 0, (void *)DS4510_CMD_DEVICE, "", ""),
-	U_BOOT_CMD_MKENT(nv, 3, 0, (void *)DS4510_CMD_NV, "", ""),
-	U_BOOT_CMD_MKENT(output, 4, 0, (void *)DS4510_CMD_OUTPUT, "", ""),
-	U_BOOT_CMD_MKENT(input, 3, 0, (void *)DS4510_CMD_INPUT, "", ""),
-	U_BOOT_CMD_MKENT(pullup, 4, 0, (void *)DS4510_CMD_PULLUP, "", ""),
+U_BOOT_SUBCMD_START(cmd_ds4510)
+	U_BOOT_CMD_MKENT(device, 3, 0, (void *)DS4510_CMD_DEVICE, "", "")
+	U_BOOT_CMD_MKENT(nv, 3, 0, (void *)DS4510_CMD_NV, "", "")
+	U_BOOT_CMD_MKENT(output, 4, 0, (void *)DS4510_CMD_OUTPUT, "", "")
+	U_BOOT_CMD_MKENT(input, 3, 0, (void *)DS4510_CMD_INPUT, "", "")
+	U_BOOT_CMD_MKENT(pullup, 4, 0, (void *)DS4510_CMD_PULLUP, "", "")
 #ifdef CONFIG_CMD_DS4510_INFO
-	U_BOOT_CMD_MKENT(info, 2, 0, (void *)DS4510_CMD_INFO, "", ""),
+	U_BOOT_CMD_MKENT(info, 2, 0, (void *)DS4510_CMD_INFO, "", "")
 #endif
 #ifdef CONFIG_CMD_DS4510_RST
-	U_BOOT_CMD_MKENT(rstdelay, 3, 0, (void *)DS4510_CMD_RSTDELAY, "", ""),
+	U_BOOT_CMD_MKENT(rstdelay, 3, 0, (void *)DS4510_CMD_RSTDELAY, "", "")
 #endif
 #ifdef CONFIG_CMD_DS4510_MEM
-	U_BOOT_CMD_MKENT(eeprom, 6, 0, (void *)DS4510_CMD_EEPROM, "", ""),
-	U_BOOT_CMD_MKENT(seeprom, 6, 0, (void *)DS4510_CMD_SEEPROM, "", ""),
-	U_BOOT_CMD_MKENT(sram, 6, 0, (void *)DS4510_CMD_SRAM, "", ""),
+	U_BOOT_CMD_MKENT(eeprom, 6, 0, (void *)DS4510_CMD_EEPROM, "", "")
+	U_BOOT_CMD_MKENT(seeprom, 6, 0, (void *)DS4510_CMD_SEEPROM, "", "")
+	U_BOOT_CMD_MKENT(sram, 6, 0, (void *)DS4510_CMD_SRAM, "", "")
 #endif
-};
+U_BOOT_SUBCMD_END
 
 int do_ds4510(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[])
 {

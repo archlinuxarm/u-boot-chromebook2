@@ -208,15 +208,15 @@ static int pca953x_info(uint8_t chip)
 }
 #endif /* CONFIG_CMD_PCA953X_INFO */
 
-cmd_tbl_t cmd_pca953x[] = {
-	U_BOOT_CMD_MKENT(device, 3, 0, (void *)PCA953X_CMD_DEVICE, "", ""),
-	U_BOOT_CMD_MKENT(output, 4, 0, (void *)PCA953X_CMD_OUTPUT, "", ""),
-	U_BOOT_CMD_MKENT(input, 3, 0, (void *)PCA953X_CMD_INPUT, "", ""),
-	U_BOOT_CMD_MKENT(invert, 4, 0, (void *)PCA953X_CMD_INVERT, "", ""),
+U_BOOT_SUBCMD_STARTcmd_pca953x)
+	U_BOOT_CMD_MKENT(device, 3, 0, (void *)PCA953X_CMD_DEVICE, "", "")
+	U_BOOT_CMD_MKENT(output, 4, 0, (void *)PCA953X_CMD_OUTPUT, "", "")
+	U_BOOT_CMD_MKENT(input, 3, 0, (void *)PCA953X_CMD_INPUT, "", "")
+	U_BOOT_CMD_MKENT(invert, 4, 0, (void *)PCA953X_CMD_INVERT, "", "")
 #ifdef CONFIG_CMD_PCA953X_INFO
-	U_BOOT_CMD_MKENT(info, 2, 0, (void *)PCA953X_CMD_INFO, "", ""),
+	U_BOOT_CMD_MKENT(info, 2, 0, (void *)PCA953X_CMD_INFO, "", "")
 #endif
-};
+U_BOOT_SUBCMD_END
 
 int do_pca953x(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[])
 {

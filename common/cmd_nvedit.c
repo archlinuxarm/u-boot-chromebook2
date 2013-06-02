@@ -1078,39 +1078,39 @@ sep_err:
 /*
  * New command line interface: "env" command with subcommands
  */
-static cmd_tbl_t cmd_env_sub[] = {
+U_BOOT_SUBCMD_START(cmd_env_sub)
 #if defined(CONFIG_CMD_ASKENV)
-	U_BOOT_CMD_MKENT(ask, CONFIG_SYS_MAXARGS, 1, do_env_ask, "", ""),
+	U_BOOT_CMD_MKENT(ask, CONFIG_SYS_MAXARGS, 1, do_env_ask, "", "")
 #endif
-	U_BOOT_CMD_MKENT(default, 1, 0, do_env_default, "", ""),
-	U_BOOT_CMD_MKENT(delete, CONFIG_SYS_MAXARGS, 0, do_env_delete, "", ""),
+	U_BOOT_CMD_MKENT(default, 1, 0, do_env_default, "", "")
+	U_BOOT_CMD_MKENT(delete, CONFIG_SYS_MAXARGS, 0, do_env_delete, "", "")
 #if defined(CONFIG_CMD_EDITENV)
-	U_BOOT_CMD_MKENT(edit, 2, 0, do_env_edit, "", ""),
+	U_BOOT_CMD_MKENT(edit, 2, 0, do_env_edit, "", "")
 #endif
 #if defined(CONFIG_CMD_ENV_CALLBACK)
-	U_BOOT_CMD_MKENT(callbacks, 1, 0, do_env_callback, "", ""),
+	U_BOOT_CMD_MKENT(callbacks, 1, 0, do_env_callback, "", "")
 #endif
 #if defined(CONFIG_CMD_ENV_FLAGS)
-	U_BOOT_CMD_MKENT(flags, 1, 0, do_env_flags, "", ""),
+	U_BOOT_CMD_MKENT(flags, 1, 0, do_env_flags, "", "")
 #endif
 #if defined(CONFIG_CMD_EXPORTENV)
-	U_BOOT_CMD_MKENT(export, 4, 0, do_env_export, "", ""),
+	U_BOOT_CMD_MKENT(export, 4, 0, do_env_export, "", "")
 #endif
 #if defined(CONFIG_CMD_GREPENV)
-	U_BOOT_CMD_MKENT(grep, CONFIG_SYS_MAXARGS, 1, do_env_grep, "", ""),
+	U_BOOT_CMD_MKENT(grep, CONFIG_SYS_MAXARGS, 1, do_env_grep, "", "")
 #endif
 #if defined(CONFIG_CMD_IMPORTENV)
-	U_BOOT_CMD_MKENT(import, 5, 0, do_env_import, "", ""),
+	U_BOOT_CMD_MKENT(import, 5, 0, do_env_import, "", "")
 #endif
-	U_BOOT_CMD_MKENT(print, CONFIG_SYS_MAXARGS, 1, do_env_print, "", ""),
+	U_BOOT_CMD_MKENT(print, CONFIG_SYS_MAXARGS, 1, do_env_print, "", "")
 #if defined(CONFIG_CMD_RUN)
-	U_BOOT_CMD_MKENT(run, CONFIG_SYS_MAXARGS, 1, do_run, "", ""),
+	U_BOOT_CMD_MKENT(run, CONFIG_SYS_MAXARGS, 1, do_run, "", "")
 #endif
 #if defined(CONFIG_CMD_SAVEENV) && !defined(CONFIG_ENV_IS_NOWHERE)
-	U_BOOT_CMD_MKENT(save, 1, 0, do_env_save, "", ""),
+	U_BOOT_CMD_MKENT(save, 1, 0, do_env_save, "", "")
 #endif
-	U_BOOT_CMD_MKENT(set, CONFIG_SYS_MAXARGS, 0, do_env_set, "", ""),
-};
+	U_BOOT_CMD_MKENT(set, CONFIG_SYS_MAXARGS, 0, do_env_set, "", "")
+U_BOOT_SUBCMD_END
 
 #if defined(CONFIG_NEEDS_MANUAL_RELOC)
 void env_reloc(void)

@@ -298,16 +298,16 @@ static int do_vboot_test_all(cmd_tbl_t *cmdtp,
 	return ret;
 }
 
-static cmd_tbl_t cmd_vboot_test_sub[] = {
-	U_BOOT_CMD_MKENT(all, 0, 1, do_vboot_test_all, "", ""),
-	U_BOOT_CMD_MKENT(fwrw, 0, 1, do_vboot_test_fwrw, "", ""),
-	U_BOOT_CMD_MKENT(memwipe, 0, 1, do_vboot_test_memwipe, "", ""),
-	U_BOOT_CMD_MKENT(gpio, 0, 1, do_vboot_test_gpio, "", ""),
-	U_BOOT_CMD_MKENT(reboot, 0, 1, do_vboot_reboot, "", ""),
-	U_BOOT_CMD_MKENT(poweroff, 0, 1, do_vboot_poweroff, "", ""),
-	U_BOOT_CMD_MKENT(fmap, 0, 1, do_vboot_fmap, "", ""),
-	U_BOOT_CMD_MKENT(chrome_ec, 0, 1, do_vboot_chrome_ec, "", ""),
-};
+U_BOOT_SUBCMD_START(cmd_vboot_test_sub)
+	U_BOOT_CMD_MKENT(all, 0, 1, do_vboot_test_all, "", "")
+	U_BOOT_CMD_MKENT(fwrw, 0, 1, do_vboot_test_fwrw, "", "")
+	U_BOOT_CMD_MKENT(memwipe, 0, 1, do_vboot_test_memwipe, "", "")
+	U_BOOT_CMD_MKENT(gpio, 0, 1, do_vboot_test_gpio, "", "")
+	U_BOOT_CMD_MKENT(reboot, 0, 1, do_vboot_reboot, "", "")
+	U_BOOT_CMD_MKENT(poweroff, 0, 1, do_vboot_poweroff, "", "")
+	U_BOOT_CMD_MKENT(fmap, 0, 1, do_vboot_fmap, "", "")
+	U_BOOT_CMD_MKENT(chrome_ec, 0, 1, do_vboot_chrome_ec, "", "")
+U_BOOT_SUBCMD_END
 
 static int do_vboot_test(cmd_tbl_t *cmdtp,
 		int flag, int argc, char * const argv[])

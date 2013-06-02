@@ -459,22 +459,22 @@ VOIDTEST(timing)
 VOIDTEST(write_limit)
 VOIDTEST(timer)
 
-static cmd_tbl_t cmd_cros_tpm_sub[] = {
-	VOIDENT(early_extend),
-	VOIDENT(early_nvram),
-	VOIDENT(early_nvram2),
-	VOIDENT(enable),
-	VOIDENT(fast_enable),
-	VOIDENT(global_lock),
-	VOIDENT(lock),
-	VOIDENT(readonly),
-	VOIDENT(redefine_unowned),
-	VOIDENT(space_perm),
-	VOIDENT(startup),
-	VOIDENT(timing),
-	VOIDENT(write_limit),
+U_BOOT_SUBCMD_START(cmd_cros_tpm_sub)
+	VOIDENT(early_extend)
+	VOIDENT(early_nvram)
+	VOIDENT(early_nvram2)
+	VOIDENT(enable)
+	VOIDENT(fast_enable)
+	VOIDENT(global_lock)
+	VOIDENT(lock)
+	VOIDENT(readonly)
+	VOIDENT(redefine_unowned)
+	VOIDENT(space_perm)
+	VOIDENT(startup)
+	VOIDENT(timing)
+	VOIDENT(write_limit)
 	VOIDENT(timer)
-};
+U_BOOT_SUBCMD_END
 
 /* u-boot shell commands
  */

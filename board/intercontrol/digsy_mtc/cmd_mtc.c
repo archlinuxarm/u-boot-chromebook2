@@ -308,32 +308,32 @@ static int do_mtc_state(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[
 
 static int do_mtc_help(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[]);
 
-cmd_tbl_t cmd_mtc_sub[] = {
+U_BOOT_SUBCMD_START(cmd_mtc_sub)
 	U_BOOT_CMD_MKENT(led, 3, 1, do_mtc_led,
 	"set state of leds",
 	"[ledname] [state] [blink]\n"
 	" - lednames: diag can1 can2 can3 can4 usbpwr usbbusy user1 user2\n"
 	" - state: off red green orange\n"
-	" - blink: blink interval in 100ms steps (1 - 10; 0 = static)\n"),
+	" - blink: blink interval in 100ms steps (1 - 10; 0 = static)\n")
 	U_BOOT_CMD_MKENT(key, 0, 1, do_mtc_key,
 	"returns state of user key", ""),
 	U_BOOT_CMD_MKENT(version, 0, 1, do_mtc_version,
-	"returns firmware version of supervisor uC", ""),
+	"returns firmware version of supervisor uC", "")
 	U_BOOT_CMD_MKENT(appreg, 1, 1, do_mtc_appreg,
 	"reads or writes appreg value and stores in environment "
 	"variable 'appreg'",
-	"[value] - value (1 - 255) to write to appreg"),
+	"[value] - value (1 - 255) to write to appreg")
 	U_BOOT_CMD_MKENT(digin, 1, 1, do_mtc_digin,
 	"returns state of digital input",
-	"<channel_num> - get state of digital input (1 or 2)\n"),
+	"<channel_num> - get state of digital input (1 or 2)\n")
 	U_BOOT_CMD_MKENT(digout, 2, 1, do_mtc_digout,
 	"sets digital outputs",
-	"<on|off> <on|off>- set state of digital output 1 and 2\n"),
+	"<on|off> <on|off>- set state of digital output 1 and 2\n")
 	U_BOOT_CMD_MKENT(state, 0, 1, do_mtc_state,
-	"displays state", ""),
+	"displays state", "")
 	U_BOOT_CMD_MKENT(help, 4, 1, do_mtc_help, "get help",
-	"[command] - get help for command\n"),
-};
+	"[command] - get help for command\n")
+U_BOOT_SUBCMD_END
 
 static int do_mtc_help(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[])
 {

@@ -79,11 +79,11 @@ static int do_bootstage_stash(cmd_tbl_t *cmdtp, int flag, int argc,
 	return 0;
 }
 
-static cmd_tbl_t cmd_bootstage_sub[] = {
-	U_BOOT_CMD_MKENT(report, 2, 1, do_bootstage_report, "", ""),
-	U_BOOT_CMD_MKENT(stash, 4, 0, do_bootstage_stash, "", ""),
-	U_BOOT_CMD_MKENT(unstash, 4, 0, do_bootstage_stash, "", ""),
-};
+U_BOOT_SUBCMD_START(cmd_bootstage_sub)
+	U_BOOT_CMD_MKENT(report, 2, 1, do_bootstage_report, "", "")
+	U_BOOT_CMD_MKENT(stash, 4, 0, do_bootstage_stash, "", "")
+	U_BOOT_CMD_MKENT(unstash, 4, 0, do_bootstage_stash, "", "")
+U_BOOT_SUBCMD_END
 
 /*
  * Process a bootstage sub-command

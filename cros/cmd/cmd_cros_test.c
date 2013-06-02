@@ -583,19 +583,19 @@ static int do_cros_test_all(cmd_tbl_t *cmdtp, int flag,
 	return ret;
 }
 
-static cmd_tbl_t cmd_cros_test_sub[] = {
-	U_BOOT_CMD_MKENT(i2c, 0, 1, do_cros_test_i2c, "", ""),
+U_BOOT_SUBCMD_START(cmd_cros_test_sub)
+	U_BOOT_CMD_MKENT(i2c, 0, 1, do_cros_test_i2c, "", "")
 #if defined(CONFIG_DRIVER_S3C24X0_I2C) && defined(CONFIG_EXYNOS5250) \
 		&& defined(CONFIG_CMD_GPIO)
-	U_BOOT_CMD_MKENT(i2creset, 0, 1, do_cros_test_i2creset, "", ""),
-	U_BOOT_CMD_MKENT(i2cfiddle, 0, 1, do_cros_test_i2cfiddle, "", ""),
+	U_BOOT_CMD_MKENT(i2creset, 0, 1, do_cros_test_i2creset, "", "")
+	U_BOOT_CMD_MKENT(i2cfiddle, 0, 1, do_cros_test_i2cfiddle, "", "")
 #endif
 #ifdef CONFIG_CROS_EC
-	U_BOOT_CMD_MKENT(swsync, 0, 1, do_cros_test_swsync, "", ""),
+	U_BOOT_CMD_MKENT(swsync, 0, 1, do_cros_test_swsync, "", "")
 #endif
-	U_BOOT_CMD_MKENT(corruptec, 0, 1, do_cros_test_corruptec, "", ""),
-	U_BOOT_CMD_MKENT(all, 0, 1, do_cros_test_all, "", ""),
-};
+	U_BOOT_CMD_MKENT(corruptec, 0, 1, do_cros_test_corruptec, "", "")
+	U_BOOT_CMD_MKENT(all, 0, 1, do_cros_test_all, "", "")
+U_BOOT_SUBCMD_END
 
 static int do_cros_test(cmd_tbl_t *cmdtp, int flag,
 		int argc, char * const argv[])

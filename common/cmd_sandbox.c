@@ -38,11 +38,11 @@ static int do_sandbox_save(cmd_tbl_t *cmdtp, int flag, int argc,
 	return do_save(cmdtp, flag, argc, argv, FS_TYPE_SANDBOX, 16);
 }
 
-static cmd_tbl_t cmd_sandbox_sub[] = {
-	U_BOOT_CMD_MKENT(load, 7, 0, do_sandbox_load, "", ""),
-	U_BOOT_CMD_MKENT(ls, 3, 0, do_sandbox_ls, "", ""),
-	U_BOOT_CMD_MKENT(save, 6, 0, do_sandbox_save, "", ""),
-};
+U_BOOT_SUBCMD_START(cmd_sandbox_sub)
+	U_BOOT_CMD_MKENT(load, 7, 0, do_sandbox_load, "", "")
+	U_BOOT_CMD_MKENT(ls, 3, 0, do_sandbox_ls, "", "")
+	U_BOOT_CMD_MKENT(save, 6, 0, do_sandbox_save, "", "")
+U_BOOT_SUBCMD_END
 
 static int do_sandbox(cmd_tbl_t *cmdtp, int flag, int argc,
 		      char * const argv[])

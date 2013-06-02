@@ -432,17 +432,17 @@ static int do_inkadiag_buzzer(cmd_tbl_t *cmdtp, int flag, int argc,
 
 static int do_inkadiag_help(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[]);
 
-cmd_tbl_t cmd_inkadiag_sub[] = {
+U_BOOT_SUBCMD_START(cmd_inkadiag_sub)
 	U_BOOT_CMD_MKENT(io, 1, 1, do_inkadiag_io, "read digital input",
-	 "<drawer1|drawer2|other> [value] - get or set specified signal"),
+	 "<drawer1|drawer2|other> [value] - get or set specified signal")
 	U_BOOT_CMD_MKENT(serial, 4, 1, do_inkadiag_serial, "test serial port",
 	 "<num> <mode> <baudrate> <msg>  - test uart num [0..11] in mode\n"
-	 "and baudrate with msg"),
+	 "and baudrate with msg")
 	U_BOOT_CMD_MKENT(buzzer, 2, 1, do_inkadiag_buzzer, "activate buzzer",
-	 "<period> <freq> - turn buzzer on for period ms with freq hz"),
+	 "<period> <freq> - turn buzzer on for period ms with freq hz")
 	U_BOOT_CMD_MKENT(help, 4, 1, do_inkadiag_help, "get help",
-	 "[command] - get help for command"),
-};
+	 "[command] - get help for command")
+U_BOOT_SUBCMD_END
 
 static int do_inkadiag_help(cmd_tbl_t *cmdtp, int flag,
 			    int argc, char * const argv[]) {

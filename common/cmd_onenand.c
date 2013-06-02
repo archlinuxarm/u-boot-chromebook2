@@ -546,17 +546,18 @@ static int do_onenand_markbad(cmd_tbl_t * cmdtp, int flag, int argc, char * cons
 	return ret;
 }
 
-static cmd_tbl_t cmd_onenand_sub[] = {
-	U_BOOT_CMD_MKENT(info, 1, 0, do_onenand_info, "", ""),
-	U_BOOT_CMD_MKENT(bad, 1, 0, do_onenand_bad, "", ""),
-	U_BOOT_CMD_MKENT(read, 4, 0, do_onenand_read, "", ""),
-	U_BOOT_CMD_MKENT(write, 4, 0, do_onenand_write, "", ""),
-	U_BOOT_CMD_MKENT(write.yaffs, 4, 0, do_onenand_write, "", ""),
-	U_BOOT_CMD_MKENT(erase, 3, 0, do_onenand_erase, "", ""),
-	U_BOOT_CMD_MKENT(test, 3, 0, do_onenand_test, "", ""),
-	U_BOOT_CMD_MKENT(dump, 2, 0, do_onenand_dump, "", ""),
-	U_BOOT_CMD_MKENT(markbad, CONFIG_SYS_MAXARGS, 0, do_onenand_markbad, "", ""),
-};
+U_BOOT_SUBCMD_START(cmd_onenand_sub)
+	U_BOOT_CMD_MKENT(info, 1, 0, do_onenand_info, "", "")
+	U_BOOT_CMD_MKENT(bad, 1, 0, do_onenand_bad, "", "")
+	U_BOOT_CMD_MKENT(read, 4, 0, do_onenand_read, "", "")
+	U_BOOT_CMD_MKENT(write, 4, 0, do_onenand_write, "", "")
+	U_BOOT_CMD_MKENT(write.yaffs, 4, 0, do_onenand_write, "", "")
+	U_BOOT_CMD_MKENT(erase, 3, 0, do_onenand_erase, "", "")
+	U_BOOT_CMD_MKENT(test, 3, 0, do_onenand_test, "", "")
+	U_BOOT_CMD_MKENT(dump, 2, 0, do_onenand_dump, "", "")
+	U_BOOT_CMD_MKENT(markbad, CONFIG_SYS_MAXARGS, 0, do_onenand_markbad,
+			 "", "")
+U_BOOT_SUBCMD_END
 
 #ifdef CONFIG_NEEDS_MANUAL_RELOC
 void onenand_reloc(void) {

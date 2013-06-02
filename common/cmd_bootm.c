@@ -506,30 +506,30 @@ static int bootm_start_standalone(int argc, char * const argv[])
 
 /* we overload the cmd field with our state machine info instead of a
  * function pointer */
-static cmd_tbl_t cmd_bootm_sub[] = {
+U_BOOT_SUBCMD_START(cmd_bootm_sub)
 	U_BOOT_CMD_MKENT_COMPLETE(start, 0, 1, cmd_dummy, "", "", NULL,
-				  BOOTM_STATE_START),
+				  BOOTM_STATE_START)
 	U_BOOT_CMD_MKENT_COMPLETE(loados, 0, 1, cmd_dummy, "", "", NULL,
-				  BOOTM_STATE_LOADOS),
+				  BOOTM_STATE_LOADOS)
 #ifdef CONFIG_SYS_BOOT_RAMDISK_HIGH
 	U_BOOT_CMD_MKENT_COMPLETE(ramdisk, 0, 1, cmd_dummy, "", "", NULL,
-				  BOOTM_STATE_RAMDISK),
+				  BOOTM_STATE_RAMDISK)
 #endif
 #ifdef CONFIG_OF_LIBFDT
 	U_BOOT_CMD_MKENT_COMPLETE(fdt, 0, 1, cmd_dummy, "", "", NULL,
-				  BOOTM_STATE_FDT),
+				  BOOTM_STATE_FDT)
 #endif
 	U_BOOT_CMD_MKENT_COMPLETE(cmdline, 0, 1, cmd_dummy, "", "", NULL,
-				  BOOTM_STATE_OS_CMDLINE),
+				  BOOTM_STATE_OS_CMDLINE)
 	U_BOOT_CMD_MKENT_COMPLETE(bdt, 0, 1, cmd_dummy, "", "", NULL,
-				  BOOTM_STATE_OS_BD_T),
+				  BOOTM_STATE_OS_BD_T)
 	U_BOOT_CMD_MKENT_COMPLETE(prep, 0, 1, cmd_dummy, "", "", NULL,
-				  BOOTM_STATE_OS_PREP),
+				  BOOTM_STATE_OS_PREP)
 	U_BOOT_CMD_MKENT_COMPLETE(fake, 0, 1, cmd_dummy, "", "", NULL,
-				  BOOTM_STATE_OS_FAKE_GO),
+				  BOOTM_STATE_OS_FAKE_GO)
 	U_BOOT_CMD_MKENT_COMPLETE(go, 0, 1, cmd_dummy, "", "", NULL,
-				  BOOTM_STATE_OS_GO),
-};
+				  BOOTM_STATE_OS_GO)
+U_BOOT_SUBCMD_END
 
 static int boot_selected_os(int argc, char * const argv[], int state,
 		bootm_headers_t *images, boot_os_fn *boot_fn, ulong *iflag)

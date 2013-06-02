@@ -549,48 +549,48 @@ static int do_tpm_nv_write(cmd_tbl_t *cmdtp, int flag,
 #define MAKE_TPM_CMD_ENTRY(cmd) \
 	U_BOOT_CMD_MKENT(cmd, 0, 1, do_tpm_ ## cmd, "", "")
 
-static cmd_tbl_t tpm_commands[] = {
+U_BOOT_SUBCMD_START(tpm_commands)
 	U_BOOT_CMD_MKENT(init, 0, 1,
-			do_tpm_init, "", ""),
+			do_tpm_init, "", "")
 	U_BOOT_CMD_MKENT(startup, 0, 1,
-			do_tpm_startup, "", ""),
+			do_tpm_startup, "", "")
 	U_BOOT_CMD_MKENT(self_test_full, 0, 1,
-			do_tpm_self_test_full, "", ""),
+			do_tpm_self_test_full, "", "")
 	U_BOOT_CMD_MKENT(continue_self_test, 0, 1,
-			do_tpm_continue_self_test, "", ""),
+			do_tpm_continue_self_test, "", "")
 	U_BOOT_CMD_MKENT(force_clear, 0, 1,
-			do_tpm_force_clear, "", ""),
+			do_tpm_force_clear, "", "")
 	U_BOOT_CMD_MKENT(physical_enable, 0, 1,
-			do_tpm_physical_enable, "", ""),
+			do_tpm_physical_enable, "", "")
 	U_BOOT_CMD_MKENT(physical_disable, 0, 1,
-			do_tpm_physical_disable, "", ""),
+			do_tpm_physical_disable, "", "")
 	U_BOOT_CMD_MKENT(nv_define_space, 0, 1,
-			do_tpm_nv_define_space, "", ""),
+			do_tpm_nv_define_space, "", "")
 	U_BOOT_CMD_MKENT(nv_read_value, 0, 1,
-			do_tpm_nv_read_value, "", ""),
+			do_tpm_nv_read_value, "", "")
 	U_BOOT_CMD_MKENT(nv_write_value, 0, 1,
-			do_tpm_nv_write_value, "", ""),
+			do_tpm_nv_write_value, "", "")
 	U_BOOT_CMD_MKENT(extend, 0, 1,
-			do_tpm_extend, "", ""),
+			do_tpm_extend, "", "")
 	U_BOOT_CMD_MKENT(pcr_read, 0, 1,
-			do_tpm_pcr_read, "", ""),
+			do_tpm_pcr_read, "", "")
 	U_BOOT_CMD_MKENT(tsc_physical_presence, 0, 1,
-			do_tpm_tsc_physical_presence, "", ""),
+			do_tpm_tsc_physical_presence, "", "")
 	U_BOOT_CMD_MKENT(read_pubek, 0, 1,
-			do_tpm_read_pubek, "", ""),
+			do_tpm_read_pubek, "", "")
 	U_BOOT_CMD_MKENT(physical_set_deactivated, 0, 1,
-			do_tpm_physical_set_deactivated, "", ""),
+			do_tpm_physical_set_deactivated, "", "")
 	U_BOOT_CMD_MKENT(get_capability, 0, 1,
-			do_tpm_get_capability, "", ""),
+			do_tpm_get_capability, "", "")
 	U_BOOT_CMD_MKENT(raw_transfer, 0, 1,
-			do_tpm_raw_transfer, "", ""),
+			do_tpm_raw_transfer, "", "")
 	U_BOOT_CMD_MKENT(nv_define, 0, 1,
-			do_tpm_nv_define, "", ""),
+			do_tpm_nv_define, "", "")
 	U_BOOT_CMD_MKENT(nv_read, 0, 1,
-			do_tpm_nv_read, "", ""),
+			do_tpm_nv_read, "", "")
 	U_BOOT_CMD_MKENT(nv_write, 0, 1,
-			do_tpm_nv_write, "", ""),
-};
+			do_tpm_nv_write, "", "")
+U_BOOT_SUBCMD_END
 
 static int do_tpm(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[])
 {

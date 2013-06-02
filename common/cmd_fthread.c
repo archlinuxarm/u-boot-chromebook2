@@ -232,13 +232,13 @@ static int do_fthread_report(cmd_tbl_t *cmdtp, int flag, int argc,
 }
 #endif
 
-static cmd_tbl_t cmd_fthread_sub[] = {
-	U_BOOT_CMD_MKENT(demo, 2, 0, do_fthread_demo, "", ""),
-	U_BOOT_CMD_MKENT(test, 2, 0, do_fthread_test, "", ""),
+U_BOOT_SUBCMD_START(cmd_fthread_sub)
+	U_BOOT_CMD_MKENT(demo, 2, 0, do_fthread_demo, "", "")
+	U_BOOT_CMD_MKENT(test, 2, 0, do_fthread_test, "", "")
 #ifdef CONFIG_CMD_FTHREAD_REPORT
-	U_BOOT_CMD_MKENT(report, 2, 0, do_fthread_report, "", ""),
+	U_BOOT_CMD_MKENT(report, 2, 0, do_fthread_report, "", "")
 #endif
-};
+U_BOOT_SUBCMD_END
 
 /*
  * Process a fthread sub-command

@@ -177,20 +177,43 @@ int cmd_process(int flag, int argc, char * const argv[],
 # define _CMD_HELP(x)
 #endif
 
-#define U_BOOT_CMD_MKENT_COMPLETE(_name, _maxargs, _rep, _cmd,		\
-				_usage, _help, _comp, _info)		\
+/*
+ * These macros help declare commands. They are set up in such as way that
+ * it is possible to completely remove all commands when CONFIG_CMDLINE is
+ * not defined.
+ *
+ * Usage is:
+ * U_BOOT_SUBCMD_START(name)
+ *	U_BOOT_CMD_MKENT(...)		(or U_BOOT_CMD_MKENT_COMPLETE)
+ *	U_BOOT_CMD_MKENT(...)
+ *	...
+ * U_BOOT_SUBCMD_END
+ *
+ * We need to ensure that a command is placed between each entry
+ */
+#define U_BOOT_SUBCMD_START(name)	static cmd_tbl_t name[] = {
+#define U_BOOT_SUBCMD_END		};
+#define U_BOOT_CMD_MKENT_LINE(_name, _maxargs, _rep, _cmd, _usage,	\
+			      _help, _comp, _info)			\
 	{ #_name, _maxargs, (_rep) << CMD_INFO_REPEATABLE_SHIFT | (_info), \
 		_cmd, _usage, _CMD_HELP(_help) _CMD_COMPLETE(_comp) }
+
+/* Add a comma to separate lines */
+#define U_BOOT_CMD_MKENT_COMPLETE(_name, _maxargs, _rep, _cmd, _usage,	\
+				  _help, _comp, _info)			\
+	U_BOOT_CMD_MKENT_LINE(_name, _maxargs, _rep, _cmd, _usage,	\
+				  _help, _comp, _info),
+
+/* Here we want a semicolon after the (single) entry */
+#define U_BOOT_CMD_COMPLETE(_name, _maxargs, _rep, _cmd, _usage, _help,	\
+			    _comp, _info)				\
+	ll_entry_declare(cmd_tbl_t, _name, cmd) =			\
+		U_BOOT_CMD_MKENT_LINE(_name, _maxargs, _rep, _cmd,	\
+			_usage, _help, _comp, _info);
 
 #define U_BOOT_CMD_MKENT(_name, _maxargs, _rep, _cmd, _usage, _help)	\
 	U_BOOT_CMD_MKENT_COMPLETE(_name, _maxargs, _rep, _cmd,		\
 				  _usage, _help, NULL, 0)
-
-#define U_BOOT_CMD_COMPLETE(_name, _maxargs, _rep, _cmd, _usage, _help,	\
-			    _comp, _info)				\
-	ll_entry_declare(cmd_tbl_t, _name, cmd) =			\
-		U_BOOT_CMD_MKENT_COMPLETE(_name, _maxargs, _rep, _cmd,	\
-					  _usage, _help, _comp, _info);
 
 #define U_BOOT_CMD(_name, _maxargs, _rep, _cmd, _usage, _help)		\
 	U_BOOT_CMD_COMPLETE(_name, _maxargs, _rep, _cmd, _usage, _help,	\

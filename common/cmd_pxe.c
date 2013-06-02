@@ -1419,10 +1419,10 @@ do_pxe_boot(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[])
 	return 0;
 }
 
-static cmd_tbl_t cmd_pxe_sub[] = {
-	U_BOOT_CMD_MKENT(get, 1, 1, do_pxe_get, "", ""),
+U_BOOT_SUBCMD_START(cmd_pxe_sub)
+	U_BOOT_CMD_MKENT(get, 1, 1, do_pxe_get, "", "")
 	U_BOOT_CMD_MKENT(boot, 2, 1, do_pxe_boot, "", "")
-};
+U_BOOT_SUBCMD_END
 
 int do_pxe(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[])
 {

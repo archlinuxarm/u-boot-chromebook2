@@ -1527,31 +1527,31 @@ static int do_i2c_reset(cmd_tbl_t * cmdtp, int flag, int argc, char * const argv
 	return 0;
 }
 
-static cmd_tbl_t cmd_i2c_sub[] = {
+U_BOOT_SUBCMD_START(cmd_i2c_sub)
 #if defined(CONFIG_I2C_MUX)
-	U_BOOT_CMD_MKENT(bus, 1, 1, do_i2c_add_bus, "", ""),
+	U_BOOT_CMD_MKENT(bus, 1, 1, do_i2c_add_bus, "", "")
 #endif  /* CONFIG_I2C_MUX */
-	U_BOOT_CMD_MKENT(crc32, 3, 1, do_i2c_crc, "", ""),
+	U_BOOT_CMD_MKENT(crc32, 3, 1, do_i2c_crc, "", "")
 #if defined(CONFIG_I2C_MULTI_BUS)
-	U_BOOT_CMD_MKENT(dev, 1, 1, do_i2c_bus_num, "", ""),
+	U_BOOT_CMD_MKENT(dev, 1, 1, do_i2c_bus_num, "", "")
 #endif  /* CONFIG_I2C_MULTI_BUS */
 #if defined(CONFIG_I2C_EDID)
-	U_BOOT_CMD_MKENT(edid, 1, 1, do_edid, "", ""),
+	U_BOOT_CMD_MKENT(edid, 1, 1, do_edid, "", "")
 #endif  /* CONFIG_I2C_EDID */
-	U_BOOT_CMD_MKENT(loop, 3, 1, do_i2c_loop, "", ""),
-	U_BOOT_CMD_MKENT(md, 3, 1, do_i2c_md, "", ""),
-	U_BOOT_CMD_MKENT(mm, 2, 1, do_i2c_mm, "", ""),
-	U_BOOT_CMD_MKENT(mw, 3, 1, do_i2c_mw, "", ""),
-	U_BOOT_CMD_MKENT(nm, 2, 1, do_i2c_nm, "", ""),
-	U_BOOT_CMD_MKENT(probe, 0, 1, do_i2c_probe, "", ""),
-	U_BOOT_CMD_MKENT(read, 5, 1, do_i2c_read, "", ""),
-	U_BOOT_CMD_MKENT(write, 5, 0, do_i2c_write, "", ""),
-	U_BOOT_CMD_MKENT(reset, 0, 1, do_i2c_reset, "", ""),
+	U_BOOT_CMD_MKENT(loop, 3, 1, do_i2c_loop, "", "")
+	U_BOOT_CMD_MKENT(md, 3, 1, do_i2c_md, "", "")
+	U_BOOT_CMD_MKENT(mm, 2, 1, do_i2c_mm, "", "")
+	U_BOOT_CMD_MKENT(mw, 3, 1, do_i2c_mw, "", "")
+	U_BOOT_CMD_MKENT(nm, 2, 1, do_i2c_nm, "", "")
+	U_BOOT_CMD_MKENT(probe, 0, 1, do_i2c_probe, "", "")
+	U_BOOT_CMD_MKENT(read, 5, 1, do_i2c_read, "", "")
+	U_BOOT_CMD_MKENT(write, 5, 0, do_i2c_write, "", "")
+	U_BOOT_CMD_MKENT(reset, 0, 1, do_i2c_reset, "", "")
 #if defined(CONFIG_CMD_SDRAM)
-	U_BOOT_CMD_MKENT(sdram, 1, 1, do_sdram, "", ""),
+	U_BOOT_CMD_MKENT(sdram, 1, 1, do_sdram, "", "")
 #endif
-	U_BOOT_CMD_MKENT(speed, 1, 1, do_i2c_bus_speed, "", ""),
-};
+	U_BOOT_CMD_MKENT(speed, 1, 1, do_i2c_bus_speed, "", "")
+U_BOOT_SUBCMD_END
 
 #ifdef CONFIG_NEEDS_MANUAL_RELOC
 void i2c_reloc(void) {
