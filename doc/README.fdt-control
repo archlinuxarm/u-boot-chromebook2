@@ -176,6 +176,37 @@ After board configuration is done, fdt supported u-boot can be build in two ways
     $ make DEVICE_TREE=<dts-file-name>
 
 
+Configuration Options
+---------------------
+
+A number of run-time configuration options are provided in the /config node
+of the control device tree. You can access these using fdtdec_get_config_int(),
+fdtdec_get_config_bool() and fdtdec_get_config_string().
+
+Available options are:
+
+hda-codec-beep-nid
+	Indicates the NID of the HDA audio codec for the current machine.
+	This can save having to search for it and perhaps finding the wrong
+	one.
+
+load-environment
+	If 0, the environment is not loaded on boot. If 1 it is loaded.
+
+	TODO(sjg@chromium.org): This would be better as a boolean property.
+
+kernel-offset
+	If present, it is the offset from the start of U-Boot to a kernel
+	payload. U-Boot sets 'kernaddr' to the address of the payload. This
+	is useful for bundling a kernel with U-Boot, e.g. using USB download.
+
+rootdisk-offset
+	If present, it is the offset from the start of U-Boot to a root
+	filesystem payload. U-Boot sets 'rootaddr' to the address of the
+	payload. This is useful for bundling a root filesystem with U-Boot,
+	e.g. using USB download.
+
+
 Limitations
 -----------
 
