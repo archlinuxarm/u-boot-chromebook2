@@ -824,7 +824,7 @@ twostop_init(struct twostop_fmap *fmap, firmware_storage_t *file,
 	     void **gbbp, size_t gbb_size, crossystem_data_t *cdata,
 	     void *vb_shared_data)
 {
-	struct vboot_flag_details wpsw, recsw, devsw, oprom;
+	struct vboot_flag_details wpsw, devsw, oprom;
 	GoogleBinaryBlockHeader *gbbh;
 	uint8_t hardware_id[ID_LEN];
 #ifndef CONFIG_HARDWARE_MAPPED_SPI
@@ -902,7 +902,7 @@ twostop_init(struct twostop_fmap *fmap, firmware_storage_t *file,
 	 * the device tree) whether the active EC firmware is R/O or R/W.
 	 */
 	if (crossystem_data_init(cdata,
-				 &wpsw, &recsw, &devsw, &oprom,
+				 &wpsw, &devsw, &oprom,
 				 oprom_matters,
 				 fmap->readonly.fmap.offset,
 				 ACTIVE_EC_FIRMWARE_RO,

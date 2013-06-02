@@ -53,7 +53,6 @@ const char *cros_fdt_get_mem_type(void)
 
 int crossystem_data_init(crossystem_data_t *cdata,
 			 struct vboot_flag_details *write_protect_switch,
-			 struct vboot_flag_details *recovery_switch,
 			 struct vboot_flag_details *developer_switch,
 			 struct vboot_flag_details *oprom_loaded,
 			 uint8_t oprom_matters,
@@ -72,18 +71,15 @@ int crossystem_data_init(crossystem_data_t *cdata,
 	       sizeof(CROSSYSTEM_DATA_SIGNATURE));
 
 	cdata->boot_write_protect_switch = write_protect_switch->value;
-	cdata->boot_recovery_switch = recovery_switch->value;
 	cdata->boot_developer_switch = developer_switch->value;
 	cdata->boot_oprom_loaded = oprom_loaded->value;
 
 	cdata->polarity_write_protect_switch =
 		write_protect_switch->active_high;
-	cdata->polarity_recovery_switch = recovery_switch->active_high;
 	cdata->polarity_developer_switch = developer_switch->active_high;
 	cdata->polarity_oprom_loaded = oprom_loaded->active_high;
 
 	cdata->gpio_port_write_protect_switch = write_protect_switch->port;
-	cdata->gpio_port_recovery_switch = recovery_switch->port;
 	cdata->gpio_port_developer_switch = developer_switch->port;
 	cdata->gpio_port_oprom_loaded = oprom_loaded->port;
 

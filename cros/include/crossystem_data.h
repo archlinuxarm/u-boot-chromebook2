@@ -196,7 +196,6 @@ assert_offset(vb_shared_data,			0x0400);
  *
  * @param cdata is the data blob shared with crossystem
  * @param write_protect_switch points to a GPIO descriptor
- * @param recovery_switch points to a GPIO descriptor
  * @param developer_switch points to a GPIO descriptor
  * @param fmap_offset is the offset of FMAP in flashrom
  * @param hardware_id is of length ID_LEN
@@ -205,7 +204,6 @@ assert_offset(vb_shared_data,			0x0400);
  */
 int crossystem_data_init(crossystem_data_t *cdata,
 		struct vboot_flag_details *write_protect_switch,
-		struct vboot_flag_details *recovery_switch,
 		struct vboot_flag_details *developer_switch,
 		struct vboot_flag_details *oprom_loaded,
 		uint8_t oprom_matters,
