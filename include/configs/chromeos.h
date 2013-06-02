@@ -32,6 +32,9 @@
 #define CONFIG_LZMA
 #define CONFIG_SPLASH_SCREEN
 
+/* Enable USB, used for recovery mode */
+#define CONFIG_CHROMEOS_USB
+
 /* Support constant vboot flag from fdt */
 #define CONFIG_CHROMEOS_CONST_FLAG
 

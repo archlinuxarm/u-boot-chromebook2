@@ -29,7 +29,7 @@
 #include <cros/vboot_flag.h>
 #include <linux/lzo.h>
 #include <spi.h>
-#ifndef CONFIG_SANDBOX
+#ifdef CONFIG_CHROMEOS_USB
 #include <usb.h>
 #endif
 
