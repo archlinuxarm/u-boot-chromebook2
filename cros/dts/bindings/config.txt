@@ -1,16 +1,6 @@
 Chrome OS dts config bindings
 =============================
 
-hda_codec_beep - use codec or legacy PC beep source
- 0 or not present - use legacy PC beep
- 1 - use a codec beep source
- ex: hda_codec_beep <1>
-
-hda-codec-beep-nid - Node ID (NID) #
- -1 or not preset - auto detect NID
- 0 or any other value - sets the codec beep NID
- ex: hda-codec-beep-nid <0x01>
-
 faft-key-remap-ascii - Array for simple ascii key remap.
  You may remap up to three keys if the GBB flag is set.
  Keys are paired with incoming key and remapped key.
@@ -23,3 +13,11 @@ faft-key-remap-special - Array for special key remap.
  Special keys are pre-stripped of ESCAPE and '['.
  example remap 'F9' to ENTER:
  faft-key-remap-special = <0x32 0x20 0 0 0 0>;
+
+skip-i8042
+	If present, i8042 init is skipped, which means that an attached
+	i8042 keyboard will not be activated.
+
+usb-keyboard
+	If present, indicates that the machine has a USB keyboard as the
+	primary input, so it will be set up before boot proceeds.
