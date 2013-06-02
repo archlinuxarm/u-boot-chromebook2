@@ -212,6 +212,9 @@ rootdisk-offset
 	payload. This is useful for bundling a root filesystem with U-Boot,
 	e.g. using USB download.
 
+silent-console
+	If present, the console is silenced by default on boot.
+
 
 Limitations
 -----------

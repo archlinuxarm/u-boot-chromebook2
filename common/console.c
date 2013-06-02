@@ -22,6 +22,7 @@
  */
 
 #include <common.h>
+#include <fdtdec.h>
 #include <stdarg.h>
 #include <malloc.h>
 #include <serial.h>
@@ -647,7 +648,15 @@ int console_init_f(void)
 	gd->have_console = 1;
 
 #ifdef CONFIG_SILENT_CONSOLE
-	if (getenv("silent") != NULL)
+	bool silent = getenv("silent") != NULL;
+
+# if defined(CONFIG_OF_CONTROL) && !defined(CONFIG_SPL_BUILD)
+	if (!silent) {
+		silent = (fdtdec_get_config_int(gd->fdt_blob, "silent-console",
+						0) != 0);
+	}
+# endif
+	if (silent)
 		gd->flags |= GD_FLG_SILENT;
 #endif
 
