@@ -676,7 +676,7 @@ twostop_select_and_set_main_firmware(struct twostop_fmap *fmap,
 	VbCommonParams cparams;
 
 	*entryp = NULL;
-	bootstage_mark_name(BOOTSTAGE_VBOOT_SELECT_AND_SET,
+	bootstage_mark_name(BOOTSTAGE_ID_ALLOC,
 			"twostop_select_and_set_main_firmware");
 	if (twostop_init_cparams(fmap, gbb, vb_shared_data, &cparams)) {
 		VBDEBUG("failed to init cparams\n");
@@ -813,7 +813,7 @@ twostop_init(struct twostop_fmap *fmap, firmware_storage_t *file,
 	int ret = -1;
 	void *gbb;
 
-	bootstage_mark_name(BOOTSTAGE_VBOOT_TWOSTOP_INIT, "twostop_init");
+	bootstage_mark_name(BOOTSTAGE_ID_ALLOC, "twostop_init");
 	if (vboot_flag_fetch(VBOOT_FLAG_WRITE_PROTECT, &wpsw) ||
 	    vboot_flag_fetch(VBOOT_FLAG_DEVELOPER, &devsw) ||
 	    vboot_flag_fetch(VBOOT_FLAG_OPROM_LOADED, &oprom)) {
@@ -909,8 +909,7 @@ twostop_main_firmware(struct twostop_fmap *fmap, void *gbb,
 	bootstage_unstash((void *)CONFIG_BOOTSTAGE_STASH,
 			CONFIG_BOOTSTAGE_STASH_SIZE);
 #endif
-	bootstage_mark_name(BOOTSTAGE_VBOOT_TWOSTOP_MAIN_FIRMWARE,
-			"twostop_main_firmware");
+	bootstage_mark_name(BOOTSTAGE_ID_ALLOC, "twostop_main_firmware");
 	if (twostop_init_cparams(fmap, gbb, vb_shared_data, &cparams)) {
 		VBDEBUG("failed to init cparams\n");
 		return TWOSTOP_SELECT_ERROR;
@@ -1059,6 +1058,7 @@ twostop_boot(int stop_at_select)
 	VBDEBUG("selection of bootstub: %s\n", str_selection(selection));
 
 	file.close(&file); /* We don't care even if it fails */
+	bootstage_mark_name(BOOTSTAGE_ID_ALLOC, "rw_firmware_loaded");
 
 	if (stop_at_select)
 		return selection;
