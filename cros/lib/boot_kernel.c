@@ -14,8 +14,8 @@
 #include <cros/boot_kernel.h>
 #include <cros/common.h>
 #include <cros/crossystem_data.h>
-#ifdef CONFIG_X86
 #include <i8042.h>
+#ifdef CONFIG_X86
 #include <asm/zimage.h>
 #endif
 
@@ -271,13 +271,15 @@ int boot_kernel(VbSelectAndLoadKernelParams *kparams, crossystem_data_t *cdata)
 
 	g_crossystem_data = cdata;
 
-#ifdef CONFIG_X86
 	/* Disable keyboard and flush buffer so that further key strokes
 	 * won't interfere kernel driver init. */
+#ifdef CONFIG_I8042_KBD
 	if (i8042_disable())
 		VBDEBUG("i8042_disable() failed. fine, continue.\n");
 	i8042_flush();
+#endif
 
+#ifdef CONFIG_X86
 	crossystem_data_update_acpi(cdata);
 
 	params = (struct boot_params *)(uintptr_t)
