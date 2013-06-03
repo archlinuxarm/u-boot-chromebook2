@@ -30,7 +30,12 @@ LIB	= $(obj)libdts.o
 ifeq ($(DEVICE_TREE),)
 $(if $(CONFIG_DEFAULT_DEVICE_TREE),,\
 $(error Please define CONFIG_DEFAULT_DEVICE_TREE in your board header file))
-DEVICE_TREE = $(subst ",,$(CONFIG_DEFAULT_DEVICE_TREE))
+# This gets rid both of the double quotes and a possible suffix.
+DEV_TREE_BASE := $(shell echo $(CONFIG_DEFAULT_DEVICE_TREE) | sed 's/-.*//')
+DEFAULT_TREE := $(subst ",,$(obj)$(CONFIG_DEFAULT_DEVICE_TREE).dtb)
+else
+DEV_TREE_BASE := $(DEVICE_TREE)
+DEFAULT_TREE := $(obj)$(DEVICE_TREE).dtb)
 endif
 
 $(if $(CONFIG_ARCH_DEVICE_TREE),,\
@@ -52,14 +57,12 @@ DTS_FLAGS := $(shell if ! dtc -i 2>&1 | grep -q "invalid option"; then \
 # Undefine 'linux' since it might be used in device tree files
 DTS_CPPFLAGS := -x assembler-with-cpp -Ulinux \
 		-DARCH_CPU_DTS=\"$(SRCTREE)/arch/$(ARCH)/dts/$(CONFIG_ARCH_DEVICE_TREE).dtsi\" \
-		-DBOARD_DTS=\"$(SRCTREE)/board/$(VENDOR)/$(BOARD)/dts/$(DEVICE_TREE).dts\" \
 		-D__ASSEMBLY__ -I$(OBJTREE)/include -I$(SRCTREE)/include \
 		-I$(OBJTREE)/include2 \
 		-I$(SRCTREE)/board/$(VENDOR)/dts -I$(SRCTREE)/arch/$(ARCH)/dts \
 		-include $(OBJTREE)/include/config.h
 
-DTS_TMP := $(OBJTREE)/include/generated/$(DEVICE_TREE).dts.in
-DTS_SRC := board/$(VENDOR)/dts/$(DEVICE_TREE).dts
+DTS_DIR := $(TOPDIR)/board/$(VENDOR)/dts
 
 all:	$(obj).depend $(LIB)
 
@@ -68,20 +71,28 @@ all:	$(obj).depend $(LIB)
 # the filename.
 DT_BIN	:= $(obj)dt.dtb
 
-DTC_CMD := $(DTC) -R 4 -p 0x1000 -O dtb -o ${DT_BIN} $(DTS_FLAGS) $(DTS_TMP)
+DT_SOURCES := $(notdir $(wildcard $(DTS_DIR)/$(DEV_TREE_BASE)-*))
+DT_BINS := $(addprefix $(obj),$(addsuffix .dtb,$(basename $(DT_SOURCES)))) \
+	$(DT_BIN)
 
-$(DT_BIN): $(TOPDIR)/$(DTS_SRC)
-	rc=$$( \
-		cat $< | $(CPP) -P $(DTS_CPPFLAGS) - > $(DTS_TMP); \
-		{ { $(DTC_CMD)  2>&1 ; \
-		    echo $$? >&3 ; } | \
-		  grep -v '^DTC: dts->dtb  on file' ; \
-	        } 3>&1 1>&2 ) ; \
-	if [ $$rc != 0 ]; then \
-		echo "Source file is $(DTS_SRC)"; \
-		echo "Compiler: $(DTC_CMD)"; \
-	fi; \
-	exit $$rc
+$(obj)dt.dtb: $(DEFAULT_TREE)
+	cp $< $@
+
+# Get preprocessed version of the tree.
+$(obj)%.dts.in : $(DTS_DIR)/%.dts
+	$(CPP) -P $(DTS_CPPFLAGS) -DBOARD_DTS=$< $< -o $@
+
+# Compile the preprocessed device tree. Some DTC versions insist on sending
+# output to stderr even when everything is fine, which wrecs havoc on
+# automated testing tools watching for stderr output.
+#
+# To address this issue collect all DTC output in a file and send the file to
+# stderr only if there has been a DTC error. '&& false' enforces a make error.
+#
+$(obj)%.dtb : $(obj)%.dts.in
+	$(DTC) -R 4 -p 0x1000 -O dtb $(DTS_FLAGS) -o $@ $< > $@.errmsg 2>&1 || \
+	(export rc=$$? && cat $@.errmsg >&2 && exit $$rc)
+	rm -f $@.errmsg
 
 process_lds = \
 	$(1) | sed -r -n 's/^OUTPUT_$(2)[ ("]*([^")]*).*/\1/p'
@@ -122,7 +133,7 @@ COBJS	:= $(OBJS-y)
 
 OBJS	:= $(addprefix $(obj),$(COBJS))
 
-binary:	$(DT_BIN)
+binary:	$(DT_BINS)
 
 $(LIB):	$(OBJS) $(DTB)
 	$(call cmd_link_o_target, $(OBJS))
