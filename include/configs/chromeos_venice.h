@@ -14,8 +14,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef __CHROMEOS_PUPPY_CONFIG_H
-#define __CHROMEOS_PUPPY_CONFIG_H
+#ifndef __CHROMEOS_VENICE_CONFIG_H
+#define __CHROMEOS_VENICE_CONFIG_H
 
 #define CONFIG_EXTRA_BOOTARGS \
 	"console=ttyS0,115200n8 " \
@@ -24,7 +24,6 @@
 	"noinitrd usb_port_owner_info=0 " \
 	"usbcore.old_scheme_first=1 " \
 	"core_edp_mv=1120 core_edp_ma=4000 " \
-	"no_console_suspend=1 " \
 	"tegraid=35.1.1.0.0 " \
 	"mem=1980M@2048M vpr=32M@4063M tsec=32M@4031M " \
 	"otf_key=0 commchip_id=0 " \
@@ -35,7 +34,7 @@
 	"display_panel=0 " \
 	"audio_codec=rt5640 " \
 	"board_info=64b:3e8:2:45:3 " \
-	"debug_uartport=lsport,3"
+	"debug_uartport=lsport,3\0 "
 
 /* Add chromeos specific only for non spl build */
 #ifndef CONFIG_SPL_BUILD
@@ -61,17 +60,17 @@
 #define CONFIG_KEYBOARD
 
 #endif
-#include <configs/dalmore.h>
+#include <configs/venice.h>
 
 /* High-level configuration options */
 #ifdef V_PROMPT
 #undef V_PROMPT
 #endif
-#define V_PROMPT		"Tegra114 (Puppy) # "
+#define V_PROMPT		"Tegra114 (ChromeOS Venice) # "
 
 #ifdef CONFIG_TEGRA_BOARD_STRING
 #undef CONFIG_TEGRA_BOARD_STRING
 #endif
-#define CONFIG_TEGRA_BOARD_STRING	"NVIDIA Puppy"
+#define CONFIG_TEGRA_BOARD_STRING	"NVIDIA ChromeOS Venice"
 
-#endif /* __CHROMEOS_PUPPY_CONFIG_H */
+#endif /* __CHROMEOS_VENICE_CONFIG_H */

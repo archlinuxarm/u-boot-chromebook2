@@ -1,5 +1,5 @@
 /*
- * Common device tree include for all Tegra boards (Puppy for now).
+ * Common device tree include for all Tegra boards.
  *
  * Copyright (c) 2010-2013, NVIDIA CORPORATION.  All rights reserved.
  * Copyright (c) 2012 Samsung Electronics Co., Ltd. http://www.samsung.com
