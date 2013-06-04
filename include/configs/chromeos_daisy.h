@@ -25,8 +25,8 @@
 #ifndef __CONFIG_SMDK_H
 #define __CONFIG_SMDK_H
 
-#include <configs/exynos5-dt.h>
 #include <configs/exynos5250.h>
+#include <configs/exynos5-dt.h>
 
 #undef CONFIG_DEFAULT_DEVICE_TREE
 #define CONFIG_DEFAULT_DEVICE_TREE	exynos5250-snow
