@@ -217,6 +217,7 @@ int board_get_num_dram_banks(void)
 {
 	switch (board_get_revision()) {
 	case 6: /* peach pit rev 1 */
+	case 10: /* peach pit rev 2 */
 		return 7;  /* 7 banks of .5 GB, 3.5GB total. */
 	default:
 		break;
