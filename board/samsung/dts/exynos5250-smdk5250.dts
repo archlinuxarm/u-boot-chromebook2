@@ -11,10 +11,20 @@
 
 /dts-v1/;
 /include/ "exynos5.dtsi"
+#ifdef CONFIG_CHROMEOS
+/include/ "flashmap-exynos-ro.dtsi"
+/include/ "flashmap-4mb-rw.dtsi"
+/include/ "chromeos-exynos.dtsi"
+/include/ "cros5250-common.dtsi"
+#endif
 
 / {
 	model = "SAMSUNG SMDK5250 board based on EXYNOS5250";
 	compatible = "samsung,smdk5250", "samsung,exynos5";
+
+	config {
+		hwid = "smdk5250 TEST A-A 5381";
+	};
 
 	aliases {
 		i2c0 = "/i2c@12c60000";

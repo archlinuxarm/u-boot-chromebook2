@@ -19,6 +19,10 @@
 	model = "Google Spring";
 	compatible = "google,spring", "samsung,exynos5";
 
+	config {
+		hwid = "spring TEST A-A 1228";
+	};
+
 	aliases {
 		sdmmc1 = "/mshci@12210000";
 	};
