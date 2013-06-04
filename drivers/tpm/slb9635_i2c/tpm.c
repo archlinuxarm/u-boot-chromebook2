@@ -36,7 +36,7 @@
 #include "tpm.h"
 
 /* global structure for tpm chip data */
-struct tpm_chip g_chip;
+static struct tpm_chip g_chip;
 
 enum tpm_duration {
 	TPM_SHORT = 0,
@@ -405,7 +405,7 @@ out_recv:
 	dbg_printf("out_recv: reading response...\n");
 	rc = chip->vendor.recv(chip, (u8 *)buf, TPM_BUFSIZE);
 	if (rc < 0)
-		dev_err(chip->dev, "tpm_transmit: tpm_recv: error %zd\n", rc);
+		dev_err(chip->dev, "tpm_transmit: tpm_recv: error -%zd\n", -rc);
 out:
 	return rc;
 }
