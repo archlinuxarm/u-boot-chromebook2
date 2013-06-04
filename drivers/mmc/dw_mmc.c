@@ -222,6 +222,7 @@ static int dwmci_send_cmd(struct mmc *mmc, struct mmc_cmd *cmd,
 		}
 		do {
 			mask = dwmci_readl(host, DWMCI_RINTSTS);
+			udelay(1);
 			if (mask & (DWMCI_DATA_ERR | DWMCI_DATA_TOUT)) {
 				debug("DATA ERROR!\n");
 				return -1;
@@ -234,8 +235,6 @@ static int dwmci_send_cmd(struct mmc *mmc, struct mmc_cmd *cmd,
 		ctrl &= ~(DWMCI_DMA_EN);
 		dwmci_writel(host, DWMCI_CTRL, ctrl);
 	}
-
-	udelay(100);
 
 	return 0;
 }
