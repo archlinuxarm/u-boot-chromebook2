@@ -22,7 +22,11 @@
 		cros-system-data = <0x01100000 0x8000>;
 		google-binary-block = <0x01200000 0x100000>;
 
-		firmware-storage = <&firmware_storage_spi>;
+		/*
+		 * TODO(sjg@chromium.org): Not all x86 platforms have this yet
+		 *
+		 * firmware-storage = <&firmware_storage_spi>;
+		*/
 		nvstorage-media = "nvram";
 
 		vboot-flag-write-protect {
