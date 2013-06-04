@@ -1,0 +1,29 @@
+/dts-v1/;
+
+/include/ "coreboot.dtsi"
+/include/ "chromeos-coreboot.dtsi"
+/include/ "flashmap-coreboot-8mb_1mb_rom.dtsi"
+
+/ {
+	model = "Google Stout";
+	compatible = "google,stout", "intel,celeron-sandybridge";
+
+	config {
+		hwid = "X86 STOUT TEST 8762";
+		hda_codec_beep = <1>;
+		hda-codec-beep-nid = <0x1>;
+	};
+
+	chromeos-config {
+		/* Enable memory region for temporary GBB storage */
+		google-binary-block = <0x01108000 0x100000>;
+		virtual-dev-switch;
+		oprom-matters;
+		faft-key-remap-ascii = <0x5c 0x0D 0 0 0 0>;
+		faft-key-remap-special = <0x32 0x20 0 0 0 0>;
+		vboot-flag-ec-in-rw {
+			compatible = "google,sysinfo-flag";
+			google,name = "ec_in_rw";
+		};
+	};
+};

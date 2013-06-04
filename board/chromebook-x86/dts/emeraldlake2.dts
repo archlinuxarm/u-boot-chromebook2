@@ -1,0 +1,25 @@
+/dts-v1/;
+
+/include/ "coreboot.dtsi"
+/include/ "chromeos-coreboot.dtsi"
+/include/ "flashmap-coreboot-8mb_1mb_rom.dtsi"
+
+/ {
+	model = "Intel Emerald Lake 2";
+	compatible = "intel,emerald-lake-2", "intel,celeron-ivybridge";
+
+	config {
+		hwid = "X86 EMERALD LAKE 2 TEST 6638";
+		skip-i8042 = <1>;
+		hda_codec_beep = <1>;
+		usb-keyboard;
+	};
+
+	chromeos-config {
+		oprom-matters;
+		vboot-flag-ec-in-rw {
+			compatible = "google,const-flag";
+			value = <0>;
+		};
+	};
+};

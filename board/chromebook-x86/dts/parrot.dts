@@ -1,0 +1,27 @@
+/dts-v1/;
+
+/include/ "coreboot.dtsi"
+/include/ "chromeos-coreboot.dtsi"
+/include/ "flashmap-coreboot-8mb_1mb_rom.dtsi"
+
+/ {
+	model = "Google Parrot";
+	compatible = "google,parrot", "intel,celeron-sandybridge";
+
+	config {
+		hwid = "X86 PARROT TEST 8762";
+		hda_codec_beep = <1>;
+		hda-codec-beep-nid = <0x1>;
+	};
+
+	gpio: gpio {};
+
+	chromeos-config {
+		virtual-dev-switch;
+		oprom-matters;
+		vboot-flag-ec-in-rw {
+			compatible = "google,gpio-flag";
+			gpio = <&gpio 68 0>;
+		};
+	};
+};

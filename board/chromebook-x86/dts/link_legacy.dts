@@ -1,0 +1,25 @@
+/dts-v1/;
+
+/include/ "coreboot.dtsi"
+/include/ "chromeos-coreboot.dtsi"
+/include/ "flashmap-coreboot-8mb_1mb_rom.dtsi"
+
+/ {
+	model = "Google Link";
+	compatible = "google,link", "intel,celeron-ivybridge";
+
+	config {
+		hwid = "X86 LINK TEST 6638";
+		silent_console = <0>;
+		hda_codec_beep = <1>;
+	};
+
+	serial {
+		compatible = "ns16550";
+		reg = <0x3f8 8>;
+		reg-shift = <1>;
+		clock-frequency = <115200>;
+		multiplier = <1>;
+		io-mapped = <1>;
+	};
+};

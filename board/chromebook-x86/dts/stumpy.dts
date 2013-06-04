@@ -1,0 +1,25 @@
+/dts-v1/;
+
+/include/ "coreboot.dtsi"
+/include/ "chromeos-coreboot.dtsi"
+/include/ "flashmap-coreboot-8mb_1mb_rom.dtsi"
+
+/ {
+	model = "Google Stumpy";
+	compatible = "google,stumpy", "intel,celeron-sandybridge";
+
+	config {
+		hwid = "X86 STUMPY TEST 0128";
+		skip-i8042 = <1>;
+		usb-keyboard;
+		hda_codec_beep = <1>;
+	};
+
+	chromeos-config {
+		oprom-matters;
+		vboot-flag-ec-in-rw {
+			compatible = "google,const-flag";
+			value = <0>;
+		};
+	};
+};
