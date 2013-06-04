@@ -47,6 +47,21 @@ int funcmux_select(enum periph_id id, int config)
 		}
 		break;
 
+	case PERIPH_ID_UART1:
+		switch (config) {
+		case FUNCMUX_UART1_KBC:
+			pinmux_set_func(PINGRP_KB_ROW9, PMUX_FUNC_UARTA);
+			pinmux_set_func(PINGRP_KB_ROW10, PMUX_FUNC_UARTA);
+
+			pinmux_set_io(PINGRP_KB_ROW9, PMUX_PIN_OUTPUT);
+			pinmux_set_io(PINGRP_KB_ROW10, PMUX_PIN_INPUT);
+
+			pinmux_tristate_disable(PINGRP_KB_ROW9);
+			pinmux_tristate_disable(PINGRP_KB_ROW10);
+			break;
+		}
+		break;
+
 	/* Add other periph IDs here as needed */
 
 	default:

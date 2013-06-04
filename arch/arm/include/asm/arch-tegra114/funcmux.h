@@ -26,6 +26,7 @@ enum {
 	FUNCMUX_DEFAULT = 0,	/* default config */
 
 	/* UART configs */
+	FUNCMUX_UART1_KBC = 0,
 	FUNCMUX_UART4_GMI = 0,
 };
 #endif	/* _TEGRA114_FUNCMUX_H_ */

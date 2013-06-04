@@ -126,7 +126,7 @@ static int uart_configs[] = {
 	-1,
 	-1,
 #else	/* Tegra114 */
-	-1,
+	FUNCMUX_UART1_KBC,	/* UARTA */
 	-1,
 	-1,
 	FUNCMUX_UART4_GMI,	/* UARTD */
