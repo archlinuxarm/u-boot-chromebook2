@@ -1,0 +1,42 @@
+Chrome OS Firmware Storage Binding
+==================================
+
+The device tree node which describes how firmware is stored on the device is
+as follows:
+
+Optional properties :
+- bus : The number of the SPI bus the storage is on. Defaults to zero.
+- reg : The chip select for the storage device. Defaults to zero.
+- spi-max-frequency : Sets the maximum frequency (in Hz) for SPI bus
+   operation. Defaults to 1MHz.
+- spi-cpol : Boolean property - if present, changes the clock polarity.
+- spi-cpha : Boolean property - if present, changes the clock phase.
+- spi-cs-high : Boolean property - if present, CS is active high.
+- elog-panic-event : The location and size in memory of the event log
+   panic event buffer.
+- elog-shrink-size : The amount of buffer to clear when the event log is too
+   full.
+- elog-full-threshold : How much data can be in the event log before it's
+   considered full.
+
+The firmware_storage_spi node should appear as a subnode of the spi bus the
+storage it describes is attached to.
+
+Example
+=======
+
+	spi@12d30000 {
+		firmware_storage_spi: flash@0 {
+			bus = <1>;
+			spi-max-frequency = <45000000>;
+
+			/*
+			 * A region for the kernel to store a panic event
+			 * which the firmware will add to the log.
+			 */
+			elog-panic-event = <0x41fff000 0x1000>;
+
+			elog-shrink-size = <0x400>;
+			elog-full-threshold = <0xc00>;
+		};
+	};
