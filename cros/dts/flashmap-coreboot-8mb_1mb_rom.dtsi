@@ -96,8 +96,8 @@
 		rw-a-ec {
 			label = "ec-rw-a";
 			reg = <0x002d0000 0x0001ffc0>;
-			type = "blob ecbin";
-			add-hash;
+			type = "wiped";
+			wipe-value = [ff];
 		};
 		rw-a-firmware-id {
 			/* Alignment: no requirement. */
@@ -138,8 +138,8 @@
 		rw-b-ec {
 			label = "ec-rw-b";
 			reg = <0x003c0000 0x0001ffc0>;
-			type = "blob ecbin";
-			add-hash;
+			type = "wiped";
+			wipe-value = [ff];
 		};
 		rw-b-firmware-id {
 			label = "rw-fwid-b";
