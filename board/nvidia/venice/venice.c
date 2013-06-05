@@ -23,8 +23,13 @@
 #include <i2c.h>
 
 /* TODO(twarren@nvidia.com): Move to device tree */
-#define BAT_I2C_ADDRESS		0x48	/* TPS65090 charger */
 #define PMU_I2C_ADDRESS		0x58	/* TPS65913 PMU */
+
+/*
+ * NOTE: On Venice, the TPS65090 PMIC is behind the EC, and
+ * isn't directly controlled from U-Boot. See comments below
+ * marked with *EC* for those PMIC inits.
+ */
 
 /*
  * Routine: pinmux_init
@@ -78,8 +83,7 @@ void board_sdmmc_voltage_init(void)
 	/* TPS65913: LDO9_CTRL = Active */
 	i2c_write_pmic(PMU_I2C_ADDRESS, 0x60, 0x01);
 
-	/* TPS65090: FET6_CTRL = enable output auto discharge, enable FET6 */
-	i2c_write_pmic(BAT_I2C_ADDRESS, 0x14, 0x03);
+	/* *EC*: TPS65090: FET6_CTRL = enable FET6 output auto discharge */
 }
 
 void board_vreg_init(void)
@@ -89,8 +93,7 @@ void board_vreg_init(void)
 		printf("%s: i2c_set_bus_num returned %d\n", __func__, ret);
 
 	/*
-	 * Enable USB voltage: AVDD_USB_HDMI for AVDD_USB_AP
-	 *			and AVDD_HDMI_AP
+	 * Enable USB voltage: AVDD_USB
 	 *   LDOUSB_VOLTAGE = 3.3v
 	 *   LDOUSB_CTRL = Active
 	 */
@@ -116,23 +119,16 @@ void board_vreg_init(void)
 	i2c_write_pmic(PMU_I2C_ADDRESS, 0x30, 0x05);
 
 	/*
-	 * Set and enable AVDD_2V8_CAM1
-	 *   LDO1_VOLTAGE = 2.8v
+	 * Set and enable 1V2_AVDD_USB
+	 *   LDO1_VOLTAGE = 1.2v
 	 *   LDO1_CTRL = Active
 	 */
-	i2c_write_pmic(PMU_I2C_ADDRESS, 0x51, 0x27);
+	i2c_write_pmic(PMU_I2C_ADDRESS, 0x51, 0x07);
 	i2c_write_pmic(PMU_I2C_ADDRESS, 0x50, 0x01);
 
 	/*
-	 * Set and enable AVDD_2V8_CAM2
-	 *   LDO2_VOLTAGE = 2.8v
-	 *   LDO2_CTRL = Active
-	 */
-	i2c_write_pmic(PMU_I2C_ADDRESS, 0x53, 0x27);
-	i2c_write_pmic(PMU_I2C_ADDRESS, 0x52, 0x01);
-
-	/*
-	 * Set and enable AVDD_1V2 for VDDIO_HSIC_AP and AVDD_DSI_CSI_AP
+	 * Set and enable 1V2_GEN_VDD for VDDIO_HSIC, AVDD_DSI_CSI,
+	 * WiFi, audio, and AVDD_HDMI_PLL
 	 *   LDO3_VOLTAGE = 1.2v
 	 *   LDO3_CTRL = Active
 	 */
@@ -140,35 +136,31 @@ void board_vreg_init(void)
 	i2c_write_pmic(PMU_I2C_ADDRESS, 0x54, 0x01);
 
 	/*
-	 * Set and enable VPP_FUSE_APP
-	 *   LDO4_VOLTAGE = 1.8v
+	 * Set and enable 1V2_USB3_PLL
+	 *   LDO4_VOLTAGE = 1.2v
 	 *   LDO4_CTRL = Active
 	 */
-	i2c_write_pmic(PMU_I2C_ADDRESS, 0x57, 0x13);
+	i2c_write_pmic(PMU_I2C_ADDRESS, 0x57, 0x07);
 	i2c_write_pmic(PMU_I2C_ADDRESS, 0x56, 0x01);
 
 	/*
-	 * Set and enable VDD_1V2_LCD
+	 * Set and enable 1V2_EDP
 	 *   LDO5_VOLTAGE = 1.2v (TPS65913)
 	 *   LDO5_CTRL = Active
-	 *
-	 * Enable VDD_LCD_BL
-	 *   VOUT1 (FET1) (TPS65090): auto discharge and enable
-	 *
-	 * Enable AVDD_LCD
-	 *   VOUT4 (FET4) (TPS65090): auto discharge and enable
-	 *
-	 * Enable VDD_LVDS
-	 *   VOUT5 (FET5) (TPS65090): auto discharge and enable
 	 */
-	i2c_write_pmic(PMU_I2C_ADDRESS, 0x59, 0x07); /* LDO5_VOLTAGE */
+
+	i2c_write_pmic(PMU_I2C_ADDRESS, 0x59, 0x07); /* LD05_VOLTAGE */
 	i2c_write_pmic(PMU_I2C_ADDRESS, 0x58, 0x01); /* LD05_CTRL */
-	i2c_write_pmic(BAT_I2C_ADDRESS, 0x0F, 0x03); /* VOUT1 (FET1) */
-	i2c_write_pmic(BAT_I2C_ADDRESS, 0x12, 0x03); /* VOUT4 (FET4) */
-	i2c_write_pmic(BAT_I2C_ADDRESS, 0x13, 0x03); /* VOUT5 (FET5) */
 
 	/*
-	 * Set and enable VDD_SENSOR
+	 * *EC*: Enable VDD_LCD_BL
+	 *   VOUT1 (FET1) (TPS65090): auto discharge and enable
+	 * *EC*: Enable 3V3_PANEL
+	 *   VOUT4 (FET4) (TPS65090): auto discharge and enable
+	 */
+
+	/*
+	 * Set and enable 2V8_SENSOR (temp sensor)
 	 *   LDO6_VOLTAGE = 2.85v
 	 *   LDO6_CTRL = Active
 	 */
@@ -176,18 +168,9 @@ void board_vreg_init(void)
 	i2c_write_pmic(PMU_I2C_ADDRESS, 0x5A, 0x01);
 
 	/*
-	 * Set and enable AVDD_2V8_CAM_AF1
-	 *   LDO7_VOLTAGE = 2.8v
-	 *   LDO7_CTRL = Active
-	 */
-	i2c_write_pmic(PMU_I2C_ADDRESS, 0x5D, 0x27);
-	i2c_write_pmic(PMU_I2C_ADDRESS, 0x5C, 0x01);
-
-	/*
-	 * Enable VDD_3V3_COM
+	 * *EC*: Enable 3V3_VDD_WF
 	 *   VOUT7 (FET7) (TPS65090): auto discharge and enable
 	 */
-	i2c_write_pmic(BAT_I2C_ADDRESS, 0x15, 0x03);
 
 	/* Enable LCD backlight */
 	gpio_direction_output(DSI_PANEL_BL_EN_GPIO, 1);
