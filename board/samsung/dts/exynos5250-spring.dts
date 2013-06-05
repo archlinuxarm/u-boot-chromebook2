@@ -9,7 +9,7 @@
 */
 
 /dts-v1/;
-/include/ "exynos5.dtsi"
+/include/ "exynos52xx.dtsi"
 /include/ "flashmap-exynos-ro.dtsi"
 /include/ "flashmap-4mb-rw.dtsi"
 /include/ "chromeos-exynos.dtsi"
