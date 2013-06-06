@@ -44,4 +44,7 @@
 /* This defines maximum number of channels available for dwmmc */
 #define	DWMMC_MAX_CH_NUM		3
 
+/* 16 K reserved for BL2 (SPL) */
+#define CONFIG_BL2_SIZE		(16 << 10)
+
 #endif

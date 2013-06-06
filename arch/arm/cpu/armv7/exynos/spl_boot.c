@@ -229,7 +229,7 @@ void copy_uboot_to_ram(void)
 		break;
 	case BOOT_MODE_MMC:
 		copy_bl2 = get_irom_func(MMC_INDEX);
-		copy_bl2(CONFIG_BL2_OFFSET / MMC_MAX_BLOCK_LEN,
+		copy_bl2(CONFIG_UBOOT_OFFSET / MMC_MAX_BLOCK_LEN,
 			 uboot_size / MMC_MAX_BLOCK_LEN, CONFIG_SYS_TEXT_BASE);
 		break;
 	case BOOT_MODE_EMMC:
