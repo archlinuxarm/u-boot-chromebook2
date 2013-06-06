@@ -16,6 +16,11 @@
 		hwid = "smdk5420 TEST A-A 9382";
 	};
 
+	aliases {
+		serial0 = "/serial@12C30000";
+		console = "/serial@12C30000";
+	};
+
 	tmu@10060000 {
 		samsung,min-temp	= <25>;
 		samsung,max-temp	= <125>;
