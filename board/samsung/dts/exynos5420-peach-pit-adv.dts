@@ -8,9 +8,11 @@
 
 /dts-v1/;
 /include/ "exynos54xx.dtsi"
+#ifdef CONFIG_CHROMEOS
 /include/ "flashmap-exynos-ro.dtsi"
 /include/ "flashmap-4mb-rw.dtsi"
 /include/ "chromeos-exynos.dtsi"
+#endif
 / {
 	model = "SAMSUNG Peach board based on EXYNOS5420";
 	compatible = "samsung,peach-pit-adv", "samsung,exynos5";
