@@ -100,16 +100,8 @@
 		};
 	};
 
-	mshci@12210000 {
-		samsung,sdhci-bus-width = <4>;
-	};
-
-	mshci@12220000 {
+	mmc@12220000 {
 		/* MMC2 pins are used as GPIO for eDP bridge */
-		status = "disabled";
-	};
-
-	mshci@12230000 {
 		status = "disabled";
 	};
 

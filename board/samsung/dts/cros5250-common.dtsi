@@ -107,15 +107,27 @@
 		status = "disabled";
 	};
 
-	mshci@12200000 {
-		samsung,mshci-bus-width = <8>;
-		enable-gpios = <&gpio 58 0>;
-	};
+        mmc@12200000 {
+                samsung,bus-width = <8>;
+                samsung,timing = <1 3 3>;
+                samsung,removable = <0>;
+                enable-gpios = <&gpio 58 0>;
+        };
 
-	mshci@12220000 {
-		samsung,mshci-bus-width = <4>;
-		samsung,removable;
-	};
+        mmc@12210000 {
+                status = "disabled";
+        };
+
+        mmc@12220000 {
+                samsung,bus-width = <4>;
+                samsung,timing = <1 2 3>;
+                samsung,removable = <1>;
+        };
+
+        mmc@12230000 {
+                status = "disabled";
+        };
+
 
 	dmc@10C00000 {
 		mem-interleave-size = <0x1f>;
