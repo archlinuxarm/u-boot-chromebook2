@@ -30,11 +30,13 @@
 
 #undef CONFIG_DEFAULT_DEVICE_TREE
 #define CONFIG_DEFAULT_DEVICE_TREE	exynos5250-snow
+#define CONFIG_STD_DEVICES_SETTINGS    EXYNOS_DEVICE_SETTINGS
 
 /* Generally verified boot needs more heap space */
 #undef CONFIG_SYS_MALLOC_LEN
 #define CONFIG_SYS_MALLOC_LEN	(32 << 20)
 
+#define CONFIG_LOADADDR 0x42000000
 #define CONFIG_INITRD_ADDRESS 0x44000000
 
 #include <configs/chromeos.h>
@@ -65,8 +67,31 @@
 #define LCD_BPP LCD_COLOR16
 #define CONFIG_SYS_WHITE_ON_BLACK
 
-#define CONFIG_SERIAL3
-
 #define CONFIG_SYS_PROMPT	"SMDK5250 # "
+
+/*
+ * Extra bootargs used for direct booting, but not for vboot.
+ * - console of the board
+ * - debug and earlyprintk: easier to debug; they could be removed later
+ */
+#define CONFIG_DIRECT_BOOTARGS \
+	"console=ttySAC3," STRINGIFY(CONFIG_BAUDRATE) " debug earlyprintk"
+
+#define CONFIG_EXTRA_BOOTARGS ""
+
+/* Replace default CONFIG_EXTRA_ENV_SETTINGS */
+#ifdef CONFIG_EXTRA_ENV_SETTINGS
+#undef CONFIG_EXTRA_ENV_SETTINGS
+#endif
+#define CONFIG_EXTRA_ENV_SETTINGS \
+	EXYNOS_DEVICE_SETTINGS \
+	CONFIG_CHROMEOS_EXTRA_ENV_SETTINGS
+
+/* Replace default CONFIG_BOOTCOMMAND */
+#ifdef CONFIG_BOOTCOMMAND
+#undef CONFIG_BOOTCOMMAND
+#endif
+#define CONFIG_BOOTCOMMAND CONFIG_NON_VERIFIED_BOOTCOMMAND
+
 
 #endif	/* __CONFIG_SMDK_H */
