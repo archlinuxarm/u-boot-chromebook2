@@ -305,11 +305,15 @@ static int request_locality(struct tpm_chip *chip, int loc)
 static u8 tpm_tis_i2c_status(struct tpm_chip *chip)
 {
 	/* NOTE: since i2c read may fail, return 0 in this case --> time-out */
-	u8 buf;
-	if (iic_tpm_read(TPM_STS(chip->vendor.locality), &buf, 1) < 0)
-		return 0;
-	else
-		return buf;
+	u8 buf, count;
+
+	for (count = 0; count < MAX_COUNT; count++) {
+		if (iic_tpm_read(TPM_STS(chip->vendor.locality), &buf, 1) < 0)
+			break;	/* Nack retries happen in the read function. */
+		if (buf != 0xff)
+			return buf;
+	}
+	return 0;
 }
 
 static void tpm_tis_i2c_ready(struct tpm_chip *chip)
