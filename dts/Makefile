@@ -28,14 +28,24 @@ include $(TOPDIR)/config.mk
 LIB	= $(obj)libdts.o
 
 ifeq ($(DEVICE_TREE),)
+
 $(if $(CONFIG_DEFAULT_DEVICE_TREE),,\
 $(error Please define CONFIG_DEFAULT_DEVICE_TREE in your board header file))
-# This gets rid both of the double quotes and a possible suffix.
-DEV_TREE_BASE := $(shell echo $(CONFIG_DEFAULT_DEVICE_TREE) | sed 's/-.*//')
+
 DEFAULT_TREE := $(subst ",,$(obj)$(CONFIG_DEFAULT_DEVICE_TREE).dtb)
+
+ifeq ($(CONFIG_DEVICE_TREE_LIST),)
+DEV_TREE_LIST := $(subst ",,$(CONFIG_DEFAULT_DEVICE_TREE))
 else
-DEV_TREE_BASE := $(DEVICE_TREE)
+DEV_TREE_LIST := $(subst ",,$(CONFIG_DEVICE_TREE_LIST))
+endif
+
+else  # DEVICE_TREE ^^^ empty  vvvvv set
+
+# If DEVICE_TREE is defined, it will be the only tree built
+DEV_TREE_LIST := $(DEVICE_TREE)
 DEFAULT_TREE := $(obj)$(DEVICE_TREE).dtb)
+
 endif
 
 $(if $(CONFIG_ARCH_DEVICE_TREE),,\
@@ -71,7 +81,8 @@ all:	$(obj).depend $(LIB)
 # the filename.
 DT_BIN	:= $(obj)dt.dtb
 
-DT_SOURCES := $(notdir $(wildcard $(DTS_DIR)/$(DEV_TREE_BASE)-*))
+DT_SOURCES := $(addsuffix .dts,$(DEV_TREE_LIST))
+
 DT_BINS := $(addprefix $(obj),$(addsuffix .dtb,$(basename $(DT_SOURCES)))) \
 	$(DT_BIN)
 
