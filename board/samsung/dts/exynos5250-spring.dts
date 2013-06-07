@@ -54,7 +54,7 @@
 			reg = <0x1e>;
 			compatible = "google,cros-ec";
 			i2c-max-frequency = <100000>;
-			ec-interrupt = <&gpio 174 1>;
+			ec-interrupt = <&gpio 182 1>;
 
 			power-regulator@48 {
 				compatible = "ti,tps65090";
@@ -82,8 +82,8 @@
 		anx7805-bridge@72 {
 			compatible = "analogix,anx7805";
 			reg = <0x72>;
-			powerdown-gpio = <&gpio 0xc6 1>;	/* E06 */
-			reset-gpio = <&gpio 0xc7 1>;		/* E07 */
+			powerdown-gpio = <&gpio 0xce 1>;	/* E06 */
+			reset-gpio = <&gpio 0xcf 1>;		/* E07 */
 		};
 	};
 
@@ -119,7 +119,7 @@
 
 	hsichub@13400000 {
 		compatible = "smsc,usb3503";
-		reset-gpio = <&gpio 0xc8 0>;		/* E10 */
+		reset-gpio = <&gpio 0xd0 0>;		/* E10 */
 	};
 
 };
