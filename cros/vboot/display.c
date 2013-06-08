@@ -21,6 +21,7 @@
 #include <lzma/LzmaTypes.h>
 #include <lzma/LzmaDec.h>
 #include <lzma/LzmaTools.h>
+#include <asm/unaligned.h>
 
 #ifdef CONFIG_EXYNOS_DISPLAYPORT
 /* for exynos_lcd_check_next_stage() */
@@ -252,7 +253,7 @@ static int sanity_check_bitmap(void *buffer, uint32_t buffersize)
 		return -1;
 	}
 
-	data_offset = le32_to_cpu(bmp->header.data_offset);
+	data_offset = get_unaligned_le32(&bmp->header.data_offset);
 	if (data_offset > buffersize) {
 		VBDEBUG("data_offset = %u > buffersize = %u\n",
 				data_offset, buffersize);
@@ -263,9 +264,9 @@ static int sanity_check_bitmap(void *buffer, uint32_t buffersize)
 	 * This is a conservative estimation of bitmap size (it does not
 	 * consider padding).
 	 */
-	width = le32_to_cpu(bmp->header.width);
-	height = le32_to_cpu(bmp->header.height);
-	bit_count = le16_to_cpu(bmp->header.bit_count);
+	width = get_unaligned_le32(&bmp->header.width);
+	height = get_unaligned_le32(&bmp->header.height);
+	bit_count = get_unaligned_le16(&bmp->header.bit_count);
 	bitmap_size = width * height * bit_count / 8;
 	if (data_offset + bitmap_size > buffersize) {
 		VBDEBUG("data_offset + bitmap_size = %u > buffersize = %u\n",
