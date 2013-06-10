@@ -25,6 +25,7 @@
 #include <malloc.h>
 #include <asm/arch/dwmmc.h>
 #include <asm/arch/clk.h>
+#include <asm/arch/gpio.h>
 #include <asm/arch/pinmux.h>
 
 #define	DWMMC_MAX_FREQ			52000000
@@ -129,10 +130,22 @@ int exynos_dwmmc_init(const void *blob)
 				DWMMC_MAX_CH_NUM);
 
 	for (i = 0; i < count; i++) {
+		struct fdt_gpio_state gpio;
 		int node = node_list[i];
 
 		if (node <= 0)
 			continue;
+
+		/* Get enable GPIO */
+		err = fdtdec_decode_gpio(blob, node, "enable-gpios", &gpio);
+		/* If error, assume no enable GPIOs */
+		if (!err) {
+			debug("%s: Enabling GPIO %d\n",
+				__func__, gpio.gpio);
+			fdtdec_gpio_direction_output(&gpio, 1);
+			/* TODO: Disable this if things fail later */
+		}
+
 
 		/* Extract device id for each mmc channel */
 		dev_id = pinmux_decode_periph_id(blob, node);
