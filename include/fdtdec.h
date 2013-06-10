@@ -153,6 +153,24 @@ int fdtdec_get_gpio(struct fdt_gpio_state *gpio);
 int fdtdec_set_gpio(struct fdt_gpio_state *gpio, int val);
 
 /**
+ * Make a GPIO an input.
+ *
+ * @param gpio		pointer to the decoded gpio
+ * @return 0 if successful
+ */
+int fdtdec_gpio_direction_input(struct fdt_gpio_state *gpio);
+
+/**
+ * Make a GPIO an output, and set its value, taking into account the
+ * polarity of the pin.
+ *
+ * @param gpio		pointer to the decoded gpio
+ * @param val		output state of pin (0 for disable, 1 for enable)
+ * @return 0 if successful
+ */
+int fdtdec_gpio_direction_output(struct fdt_gpio_state *gpio, int val);
+
+/**
  * Find the next numbered alias for a peripheral. This is used to enumerate
  * all the peripherals of a certain type.
  *

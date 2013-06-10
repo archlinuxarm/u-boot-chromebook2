@@ -546,6 +546,23 @@ int fdtdec_set_gpio(struct fdt_gpio_state *gpio, int val)
 	return gpio_set_value(gpio->gpio, val);
 }
 
+int fdtdec_gpio_direction_input(struct fdt_gpio_state *gpio)
+{
+	if (!fdt_gpio_isvalid(gpio))
+		return -1;
+
+	return gpio_direction_input(gpio->gpio);
+}
+
+int fdtdec_gpio_direction_output(struct fdt_gpio_state *gpio, int val)
+{
+	if (!fdt_gpio_isvalid(gpio))
+		return -1;
+
+	val = gpio->flags & FDT_GPIO_ACTIVE_LOW ? val ^ 1 : val;
+	return gpio_direction_output(gpio->gpio, val);
+}
+
 int fdtdec_setup_gpio(struct fdt_gpio_state *gpio)
 {
 	/*
