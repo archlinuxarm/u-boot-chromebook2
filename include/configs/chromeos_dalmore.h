@@ -74,4 +74,6 @@
 #endif
 #define CONFIG_TEGRA_BOARD_STRING	"NVIDIA ChromeOS Dalmore"
 
+#define CONFIG_DEVICE_TREE_LIST		"tegra114-dalmore"
+
 #endif /* __CHROMEOS_DALMORE_CONFIG_H */
