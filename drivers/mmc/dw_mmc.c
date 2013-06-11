@@ -208,21 +208,8 @@ static int dwmci_send_cmd(struct mmc *mmc, struct mmc_cmd *cmd,
 	}
 
 	if (data) {
-		if (data->flags & MMC_DATA_READ) {
-			data_start = (ulong)data->dest;
-			data_end = (ulong)data->dest +
-					data->blocks * data->blocksize;
-			/*
-			 * The buffer is supposed to have padding to the
-			 * closest cache line boundary.
-			 */
-			invalidate_dcache_range(data_start,
-						ALIGN(data_end,
-						      dcache_get_line_size()));
-		}
 		do {
 			mask = dwmci_readl(host, DWMCI_RINTSTS);
-			udelay(1);
 			if (mask & (DWMCI_DATA_ERR | DWMCI_DATA_TOUT)) {
 				debug("DATA ERROR!\n");
 				return -1;
@@ -234,6 +221,18 @@ static int dwmci_send_cmd(struct mmc *mmc, struct mmc_cmd *cmd,
 		ctrl = dwmci_readl(host, DWMCI_CTRL);
 		ctrl &= ~(DWMCI_DMA_EN);
 		dwmci_writel(host, DWMCI_CTRL, ctrl);
+		if (data->flags & MMC_DATA_READ) {
+			data_start = (ulong)data->dest;
+			data_end = (ulong)data->dest +
+				data->blocks * data->blocksize;
+			/*
+			 * The buffer is supposed to have padding to the
+			 * closest cache line boundary.
+			 */
+			invalidate_dcache_range(data_start,
+						ALIGN(data_end,
+						      dcache_get_line_size()));
+		}
 	}
 
 	return 0;
