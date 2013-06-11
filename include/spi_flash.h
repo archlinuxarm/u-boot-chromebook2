@@ -132,6 +132,17 @@ static inline int spi_flash_read_sw_wp_status(struct spi_flash *flash,
 }
 
 /**
+ * spi_flash_cmd_write_status() - Write the SPi flash status
+ *
+ * @flash: SPI flash to access
+ * @status: Status to write
+ * @write_16bit: true to write the full 16-bit status, false to write 8 bits
+ * @return 0 if ok, -ve on error
+ */
+int spi_flash_cmd_write_status(struct spi_flash *flash, unsigned int status,
+			       bool write_16bit);
+
+/**
  * spi_flash_cmd_write_status() - Read the SPi flash status
  *
  * @flash: SPI flash to access

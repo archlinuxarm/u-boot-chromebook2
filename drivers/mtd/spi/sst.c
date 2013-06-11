@@ -218,7 +218,7 @@ spi_flash_probe_sst(struct spi_slave *spi, u8 *idcode)
 	stm->flash.size = stm->flash.sector_size * params->nr_sectors;
 
 	/* Flash powers up read-only, so clear BP# bits */
-	spi_flash_cmd_write_status(&stm->flash, 0);
+	spi_flash_cmd_write_status(&stm->flash, 0, false);
 
 	return &stm->flash;
 }

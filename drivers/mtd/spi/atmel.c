@@ -524,7 +524,7 @@ struct spi_flash *spi_flash_probe_atmel(struct spi_slave *spi, u8 *idcode)
 		asf->flash.page_size = page_size;
 		asf->flash.sector_size = 4096;
 		/* clear SPRL# bit for locked flash */
-		spi_flash_cmd_write_status(&asf->flash, 0);
+		spi_flash_cmd_write_status(&asf->flash, 0, false);
 		break;
 
 	default:

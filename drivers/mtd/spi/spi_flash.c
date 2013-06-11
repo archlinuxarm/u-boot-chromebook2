@@ -285,9 +285,11 @@ int spi_flash_cmd_erase(struct spi_flash *flash, u32 offset, size_t len)
 	return ret;
 }
 
-int spi_flash_cmd_write_status(struct spi_flash *flash, u8 sr)
+int spi_flash_cmd_write_status(struct spi_flash *flash, unsigned int status,
+			       bool write_16bit)
 {
-	u8 cmd;
+	u8 cmd[3];
+	int len = sizeof(cmd);
 	int ret;
 
 	ret = spi_flash_cmd_write_enable(flash);
@@ -296,10 +298,14 @@ int spi_flash_cmd_write_status(struct spi_flash *flash, u8 sr)
 		return ret;
 	}
 
-	cmd = CMD_WRITE_STATUS;
-	ret = spi_flash_cmd_write(flash->spi, &cmd, 1, &sr, 1);
+	cmd[0] = CMD_WRITE_STATUS;
+	cmd[1] = status & 0xff;
+	cmd[2] = (status >> 8) & 0xff;
+	if (!write_16bit)
+		len--;
+	ret = spi_flash_cmd_write(flash->spi, cmd, len, NULL, 0);
 	if (ret) {
-		debug("SF: fail to write status register\n");
+		debug("SF: Failed to send command %02x: %d\n", cmd[0], ret);
 		return ret;
 	}
 

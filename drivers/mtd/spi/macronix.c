@@ -108,7 +108,7 @@ struct spi_flash *spi_flash_probe_macronix(struct spi_slave *spi, u8 *idcode)
 	flash->size = flash->sector_size * params->nr_blocks;
 
 	/* Clear BP# bits for read-only flash */
-	spi_flash_cmd_write_status(flash, 0);
+	spi_flash_cmd_write_status(flash, 0, false);
 
 	return flash;
 }
