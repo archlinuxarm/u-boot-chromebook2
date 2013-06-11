@@ -44,8 +44,8 @@ static const struct gigadevice_spi_flash_params gigadevice_spi_flash_table[] = {
  */
 static int gigadevice_read_sw_wp_status(struct spi_flash *flash, u8 *result)
 {
+	unsigned int status_reg;
 	int r;
-	u8 status_reg = 0;
 
 	r = spi_flash_cmd_read_status(flash, &status_reg);
 	if (r)					/* couldn't tell, assume no */

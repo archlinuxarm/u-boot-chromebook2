@@ -131,6 +131,15 @@ static inline int spi_flash_read_sw_wp_status(struct spi_flash *flash,
 	return 1;				/* else not implemented */
 }
 
+/**
+ * spi_flash_cmd_write_status() - Read the SPi flash status
+ *
+ * @flash: SPI flash to access
+ * @status: Returns status (16-bits)
+ * @return 0 if ok, -ve on error
+ */
+int spi_flash_cmd_read_status(struct spi_flash *flash, unsigned int *status);
+
 void spi_boot(void) __noreturn;
 
 #endif /* _SPI_FLASH_H_ */

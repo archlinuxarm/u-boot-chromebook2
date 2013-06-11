@@ -21,8 +21,11 @@
 #define CMD_WRITE_STATUS		0x01
 #define CMD_PAGE_PROGRAM		0x02
 #define CMD_WRITE_DISABLE		0x04
-#define CMD_READ_STATUS			0x05
 #define CMD_WRITE_ENABLE		0x06
+
+#define CMD_READ_STATUS			0x05
+#define CMD_READ_STATUS1		0x35
+
 #define CMD_ERASE_4K			0x20
 #define CMD_ERASE_32K			0x52
 #define CMD_ERASE_64K			0xd8
@@ -96,9 +99,6 @@ int spi_flash_cmd_wait_ready(struct spi_flash *flash, unsigned long timeout);
 
 /* Erase sectors. */
 int spi_flash_cmd_erase(struct spi_flash *flash, u32 offset, size_t len);
-
-/* Read the status register */
-int spi_flash_cmd_read_status(struct spi_flash *flash, u8 *result);
 
 /* Manufacturer-specific probe functions */
 struct spi_flash *spi_flash_probe_spansion(struct spi_slave *spi, u8 *idcode);
