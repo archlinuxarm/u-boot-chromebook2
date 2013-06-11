@@ -468,6 +468,36 @@ static int do_spi_flash_test(int argc, char * const argv[])
 }
 #endif /* CONFIG_CMD_SF_TEST */
 
+static int do_spi_flash_status(int argc, char * const argv[])
+{
+	unsigned int status;
+	int ret;
+
+	if (argc > 2)
+		return -1;
+	ret = spi_flash_cmd_read_status(flash, &status);
+	if (!ret)
+		printf("SPI status %04x", status);
+	if (!ret && argc == 2) {
+		char *endp;
+
+		status = simple_strtoul(argv[1], &endp, 16);
+		if (*endp != 0)
+			return -1;
+		ret = spi_flash_cmd_write_status(flash, status, true);
+		if (ret)
+			puts(", failed to write SPI status");
+		ret = spi_flash_cmd_read_status(flash, &status);
+		if (!ret)
+			printf(", new status %04x", status);
+	}
+	if (ret)
+		puts(": Operation failed");
+	puts("\n");
+
+	return 0;
+}
+
 static int do_spi_flash(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[])
 {
 	const char *cmd;
@@ -501,6 +531,8 @@ static int do_spi_flash(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[
 	else if (!strcmp(cmd, "test"))
 		ret = do_spi_flash_test(argc, argv);
 #endif
+	else if (!strcmp(cmd, "status"))
+		ret = do_spi_flash_status(argc, argv);
 	else
 		ret = -1;
 
@@ -531,6 +563,7 @@ U_BOOT_CMD(
 	"sf erase offset [+]len		- erase `len' bytes from `offset'\n"
 	"				  `+len' round up `len' to block size\n"
 	"sf update addr offset len	- erase and write `len' bytes from memory\n"
-	"				  at `addr' to flash at `offset'"
+	"				  at `addr' to flash at `offset'\n"
+	"sf status [<value>]		- check/set flash status"
 	SF_TEST_HELP
 );
