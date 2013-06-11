@@ -57,7 +57,7 @@ DTS_INCS-y := -i $(SRCTREE)/arch/$(ARCH)/dts
 
 DTS_INCS-y += -i $(SRCTREE)/board/$(VENDOR)/dts
 
-DTS_INCS-$(CONFIG_CHROMEOS) += -i $(SRCTREE)/cros/dts
+DTS_INCS-y += -i $(SRCTREE)/cros/dts
 
 # Check if our dtc includes
 DTS_FLAGS := $(shell if ! dtc -i 2>&1 | grep -q "invalid option"; then \
