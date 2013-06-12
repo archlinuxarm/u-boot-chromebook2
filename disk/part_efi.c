@@ -372,7 +372,7 @@ int gpt_fill_pte(gpt_header *gpt_h, gpt_entry *gpt_e,
 	u32 offset = (u32)le32_to_cpu(gpt_h->first_usable_lba);
 	ulong start;
 	int i, k;
-	size_t name_len;
+	size_t name_len, part_name_len;
 #ifdef CONFIG_PARTITION_UUIDS
 	char *str_uuid;
 #endif
@@ -422,9 +422,12 @@ int gpt_fill_pte(gpt_header *gpt_h, gpt_entry *gpt_e,
 		/* partition name */
 		name_len = sizeof(gpt_e[i].partition_name)
 			/ sizeof(efi_char16_t);
-		for (k = 0; k < name_len; k++)
+		part_name_len = ARRAY_SIZE(partitions[i].name);
+		for (k = 0; k < min(name_len, part_name_len); k++)
 			gpt_e[i].partition_name[k] =
 				(efi_char16_t)(partitions[i].name[k]);
+		/* Make sure partition_name ends with '\0'. */
+		gpt_e[i].partition_name[name_len - 1] = (efi_char16_t)'\0';
 
 		debug("%s: name: %s offset[%d]: 0x%x size[%d]: 0x%lx\n",
 		      __func__, partitions[i].name, i,
