@@ -54,8 +54,14 @@
 		rw-a-boot {
 			/* Alignment: no requirement (yet). */
 			label = "fw-main-a";
-			reg = <0x00202000 0x000edf00>;
-			type = "blob boot,dtb,ecbin";
+			reg = <0x00202000 0x000de000>;
+			type = "blob boot,dtb";
+		};
+		rw-a-ec {
+			label = "ec-rw-a";
+			reg = <0x002e0000 0x0000ff00>;
+			type = "blob ecbin";
+			add-hash;
 		};
 		rw-a-firmware-id {
 			/* Alignment: no requirement. */
@@ -87,8 +93,14 @@
 		rw-b-boot {
 			label = "fw-main-b";
 			/* Alignment: no requirement (yet). */
-			reg = <0x00302000 0x000edf00>;
-			type = "blob boot,dtb,ecbin";
+			reg = <0x00302000 0x000de000>;
+			type = "blob boot,dtb";
+		};
+		rw-b-ec {
+			label = "ec-rw-b";
+			reg = <0x003e0000 0x0000ff00>;
+			type = "blob ecbin";
+			add-hash;
 		};
 		rw-b-firmware-id {
 			label = "rw-fwid-b";
