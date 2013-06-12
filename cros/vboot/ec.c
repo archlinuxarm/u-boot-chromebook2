@@ -110,7 +110,7 @@ VbError_t VbExEcStayInRO(void)
 VbError_t VbExEcHashRW(const uint8_t **hash, int *hash_size)
 {
 	struct cros_ec_dev *mdev = board_get_cros_ec_dev();
-	static struct ec_response_vboot_hash resp;
+	static struct ec_response_vboot_hash resp __aligned(8);
 
 	if (!mdev) {
 		VBDEBUG("%s: no cros_ec device\n", __func__);
