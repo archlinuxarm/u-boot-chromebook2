@@ -38,7 +38,6 @@ int board_use_usb_keyboard(int boot_mode)
 
 static int boot_device_usb_start(uint32_t disk_flags)
 {
-	static char has_been_powered_on;
 	int enumerate = 1;
 
 	/* If we aren't looking for removable disks, skip USB */
@@ -53,23 +52,6 @@ static int boot_device_usb_start(uint32_t disk_flags)
 		enumerate = usb_detect_change();
 
 	if (enumerate) {
-		/*
-		 * TODO(crosbug/11523): USB flash drive responds to probing
-		 * only after it is powered on; so start USB device if this is
-		 * the first time, and wait 3 seconds for them to power up.
-		 * From experiments a 2 seconds delay is sufficient; choose 3
-		 * seconds to have more margin of safety.
-		 *
-		 * However, this should be a temporary workaround, as USB driver
-		 * should deal with this situation.
-		 */
-		if (!has_been_powered_on) {
-			usb_stop();
-			usb_init();
-			mdelay(3000);
-			has_been_powered_on = 1;
-		}
-
 		/*
 		 * We should stop all USB devices first. Otherwise we can't
 		 * detect any new devices.
