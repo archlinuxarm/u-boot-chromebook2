@@ -47,4 +47,8 @@
 /* 16 K reserved for BL2 (SPL) */
 #define CONFIG_BL2_SIZE		(16 << 10)
 
+/* DRAM Memory Banks */
+#define CONFIG_NR_DRAM_BANKS	7
+#define SDRAM_BANK_SIZE		(512UL << 20)	/* 512 MB */
+
 #endif
