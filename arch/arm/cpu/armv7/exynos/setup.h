@@ -880,9 +880,9 @@
 
 /* CLK_SRC_PERIC1 */
 /* SRC_CLOCK = SCLK_EPLL */
-#define SPI0_SEL		6
-#define SPI1_SEL		6
-#define SPI2_SEL		6
+#define SPI0_SEL		3
+#define SPI1_SEL		3
+#define SPI2_SEL		3
 #define AUDIO0_SEL		6
 #define AUDIO1_SEL		6
 #define AUDIO2_SEL		6
@@ -930,9 +930,9 @@
 				| (AUDIO0_RATIO << 20))
 
 /* CLK_DIV_PERIC4 */
-#define SPI2_PRE_RATIO		0x2
-#define SPI1_PRE_RATIO		0x2
-#define SPI0_PRE_RATIO		0x2
+#define SPI2_PRE_RATIO		0x3
+#define SPI1_PRE_RATIO		0x3
+#define SPI0_PRE_RATIO		0x3
 #define CLK_DIV_PERIC4_VAL	((SPI2_PRE_RATIO << 24)	\
 				| (SPI1_PRE_RATIO << 16) \
 				| (SPI0_PRE_RATIO << 8))
