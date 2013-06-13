@@ -238,7 +238,7 @@ static void power_down_core(void)
  * Reconfigure secondary cores. Shutdown and change the status
  * of all cores except the primary core.
  */
-static void secondary_cores_configure(void)
+static void evt0_cores_configure(void)
 {
 	uint32_t i, core_id;
 
@@ -277,18 +277,51 @@ static void secondary_cores_configure(void)
 	/* Set reset flag */
 	writel(RST_FLAG_VAL, RST_FLAG_REG);
 }
+
+/*
+ * Set jump addresses for all the cores in EVT1
+ */
+static void evt1_cores_configure(void)
+{
+	/* Setup L2 cache */
+	set_l2cache();
+
+	/* Clear secondary boot iRAM base */
+	writel(0x0, (CONFIG_IROM_WORKAROUND_BASE + 0x1C));
+
+	/* set lowpower flag and address */
+	writel(RST_FLAG_VAL, CONFIG_LOWPOWER_FLAG);
+	writel((uint32_t)&low_power_start, CONFIG_LOWPOWER_ADDR);
+	writel(RST_FLAG_VAL, RST_FLAG_REG);
+	/* Store jump address for power down */
+	writel((uint32_t)&power_down_core, CONFIG_PHY_IRAM_BASE + 0x4);
+
+	/* Need all core power down check */
+	dsb();
+	sev();
+}
 #endif
 
 int do_lowlevel_init(void)
 {
+#ifdef CONFIG_EXYNOS5420
+	uint32_t rev_id;
+#endif
 	uint32_t reset_status;
 	int actions = 0;
 
 	arch_cpu_init();
 
 #ifdef CONFIG_EXYNOS5420
+	rev_id = readl(EXYNOS5420_PRO_ID);
+	rev_id = rev_id >> 4;
+	rev_id &= 0xf;
+
 	/* Reconfigure secondary cores */
-	secondary_cores_configure();
+	if (rev_id == 0x0)
+		evt0_cores_configure();
+	else
+		evt1_cores_configure();
 #endif
 
 	reset_status = get_reset_status();
