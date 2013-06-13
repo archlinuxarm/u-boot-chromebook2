@@ -33,6 +33,7 @@
 	};
 
 	config {
+		google,bad-wake-gpios = <&gpio 0x56 0>; /* gpx0-6 */
 		hwid = "peach TEST A-A 9382";
 	};
 
