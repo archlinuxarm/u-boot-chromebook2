@@ -260,27 +260,30 @@ int do_lowlevel_init(void)
 		break;
 	default:
 		/* This is a normal boot (not a wake from sleep) */
-		actions = DO_CLOCKS | DO_MEM_RESET | DO_POWER | DO_TIMER;
+		actions = DO_CLOCKS | DO_MEM_RESET | DO_POWER |
+			DO_TIMER | DO_UART;
 	}
 
 	if (actions & DO_POWER)
 		power_init();
 		/* TODO: Also call board_power_init()? */
-	if (actions & DO_CLOCKS) {
+
+	if (actions & DO_CLOCKS)
 		system_clock_init();
+
+#ifdef CONFIG_SPL_SERIAL_SUPPORT
+	if (actions & DO_UART) {
+		/* Set up serial UART so we can print. */
+		exynos_pinmux_config(PERIPH_ID_UART3, PINMUX_FLAG_NONE);
+		serial_init();
+	}
+#endif
+	if (actions & DO_TIMER)
+		timer_init();
+	if (actions & DO_CLOCKS) {
 		mem_ctrl_init(actions & DO_MEM_RESET);
 		tzpc_init();
 	}
-	if (actions & DO_TIMER)
-		timer_init();
-
-#ifdef CONFIG_EXYNOS_SPL_UART
-	if (actions & DO_UART) {
-		exynos_pinmux_config(PERIPH_ID_UART3, PINMUX_FLAG_NONE);
-		serial_init();
-		timer_init();
-	}
-#endif
 
 	return actions & DO_WAKEUP;
 }

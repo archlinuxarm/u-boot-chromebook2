@@ -25,6 +25,7 @@
 #include <linux/compiler.h>
 #include <asm/io.h>
 #include <fdtdec.h>
+#include <asm/arch/spl.h>
 #include <asm/arch/uart.h>
 #include <asm/arch/clk.h>
 #include <serial.h>
@@ -243,6 +244,33 @@ DECLARE_S5P_SERIAL_FUNCTIONS(3);
 struct serial_device s5p_serial3_device =
 	INIT_S5P_SERIAL_STRUCTURE(3, "s5pser3");
 
+#if defined(CONFIG_SPL_BUILD) && !defined(CONFIG_OF_CONTROL)
+static struct serial_device *all_ports[] = {
+	&s5p_serial0_device,
+	&s5p_serial1_device,
+	&s5p_serial2_device,
+	&s5p_serial3_device
+};
+
+static struct serial_device *get_spl_config(void)
+{
+	struct spl_machine_param *mp = spl_get_machine_params();
+	int i;
+
+	for (i = 0; i < ARRAY_SIZE(all_ports); i++) {
+		unsigned port_base = (unsigned)s5p_get_base_uart(i);
+
+		if (mp->serial_base == port_base)
+			return all_ports[i];
+	}
+	/*
+	 * Machine param setting is wrong, but it is not a reason to stop, use
+	 * a default.
+	 */
+	return &s5p_serial3_device;
+}
+#endif
+
 #ifdef CONFIG_OF_CONTROL
 int fdtdec_decode_console(int *index, struct fdt_serial *uart)
 {
@@ -288,7 +316,9 @@ __weak struct serial_device *default_serial_console(void)
 	return NULL;
 #else
 	config.enabled = 1;
-#if defined(CONFIG_SERIAL0)
+#ifdef CONFIG_SPL_BUILD
+	return get_spl_config();
+#elif defined(CONFIG_SERIAL0)
 	return &s5p_serial0_device;
 #elif defined(CONFIG_SERIAL1)
 	return &s5p_serial1_device;

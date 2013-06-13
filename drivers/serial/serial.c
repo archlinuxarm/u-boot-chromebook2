@@ -361,14 +361,16 @@ void serial_reinit_all(void)
 static struct serial_device *get_current(void)
 {
 	struct serial_device *dev;
-
+#ifdef CONFIG_SPL_BUILD
+	dev = default_serial_console();
+#else
 	if (!(gd->flags & GD_FLG_RELOC))
 		dev = default_serial_console();
 	else if (!serial_current)
 		dev = default_serial_console();
 	else
 		dev = serial_current;
-
+#endif
 	/* We must have a console device */
 	if (!dev) {
 #ifdef CONFIG_SPL_BUILD

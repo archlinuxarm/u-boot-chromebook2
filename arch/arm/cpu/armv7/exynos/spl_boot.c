@@ -460,7 +460,32 @@ void board_init_r(gd_t *id, ulong dest_addr)
 }
 void save_boot_params(u32 r0, u32 r1, u32 r2, u32 r3) {}
 
+#ifdef CONFIG_SPL_SERIAL_SUPPORT
+void puts(const char *s)
+{
+	serial_puts(s);
+}
+
+int printf(const char *fmt, ...)
+{
+	va_list args;
+	int i;
+	/* We won't be able to print strings longer then this. */
+	char printf_buffer[150];
+
+	va_start(args, fmt);
+	i = vsnprintf(printf_buffer, sizeof(printf_buffer), fmt, args);
+	va_end(args);
+
+	puts(printf_buffer);
+
+	return i;
+}
+
+#else
+
 int printf(const char *fmt, ...)
 {
 	return 0;
 }
+#endif

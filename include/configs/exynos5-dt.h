@@ -52,7 +52,9 @@
 
 /* Enable fdt support for Exynos5250 */
 #define CONFIG_ARCH_DEVICE_TREE		exynos5
+#ifndef CONFIG_SPL_BUILD
 #define CONFIG_OF_CONTROL
+#endif
 #define CONFIG_OF_SEPARATE
 #define CONFIG_OF_SPI_FLASH
 #define CONFIG_OF_SPI
@@ -183,7 +185,7 @@
 
 /* specific .lds file */
 #define CONFIG_SPL_LDSCRIPT	"board/samsung/common/exynos-uboot-spl.lds"
-#define CONFIG_SPL_MAX_FOOTPRINT	(14 * 1024)
+#define CONFIG_SPL_MAX_FOOTPRINT       (32 * 1024)
 
 #define CONFIG_BOOTCOMMAND	"mmc read 40007000 451 2000; bootm 40007000"
 
@@ -424,5 +426,6 @@
 #define SECONDARY_RESET			(1 << 1)
 
 #define CONFIG_EXYNOS_FAST_SPI_BOOT
+#define CONFIG_SPL_SERIAL_SUPPORT
 
 #endif	/* __CONFIG_EXYNOS5_DT_H */
