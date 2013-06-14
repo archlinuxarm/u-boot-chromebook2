@@ -278,3 +278,24 @@ int power_init(void)
 
 	return 0;
 }
+
+bool power_watchdog_fired(void)
+{
+	if (cpu_is_exynos5()) {
+		struct exynos5_power *power =
+			(struct exynos5_power *)samsung_get_base_power();
+		unsigned int val;
+
+		val = readl(&power->rst_stat);
+		if (proid_is_exynos5420())
+			val &= EXYNOS5420_RST_STAT_SYS_WDTRESET;
+		else if (proid_is_exynos5250())
+			val &= EXYNOS5250_RST_STAT_SYS_WDTRESET;
+		else
+			val = 0;
+
+		return val != 0;
+	}
+
+	return false;
+}

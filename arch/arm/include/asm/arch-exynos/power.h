@@ -875,6 +875,9 @@ void set_dp_phy_ctrl(unsigned int enable);
 #define EXYNOS_PS_HOLD_CONTROL_DATA_HIGH	(1 << 8)
 #define POWER_ENABLE_HW_TRIP			(1UL << 31)
 
+#define EXYNOS5250_RST_STAT_SYS_WDTRESET	(1 << 20)
+#define EXYNOS5420_RST_STAT_SYS_WDTRESET	(1 << 9)
+
 /*
  * Set ps_hold data driving value high
  * This enables the machine to stay powered on
@@ -920,5 +923,8 @@ void power_reset(void);
  * @return	Return 0 if ok, else -1
  */
 int power_init(void);
+
+/* @return true if watchdog fired and caused a reset */
+bool power_watchdog_fired(void);
 
 #endif

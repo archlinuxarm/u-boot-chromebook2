@@ -484,5 +484,8 @@ int arch_early_init_r(void)
         }
 #endif
 
+	if (power_watchdog_fired())
+		puts("** Watchdog reset\n");
+
 	return 0;
 }
