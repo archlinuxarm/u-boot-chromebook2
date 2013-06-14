@@ -23,3 +23,5 @@ PLATFORM_LIBS += -lrt
 
 # Support generic board on sandbox
 __HAVE_ARCH_GENERIC_BOARD := y
+
+CONFIG_ARCH_DEVICE_TREE := sandbox
