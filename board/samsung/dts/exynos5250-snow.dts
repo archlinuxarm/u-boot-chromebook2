@@ -27,7 +27,7 @@
 
 	flash@0 {
 		spl { /* spl size override */
-			size = <0x4000>;
+			size = <0x8000>;
 		};
 	};
 
