@@ -289,6 +289,7 @@ void exynos_fimd_lcd_init(vidinfo_t *vid)
 		* disabling FIMD SYSMMU.
 		*/
 		writel(0x0, 0x14640000);
+		writel(0x0, 0x14680000);
 	}
 #else
 	fimd_ctrl = (struct exynos_fb *)samsung_get_base_fimd();
