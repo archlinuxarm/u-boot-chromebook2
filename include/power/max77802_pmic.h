@@ -225,6 +225,9 @@ enum {
 #define MAX77802_LDO35CTRL1_1_2V (1 << 4)
 #define MAX77802_LOD35CTRL1_ON	 (1 << 6)
 
+/* Disable Boost Mode*/
+#define MAX77802_BOOSTCTRL_OFF	0x09
+
 /*
  * MAX77802_REG_PMIC_32KHZ set to 32KH CP
  * output is activated
