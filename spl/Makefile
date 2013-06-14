@@ -164,9 +164,20 @@ VAR_SIZE_PARAM = --vs
 else
 VAR_SIZE_PARAM =
 endif
-$(obj)$(BOARD)-spl.bin: $(obj)u-boot-spl.bin
+$(obj)$(BOARD)-spl.bin: $(obj)u-boot-spl.bin $(obj)System.spl.map
 	$(OBJTREE)/tools/mk$(BOARD)spl $(VAR_SIZE_PARAM) \
 		$(obj)u-boot-spl.bin $(obj)$(BOARD)-spl.bin
+
+# This is a copy from the top level Makefile, just exporting it from
+# there does not work - all escapes in the string seem to be getting
+# lost.
+SYSTEM_MAP = \
+	$(NM) $1 | \
+	grep -v '\(compiled\)\|\(\.o$$\)\|\( [aUw] \)\|\(\.\.ng$$\)\|\(LASH[RL]DI\)' |\
+	LC_ALL=C sort
+
+$(obj)System.spl.map:	$(obj)u-boot-spl
+		@$(call SYSTEM_MAP,$<) > $(obj)System.spl.map
 endif
 
 $(obj)u-boot-spl.bin:	$(obj)u-boot-spl
