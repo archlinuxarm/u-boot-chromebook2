@@ -29,6 +29,10 @@ LIB	= $(obj)lib$(CPU).o
 
 COBJS	:= cpu.o os.o start.o state.o
 
+ifdef CONFIG_FTHREAD
+COBJS	+= fthread_mctx.o
+endif
+
 SRCS	:= $(COBJS:.o=.c)
 OBJS	:= $(addprefix $(obj),$(COBJS))
 
@@ -37,10 +41,16 @@ all:	$(obj).depend $(LIB)
 $(LIB):	$(OBJS)
 	$(call cmd_link_o_target, $(OBJS))
 
-# os.c is build in the system environment, so needs standard includes
+# os.c and fthread_mctx.c are built in the system environment, so need
+# standard includes
 $(obj)os.o: ALL_CFLAGS := $(BASE_CPPFLAGS) \
 	$(patsubst %, -idirafter %, $(BASE_INCLUDE_DIRS))
 $(obj).depend.os: CPPFLAGS := $(BASE_CPPFLAGS) \
+	$(patsubst %, -idirafter %, $(BASE_INCLUDE_DIRS))
+
+$(obj)fthread_mctx.o: ALL_CFLAGS := $(BASE_CPPFLAGS) \
+	$(patsubst %, -idirafter %, $(BASE_INCLUDE_DIRS))
+$(obj).depend.fthread_mctx: CPPFLAGS := $(BASE_CPPFLAGS) \
 	$(patsubst %, -idirafter %, $(BASE_INCLUDE_DIRS))
 
 #########################################################################
