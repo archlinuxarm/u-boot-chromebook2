@@ -1,0 +1,93 @@
+Author: Chirantan Ekbote
+Email:  ekbotec@chromium.org
+Date:   2013/06/20
+
+fthread - Cooperative Multithreading Framework
+==============================================
+
+
+Overview
+--------
+
+fthread is a framework for cooperative multithreading in U-Boot.  It
+uses a simple priority-queue based scheduler to handle thread
+management.  Scheduling is non-preemptive, so a thread must hand
+control back to the scheduler, either explicitly by yielding or
+implicitly by joining with another thread or sleeping for some time.
+This avoids locking complexity and race conditions since each thread
+can ensure that it only hands control back in safe, non-critical
+regions of code.  Each thread has its own stack and set of register
+values and is completely isolated and independent from any other
+thread.
+
+
+Motivation
+----------
+
+U-Boot is responsible for initialising all Chromebook hardware before
+handing control off to the kernel.  This includes all the verified
+boot logic, device initialisation, loading software, verifying with
+RSA/hashing and checking rollback counters in TPM.
+
+Currently, a lot of time is wasted waiting for peripherals to come
+online.  For example on the Samsung ARM Chromebook, around 550ms is
+spent talking to the TPM, 250ms waiting for the eMMC to start up and
+80ms waiting for the kernel to load.  It should be possible to overlap
+some of these tasks with multithreading to reduce the overall boot time.
+
+
+Usage
+-----
+
+To enable fthread support, build U-Boot with:
+
+#define CONFIG_FTHREAD
+
+To enable tests, also build with:
+
+#define CONFIG_CMD_FTHREAD
+
+Both of these options are enabled by default for sandbox.  To test
+fthread, launch U-Boot and run the following command at the prompt:
+
+> fthread test
+
+Please see include/fthread.h for the public API and
+common/cmd_fthread.c for examples on how to use the library.
+
+
+Porting
+-------
+
+fthread relies on some platform-specific features to provide the
+context switching necessary to make it work.  Any platform that wants
+to use fthread must provide implementations of the following:
+
+	struct fthread_mctx;
+	This struct holds all the information necessary to save and
+	load contexts, including the link register, program counter,
+	stack pointer, and general purpose registers.
+
+	struct fthread_mctx *fthread_mctx_alloc();
+	Allocates enough memory to hold all the context information
+	for a particular thread.
+
+	void fthread_mctx_free(struct fthread_mctx *mctx);
+	Frees the memory allocated for the context.
+
+	int fthread_mctx_set(struct fthread_mctx *mctx, void
+			     (*func)(void), char *sk_addr_lo,
+			     char *sk_addr_hi);
+	Stores context information in mctx such that when it is
+	restored, execution will start from the beginning of func.
+
+	void fthread_mctx_switch(struct fthread_mctx *octx,
+				 struct fthread_mctx *nctx);
+	Saves the current context in octx and loads the context from
+	nctx.
+
+
+More extensive documentation on these functions is available in
+lib/fthread/fthread_priv.h.  Please see
+arch/sandbox/cpu/fthread_mctx.c for an example of how these are
+implemented for sandbox.

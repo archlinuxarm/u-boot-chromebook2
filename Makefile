@@ -363,6 +363,8 @@ LIBS-y += arch/$(ARCH)/cpu/tegra-common/libcputegra-common.o
 LIBS-y += $(CPUDIR)/tegra-common/libtegra-common.o
 endif
 
+LIBS-$(CONFIG_FTHREAD) += lib/fthread/libfthread.o
+
 LIBS := $(addprefix $(obj),$(sort $(LIBS-y)))
 .PHONY : $(LIBS)
 
