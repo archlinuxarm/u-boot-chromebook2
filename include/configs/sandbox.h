@@ -103,6 +103,10 @@
 
 #define CONFIG_SYS_NO_FLASH
 
+/* Add fthread library and commands */
+#define CONFIG_FTHREAD
+#define CONFIG_CMD_FTHREAD
+
 /* include default commands */
 #include <config_cmd_default.h>
 
