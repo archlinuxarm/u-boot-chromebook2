@@ -419,13 +419,13 @@ static int exynos_dp_read_dpcd_lane_stat(struct edp_device_info *edp_info,
 	return ret;
 }
 
+static const unsigned char shift_val[] = {0, 4, 0, 4};
 static unsigned int exynos_dp_read_dpcd_adj_req(unsigned char lane_num,
 		unsigned char *sw, unsigned char *em)
 {
 	unsigned int ret = EXYNOS_DP_SUCCESS;
 	unsigned char buf;
 	unsigned int dpcd_addr;
-	unsigned char shift_val[DP_LANE_CNT_4] = {0, 4, 0, 4};
 
 	/*lane_num value is used as arry index, so this range 0 ~ 3 */
 	dpcd_addr = DPCD_ADJUST_REQUEST_LANE0_1 + (lane_num / 2);
