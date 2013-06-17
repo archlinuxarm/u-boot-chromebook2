@@ -83,6 +83,7 @@ static void set_l2cache(void)
 	if (val == 0xf) {
 		mrc_l2_aux_ctlr(val);
 		val |= (1 << 7);
+		val |= (1 << 27);
 		mcr_l2_aux_ctlr(val);
 		mrc_l2_ctlr(val);
 	}
