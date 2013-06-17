@@ -34,6 +34,7 @@
 	i2c@7000c000 {
 		status = "okay";
 		clock-frequency = <100000>;
+		nvidia,use-repeat-start;
 	};
 
 	i2c@7000c400 {

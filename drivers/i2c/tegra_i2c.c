@@ -45,10 +45,11 @@ struct i2c_bus {
 	int			pinmux_config;
 	struct i2c_control	*control;
 	struct i2c_ctlr		*regs;
-	int			is_dvc;	/* DVC type, rather than I2C */
-	int			is_scs;	/* single clock source (T114+) */
-	int			inited;	/* bus is inited */
-	int			node;	/* fdt node */
+	int			is_dvc;		/* DVC type, rather than I2C */
+	int			is_scs;		/* single clock src (T114+) */
+	int			inited;			/* bus is inited */
+	int			node;			/* fdt node */
+	int			use_repeat_start;	/* don't send STOP */
 };
 
 static struct i2c_bus i2c_controllers[TEGRA_I2C_NUM_CONTROLLERS];
@@ -151,6 +152,18 @@ static void send_packet_headers(
 	/* Enable Read if it is not a write transaction */
 	if (!(trans->flags & I2C_IS_WRITE))
 		data |= PKT_HDR3_READ_MODE_MASK;
+
+	/*
+	 * Venice audio codec (Max98090) can't be read/written w/o this
+	 * bit being set. But Infineon SLB9645 TPM on Venice doesn't
+	 * like it, so only set it if we're on the same bus as the codec.
+	 * The 'use_repeat_start' flag here is controlled by the DT.
+	 */
+	if (i2c_bus->use_repeat_start) {
+		data |= PKT_HDR3_REPEAT_START_MASK;
+		debug("I2C%d: Set REPEAT_START in master xmit packet header\n",
+		      i2c_bus->id);
+	}
 
 	/* Write I2C specific header */
 	writel(data, &i2c_bus->control->tx_fifo);
@@ -352,6 +365,8 @@ static int i2c_get_config(const void *blob, int node, struct i2c_bus *i2c_bus)
 	i2c_bus->pinmux_config = FUNCMUX_DEFAULT;
 	i2c_bus->speed = fdtdec_get_int(blob, node, "clock-frequency", 0);
 	i2c_bus->periph_id = clock_decode_periph_id(blob, node);
+	i2c_bus->use_repeat_start = fdtdec_get_bool(blob, node,
+						    "nvidia,use-repeat-start");
 
 	/*
 	 * We can't specify the pinmux config in the fdt, so I2C2 will not

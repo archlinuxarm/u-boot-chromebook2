@@ -1,0 +1,34 @@
+Required properties:
+ - clocks : One clock must be given, as a phandle to the Tegra's
+	    CAR node and the clock number as a parameter:
+     - the I2C clock to use for the peripheral
+
+Example:
+
+	i2c@7000c400 {
+		compatible = "nvidia,tegra20-i2c";
+		reg = <0x7000c400 0x100>;
+		interrupts = <0 84 0x4>;
+		#address-cells = <1>;
+		#size-cells = <0>;
+		clocks = <&tegra_car 54>;
+		status = "disabled";
+	};
+
+in DTS file:
+
+Required properties:
+ - status: "okay" if the device is enabled (has devices attached)
+ - clock-frequency: I2C bus clock freq in Hz, typically 100KHz-400KHz
+ - nvidia,use-repeat-start: Some I2C devices (Maxim 98090 audo codec,
+	for one) don't like a STOP in the middle of the I2C transaction.
+	If this property is present, the Tegra I2C U-Boot driver will
+	set the REPEAT_START bit in the packet header. Use this flag
+	on the bus of the crippled/picky device. Most I2C parts don't
+	seem to object either way.
+
+	i2c@7000c000 {
+		status = "okay";
+		clock-frequency = <100000>;
+		nvidia,use-repeat-start;
+        };
