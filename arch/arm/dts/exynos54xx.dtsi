@@ -35,6 +35,8 @@
 		mmc0 = "/mmc@12200000";
 		mmc1 = "/mmc@12210000";
 		mmc2 = "/mmc@12220000";
+		xhci0 = "/xhci@12000000";
+		xhci1 = "/xhci@12400000";
 	};
 
 	i2c@12ca0000 {
@@ -133,7 +135,7 @@
 		mem-type = "ddr3";
 	};
 
-	xhci@12400000 {
+	xhci1: xhci@12400000 {
 		compatible = "samsung,exynos5250-xhci";
 		reg = <0x12400000 0x10000>;
 		#address-cells = <1>;

@@ -66,14 +66,12 @@ static int exynos_usb3_parse_dt(const void *blob,
 	unsigned int node = 0;
 	int nodes[CONFIG_USB_MAX_CONTROLLER_COUNT];
 
-	/* First find all the compatible nodes */
-	for (count = 0; count < CONFIG_USB_MAX_CONTROLLER_COUNT; count++) {
-		node = fdtdec_next_compatible(blob, node,
-						COMPAT_SAMSUNG_EXYNOS5_XHCI);
-		if (node <= 0)
-			break;
-
-		nodes[count] = node;
+	count = fdtdec_find_aliases_for_id(blob, "xhci",
+			COMPAT_SAMSUNG_EXYNOS5_XHCI, nodes,
+			CONFIG_USB_MAX_CONTROLLER_COUNT);
+	if (count < 0) {
+		printf("XHCI: Can't get device node for xhci\n");
+		return -ENODEV;
 	}
 
 	node = nodes[index];

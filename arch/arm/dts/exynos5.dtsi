@@ -140,7 +140,7 @@
 		#size-cells = <1>;
 	};
 
-	xhci@12000000 {
+	xhci0: xhci@12000000 {
 		compatible = "samsung,exynos5250-xhci";
 		reg = <0x12000000 0x10000>;
 		#address-cells = <1>;

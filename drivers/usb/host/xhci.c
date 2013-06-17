@@ -41,10 +41,6 @@
 #include <asm-generic/errno.h>
 #include "xhci.h"
 
-#ifndef CONFIG_USB_MAX_CONTROLLER_COUNT
-#define CONFIG_USB_MAX_CONTROLLER_COUNT 1
-#endif
-
 static struct descriptor {
 	struct usb_hub_descriptor hub;
 	struct usb_device_descriptor device;
