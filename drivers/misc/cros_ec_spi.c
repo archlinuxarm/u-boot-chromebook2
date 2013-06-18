@@ -45,6 +45,30 @@
  */
 #define EC_FRAME_OVERHEAD MSG_HEADER_BYTES
 
+int cros_ec_spi_packet(struct cros_ec_dev *dev, int out_bytes, int in_bytes)
+{
+	int rv;
+
+	/* Do the transfer */
+	if (spi_claim_bus(dev->u.spi)) {
+		debug("%s: Cannot claim SPI bus\n", __func__);
+		return -1;
+	}
+
+	rv = spi_xfer(dev->u.spi, max(out_bytes, in_bytes) * 8,
+		      dev->dout, dev->din,
+		      SPI_XFER_BEGIN | SPI_XFER_END);
+
+	spi_release_bus(dev->u.spi);
+
+	if (rv) {
+		debug("%s: Cannot complete SPI transfer\n", __func__);
+		return -1;
+	}
+
+	return in_bytes;
+}
+
 /**
  * Send a command to a SPI CROS_EC device and return the reply.
  *
