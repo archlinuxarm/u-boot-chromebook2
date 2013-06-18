@@ -175,7 +175,7 @@ int cros_ec_init(const void *blob, struct cros_ec_dev **cros_ecp);
  * @param info		Place to put the info structure
  */
 int cros_ec_info(struct cros_ec_dev *dev,
-		struct ec_response_cros_ec_info *info);
+		struct ec_response_mkbp_info *info);
 
 /**
  * Read the host event flags

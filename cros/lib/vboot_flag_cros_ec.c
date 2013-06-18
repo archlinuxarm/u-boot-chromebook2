@@ -20,7 +20,7 @@ static int vboot_flag_fetch_cros_ec(enum vboot_flag_id id,
 				 struct vboot_flag_details *details)
 {
 	struct cros_ec_dev *dev;
-	struct ec_response_cros_ec_info info;
+	struct ec_response_mkbp_info info;
 
 	dev = board_get_cros_ec_dev();
 	if (!dev) {

@@ -231,7 +231,7 @@ static int ec_command(struct cros_ec_dev *dev, uint8_t cmd, int cmd_version,
 
 int cros_ec_scan_keyboard(struct cros_ec_dev *dev, struct mbkp_keyscan *scan)
 {
-	if (ec_command(dev, EC_CMD_CROS_EC_STATE, 0, NULL, 0, scan,
+	if (ec_command(dev, EC_CMD_MKBP_STATE, 0, NULL, 0, scan,
 		       sizeof(scan->data)) < sizeof(scan->data))
 		return -1;
 
@@ -429,9 +429,9 @@ int cros_ec_interrupt_pending(struct cros_ec_dev *dev)
 	return !gpio_get_value(dev->ec_int.gpio);
 }
 
-int cros_ec_info(struct cros_ec_dev *dev, struct ec_response_cros_ec_info *info)
+int cros_ec_info(struct cros_ec_dev *dev, struct ec_response_mkbp_info *info)
 {
-	if (ec_command(dev, EC_CMD_CROS_EC_INFO, 0, NULL, 0, info,
+	if (ec_command(dev, EC_CMD_MKBP_INFO, 0, NULL, 0, info,
 			sizeof(*info)) < sizeof(*info))
 		return -1;
 
@@ -1312,7 +1312,7 @@ static int do_cros_ec(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[])
 		}
 		printf("%s\n", id);
 	} else if (0 == strcmp("info", cmd)) {
-		struct ec_response_cros_ec_info info;
+		struct ec_response_mkbp_info info;
 
 		if (cros_ec_info(dev, &info)) {
 			debug("%s: Could not read KBC info\n", __func__);

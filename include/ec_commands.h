@@ -28,6 +28,7 @@
  */
 
 /* Current version of this protocol */
+/* TODO: This is effectively useless; protocol is determined in other ways */
 #define EC_PROTO_VERSION          0x00000002
 
 /* Command version mask */
@@ -42,9 +43,17 @@
 #define EC_LPC_ADDR_HOST_CMD   0x204
 
 /* I/O addresses for host command args and params */
-#define EC_LPC_ADDR_HOST_ARGS  0x800
+#define EC_LPC_ADDR_HOST_ARGS  0x800    /* and 0x801, 0x802, 0x803 */
 #define EC_LPC_ADDR_HOST_PARAM 0x804
-#define EC_HOST_PARAM_SIZE     0x0fc  /* Size of param area in bytes */
+#define EC_HOST_PARAM_SIZE     0x0fc   /* Size of param area in bytes */
+#define EC_LPC_ADDR_HOST_PACKET 0x800  /* Offset of version 3 packet */
+#define EC_HOST_PACKET_SIZE     0x100  /* Max size of version 3 packet */
+
+/* The actual block is 0x800-0x8ff, but some BIOSes think it's 0x880-0x8ff
+ * and they tell the kernel that so we have to think of it as two parts. */
+#define EC_HOST_CMD_REGION0    0x800
+#define EC_HOST_CMD_REGION1    0x880
+#define EC_HOST_CMD_REGION_SIZE 0x80
 
 /* EC command register bit functions */
 #define EC_LPC_CMDR_DATA	(1 << 0)  /* Data ready for host to read */
@@ -128,10 +137,13 @@
 /* Host command interface flags */
 /* Host command interface supports LPC args (LPC interface only) */
 #define EC_HOST_CMD_FLAG_LPC_ARGS_SUPPORTED  0x01
+/* Host command interface supports version 3 protocol */
+#define EC_HOST_CMD_FLAG_VERSION_3   0x02
 
 /* Wireless switch flags */
 #define EC_WIRELESS_SWITCH_WLAN      0x01
 #define EC_WIRELESS_SWITCH_BLUETOOTH 0x02
+#define EC_WIRELESS_SWITCH_WWAN      0x04
 
 /*
  * This header file is used in coreboot both in C and ACPI code.  The ACPI code
@@ -187,6 +199,9 @@ enum ec_status {
 	EC_RES_UNAVAILABLE = 9,		/* No response available */
 	EC_RES_TIMEOUT = 10,		/* We got a timeout */
 	EC_RES_OVERFLOW = 11,		/* Table / data overflow */
+	EC_RES_INVALID_HEADER = 12,     /* Header contains invalid data */
+	EC_RES_REQUEST_TRUNCATED = 13,  /* Didn't get the entire request */
+	EC_RES_RESPONSE_TOO_BIG = 14    /* Response was too big to handle */
 };
 
 /*
@@ -268,6 +283,68 @@ struct ec_lpc_host_args {
  */
 #define EC_HOST_ARGS_FLAG_TO_HOST   0x02
 
+/*****************************************************************************/
+
+/*
+ * Value written to legacy command port / prefix byte to indicate protocol
+ * 3+ structs are being used.  Usage is bus-dependent.
+ */
+#define EC_COMMAND_PROTOCOL_3 0xda
+
+#define EC_HOST_REQUEST_VERSION 3
+
+/* Version 3 request from host */
+struct ec_host_request {
+	/* Struct version (=3)
+	 *
+	 * EC will return EC_RES_INVALID_HEADER if it receives a header with a
+	 * version it doesn't know how to parse.
+	 */
+	uint8_t struct_version;
+
+	/*
+	 * Checksum of request and data; sum of all bytes including checksum
+	 * should total to 0.
+	 */
+	uint8_t checksum;
+
+	/* Command code */
+	uint16_t command;
+
+	/* Command version */
+	uint8_t command_version;
+
+	/* Unused byte in current protocol version; set to 0 */
+	uint8_t reserved;
+
+	/* Length of data which follows this header */
+	uint16_t data_len;
+} __packed;
+
+#define EC_HOST_RESPONSE_VERSION 3
+
+/* Version 3 response from EC */
+struct ec_host_response {
+	/* Struct version (=3) */
+	uint8_t struct_version;
+
+	/*
+	 * Checksum of response and data; sum of all bytes including checksum
+	 * should total to 0.
+	 */
+	uint8_t checksum;
+
+	/* Result code (EC_RES_*) */
+	uint16_t result;
+
+	/* Length of data which follows this header */
+	uint16_t data_len;
+
+	/* Unused bytes in current protocol version; set to 0 */
+	uint16_t reserved;
+} __packed;
+
+/*****************************************************************************/
 /*
  * Notes on commands:
  *
@@ -723,6 +800,49 @@ enum lightbar_command {
 };
 
 /*****************************************************************************/
+/* LED control commands */
+
+#define EC_CMD_LED_CONTROL 0x29
+
+enum ec_led_id {
+	EC_LED_ID_BATTERY_LED = 0,
+	EC_LED_ID_POWER_BUTTON_LED,
+	EC_LED_ID_ADAPTER_LED,
+};
+
+/* LED control flags */
+#define EC_LED_FLAGS_QUERY (1 << 0) /* Query LED capability only */
+#define EC_LED_FLAGS_AUTO  (1 << 1) /* Switch LED back to automatic control */
+
+enum ec_led_colors {
+	EC_LED_COLOR_RED = 0,
+	EC_LED_COLOR_GREEN,
+	EC_LED_COLOR_BLUE,
+	EC_LED_COLOR_YELLOW,
+	EC_LED_COLOR_WHITE,
+
+	EC_LED_COLOR_COUNT
+};
+
+struct ec_params_led_control {
+	uint8_t led_id;     /* Which LED to control */
+	uint8_t flags;      /* Control flags */
+
+	uint8_t brightness[EC_LED_COLOR_COUNT];
+} __packed;
+
+struct ec_response_led_control {
+	/*
+	 * Available brightness value range.
+	 *
+	 * Range 0 means color channel not present.
+	 * Range 1 means on/off control.
+	 * Other values means the LED is control by PWM.
+	 */
+	uint8_t brightness_range[EC_LED_COLOR_COUNT];
+} __packed;
+
+/*****************************************************************************/
 /* Verified boot commands */
 
 /*
@@ -910,57 +1030,57 @@ struct ec_params_tmp006_set_calibration {
 } __packed;
 
 /*****************************************************************************/
-/* CROS_EC - Matrix KeyBoard Protocol */
+/* MKBP - Matrix KeyBoard Protocol */
 
 /*
  * Read key state
  *
- * Returns raw data for keyboard cols; see ec_response_cros_ec_info.cols for
+ * Returns raw data for keyboard cols; see ec_response_mkbp_info.cols for
  * expected response size.
  */
-#define EC_CMD_CROS_EC_STATE 0x60
+#define EC_CMD_MKBP_STATE 0x60
 
 /* Provide information about the matrix : number of rows and columns */
-#define EC_CMD_CROS_EC_INFO 0x61
+#define EC_CMD_MKBP_INFO 0x61
 
-struct ec_response_cros_ec_info {
+struct ec_response_mkbp_info {
 	uint32_t rows;
 	uint32_t cols;
 	uint8_t switches;
 } __packed;
 
 /* Simulate key press */
-#define EC_CMD_CROS_EC_SIMULATE_KEY 0x62
+#define EC_CMD_MKBP_SIMULATE_KEY 0x62
 
-struct ec_params_cros_ec_simulate_key {
+struct ec_params_mkbp_simulate_key {
 	uint8_t col;
 	uint8_t row;
 	uint8_t pressed;
 } __packed;
 
 /* Configure keyboard scanning */
-#define EC_CMD_CROS_EC_SET_CONFIG 0x64
-#define EC_CMD_CROS_EC_GET_CONFIG 0x65
+#define EC_CMD_MKBP_SET_CONFIG 0x64
+#define EC_CMD_MKBP_GET_CONFIG 0x65
 
 /* flags */
-enum cros_ec_config_flags {
-	EC_CROS_EC_FLAGS_ENABLE = 1,	/* Enable keyboard scanning */
+enum mkbp_config_flags {
+	EC_MKBP_FLAGS_ENABLE = 1,	/* Enable keyboard scanning */
 };
 
-enum cros_ec_config_valid {
-	EC_CROS_EC_VALID_SCAN_PERIOD		= 1 << 0,
-	EC_CROS_EC_VALID_POLL_TIMEOUT		= 1 << 1,
-	EC_CROS_EC_VALID_MIN_POST_SCAN_DELAY	= 1 << 3,
-	EC_CROS_EC_VALID_OUTPUT_SETTLE		= 1 << 4,
-	EC_CROS_EC_VALID_DEBOUNCE_DOWN		= 1 << 5,
-	EC_CROS_EC_VALID_DEBOUNCE_UP		= 1 << 6,
-	EC_CROS_EC_VALID_FIFO_MAX_DEPTH		= 1 << 7,
+enum mkbp_config_valid {
+	EC_MKBP_VALID_SCAN_PERIOD		= 1 << 0,
+	EC_MKBP_VALID_POLL_TIMEOUT		= 1 << 1,
+	EC_MKBP_VALID_MIN_POST_SCAN_DELAY	= 1 << 3,
+	EC_MKBP_VALID_OUTPUT_SETTLE		= 1 << 4,
+	EC_MKBP_VALID_DEBOUNCE_DOWN		= 1 << 5,
+	EC_MKBP_VALID_DEBOUNCE_UP		= 1 << 6,
+	EC_MKBP_VALID_FIFO_MAX_DEPTH		= 1 << 7,
 };
 
 /* Configuration for our key scanning algorithm */
-struct ec_cros_ec_config {
+struct ec_mkbp_config {
 	uint32_t valid_mask;		/* valid fields */
-	uint8_t flags;		/* some flags (enum cros_ec_config_flags) */
+	uint8_t flags;		/* some flags (enum mkbp_config_flags) */
 	uint8_t valid_flags;		/* which flags are valid */
 	uint16_t scan_period_us;	/* period between start of scans */
 	/* revert to interrupt mode after no activity for this long */
@@ -979,12 +1099,12 @@ struct ec_cros_ec_config {
 	uint8_t fifo_max_depth;
 } __packed;
 
-struct ec_params_cros_ec_set_config {
-	struct ec_cros_ec_config config;
+struct ec_params_mkbp_set_config {
+	struct ec_mkbp_config config;
 } __packed;
 
-struct ec_response_cros_ec_get_config {
-	struct ec_cros_ec_config config;
+struct ec_response_mkbp_get_config {
+	struct ec_mkbp_config config;
 } __packed;
 
 /* Run the key scan emulation */
@@ -1275,20 +1395,20 @@ struct ec_response_power_info {
 
 struct ec_params_i2c_passthru_msg {
 	uint16_t addr_flags;	/* I2C slave address (7 or 10 bits) and flags */
-	uint16_t len;		/* Number of bytes to write*/
+	uint16_t len;		/* Number of bytes to read or write */
 } __packed;
 
 struct ec_params_i2c_passthru {
 	uint8_t port;		/* I2C port number */
 	uint8_t num_msgs;	/* Number of messages */
 	struct ec_params_i2c_passthru_msg msg[];
-	/* Data for all messages is concatenated here */
+	/* Data to write for all messages is concatenated here */
 } __packed;
 
 struct ec_response_i2c_passthru {
 	uint8_t i2c_status;	/* Status flags (EC_I2C_STATUS_...) */
 	uint8_t num_msgs;	/* Number of messages processed */
-	uint8_t data[];		/* Data for all messages concatenated here */
+	uint8_t data[];		/* Data read by messages concatenated here */
 } __packed;
 
 
