@@ -23,12 +23,6 @@
 		hwid = "spring TEST A-A 1228";
 	};
 
-	flash@0 {
-		spl { /* spl size override */
-			size = <0x8000>;
-		};
-	};
-
 	aliases {
 		sdmmc1 = "/mshci@12210000";
 	};

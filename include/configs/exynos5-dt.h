@@ -237,6 +237,9 @@
 #define CONFIG_RES_BLOCK_SIZE	(512)
 #define CONFIG_ENV_SIZE		(16 << 10)	/* 16 KB */
 
+/* 32KB reserved for BL2 (SPL) */
+#define CONFIG_BL2_SIZE		(32 << 10)
+
 /* BL2 (SPL) and U-Boot offsets */
 #define CONFIG_BL2_OFFSET	(CONFIG_RES_BLOCK_SIZE + CONFIG_SEC_FW_SIZE)
 #define CONFIG_UBOOT_OFFSET	(CONFIG_BL2_OFFSET + CONFIG_BL2_SIZE)

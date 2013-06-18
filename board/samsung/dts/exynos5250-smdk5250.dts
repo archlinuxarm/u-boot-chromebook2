@@ -46,12 +46,6 @@
 		console = "/serial@12C30000";
 	};
 
-	flash@0 {
-		spl { /* spl size override */
-			size = <0x8000>;
-		};
-	};
-
 	sromc@12250000 {
 		bank = <1>;
 		srom-timing = <1 9 12 1 6 1 1>;

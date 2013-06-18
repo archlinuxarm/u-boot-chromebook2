@@ -39,9 +39,6 @@
 #define CONFIG_DEVICE_TREE_LIST "exynos5250-smdk5250" \
 	" exynos5250-snow exynos5250-spring"
 
-/* 32 K reserved for BL2 (SPL) */
-#define CONFIG_BL2_SIZE		(32 << 10)
-
 /* DRAM Memory Banks */
 #define CONFIG_NR_DRAM_BANKS	4
 #define SDRAM_BANK_SIZE		(512UL << 20)	/* 512 MB */

@@ -25,12 +25,6 @@
 			reg = <0>;
 		};
 	};
-	/* override SPL size to match BL1 expectations */
-	flash@0 {
-		spl {
-			size = <0x4000>;
-		};
-	};
 
 	aliases {
 		serial0 = "/serial@12C30000";

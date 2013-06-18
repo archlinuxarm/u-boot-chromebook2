@@ -20,12 +20,6 @@
 	config {
 		hwid = "peach TEST A-A 9382";
 	};
-	/* override SPL size to match BL1 expectations */
-	flash@0 {
-		spl {
-			size = <0x4000>;
-		};
-	};
 
 	board-rev {
 		compatible = "google,board-revision";
