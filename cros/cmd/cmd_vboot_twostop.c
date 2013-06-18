@@ -920,7 +920,7 @@ twostop_main_firmware(struct twostop_fmap *fmap, void *gbb,
 	 * "size" value is going to remain unchanged.
 	 */
 	kparams.kernel_buffer = cros_fdtdec_alloc_region(gd->fdt_blob,
-		"kernel", &size);
+		"kernel-offset", &size);
 	kparams.kernel_buffer_size = size;
 
 	VBDEBUG("kparams:\n");
@@ -995,18 +995,18 @@ static int setup_gbb_and_cdata(void **gbb, size_t *gbb_size,
 	size_t size;
 
 	*gbb = cros_fdtdec_alloc_region(gd->fdt_blob,
-			"google-binary-block", gbb_size);
+			"google-binary-block-offset", gbb_size);
 
 	if (!*gbb) {
-		VBDEBUG("google-binary-block missing "
+		VBDEBUG("google-binary-block-offset missing "
 			"from fdt, or malloc failed\n");
 		return -1;
 	}
 
 	*cdata = cros_fdtdec_alloc_region(gd->fdt_blob,
-						  "cros-system-data", &size);
+					  "cros-system-data-offset", &size);
 	if (!*cdata) {
-		VBDEBUG("cros-system-data missing "
+		VBDEBUG("cros-system-data-offset missing "
 				"from fdt, or malloc failed\n");
 		return -1;
 	}

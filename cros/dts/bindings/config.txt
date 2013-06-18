@@ -1,6 +1,10 @@
 Chrome OS dts config bindings
 =============================
 
+cros-system-data-offset
+  location (offset into DRAM and size) of the memory area allocated for
+  crossystem data on Exynos platforms.
+
 faft-key-remap-ascii - Array for simple ascii key remap.
  You may remap up to three keys if the GBB flag is set.
  Keys are paired with incoming key and remapped key.
@@ -13,6 +17,14 @@ faft-key-remap-special - Array for special key remap.
  Special keys are pre-stripped of ESCAPE and '['.
  example remap 'F9' to ENTER:
  faft-key-remap-special = <0x32 0x20 0 0 0 0>;
+
+google-binary-block-offset
+  location (offset into DRAM and size) of the memory area allocated for
+  gbb on Exynos platforms.
+
+kernel-offset
+  location (offset into DRAM and size) of the memory area allocated for
+  kernel blob on Exynos platforms.
 
 skip-i8042
 	If present, i8042 init is skipped, which means that an attached

@@ -24,10 +24,13 @@
 		ec-software-sync;       /* EC firmware in sync with BIOS */
 		ec-slow-update;         /* Display WAIT screen when updating */
 
-		/* Memory addresses for kernel, cros-system and gbb */
-		kernel = <0x20008000 0x00800000>;
-		cros-system-data = <0x20808000 0x8000>;
-		google-binary-block = <0x20810000 0x100000>;
+		/*
+		 * Memory regions' offsets from DRAM base and sizes for
+		 * kernel, cros-system and gbb.
+		 */
+		kernel-offset = <0x00008000 0x00800000>;
+		cros-system-data-offset = <0x00808000 0x8000>;
+		google-binary-block-offset = <0x00810000 0x100000>;
 	};
 
 	config {

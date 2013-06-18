@@ -329,7 +329,8 @@ VbError_t VbExDisplayDebugInfo(const char *info_str)
 	display_callbacks_.dc_puts(info_str);
 
 
-	cdata = cros_fdtdec_alloc_region(gd->fdt_blob, "cros-system-data",
+	cdata = cros_fdtdec_alloc_region(gd->fdt_blob,
+					 "cros-system-data-offset",
 					 &size);
 	if (!cdata) {
 		VBDEBUG("cros-system-data missing "

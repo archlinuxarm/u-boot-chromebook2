@@ -21,10 +21,13 @@
 		 * second-stage = <&emmc 0x00000080 0>;
 		 */
 
-		/* Memory addresses for kernel, cros-system and gbb */
-		kernel = <0x00100000 0x00800000>;
-		cros-system-data = <0x00900000 0x8000>;
-		google-binary-block = <0x00908000 0x80000>;
+		/*
+		 * Memory addresses (offsets off the DRAM base) for kernel,
+		 * cros-system and gbb
+		 */
+		kernel-offset = <0x00100000 0x00800000>;
+		cros-system-data-offset = <0x00900000 0x8000>;
+		google-binary-block-offset = <0x00908000 0x80000>;
 
 		firmware-storage = <&firmware_storage_spi>;
 		nvstorage-media = "disk";

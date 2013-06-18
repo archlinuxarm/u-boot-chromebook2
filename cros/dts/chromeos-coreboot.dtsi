@@ -16,11 +16,12 @@
 		twostop-optional;       /* One-stop optimization enabled */
 
 		/*
-		 * Memory addresses for cros-system, should allow for up to
-		 * 16MB kernel loaded at 0x100000
+		 * Memory addresses (offsets off DRAM base) for cros-system
+		 * data and gbb, should allow for up to 16MB kernel loaded at
+		 * 0x100000.
 		 */
-		cros-system-data = <0x01100000 0x8000>;
-		google-binary-block = <0x01200000 0x100000>;
+		cros-system-data-offset = <0x01100000 0x8000>;
+		google-binary-block-offset = <0x01200000 0x100000>;
 
 		/*
 		 * TODO(sjg@chromium.org): Not all x86 platforms have this yet

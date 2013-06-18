@@ -414,7 +414,7 @@ static uint8_t *read_gbb_from_firmware(void)
 	size_t gbb_size;
 
 	gbb = cros_fdtdec_alloc_region(gd->fdt_blob,
-			"google-binary-block", &gbb_size);
+			"google-binary-block-offset", &gbb_size);
 	if (!gbb) {
 		VbExDebug("Failed to find gbb region!\n");
 		return NULL;

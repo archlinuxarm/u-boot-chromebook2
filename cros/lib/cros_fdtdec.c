@@ -17,6 +17,16 @@
 #include <linux/string.h>
 #include <malloc.h>
 
+/*
+ * Some platforms where DRAM is based at zero do not define DRAM base address
+ * explicitly.
+ */
+#ifdef CONFIG_SYS_SDRAM_BASE
+#define DRAM_BASE_ADDRESS CONFIG_SYS_SDRAM_BASE
+#else
+#define DRAM_BASE_ADDRESS 0
+#endif
+
 int cros_fdtdec_config_node(const void *blob)
 {
 	int node = fdt_path_offset(blob, "/chromeos-config");
@@ -308,6 +318,9 @@ void *cros_fdtdec_alloc_region(const void *blob,
 
 	if (!ptr)
 		ptr = malloc(*size);
+	else
+		ptr = (char *)ptr + DRAM_BASE_ADDRESS;
+
 	if (!ptr) {
 		VBDEBUG("failed to alloc %d bytes for %s'\n", *size, prop_name);
 	}
