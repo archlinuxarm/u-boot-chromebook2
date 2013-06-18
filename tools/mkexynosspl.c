@@ -29,7 +29,10 @@
 #include <sys/stat.h>
 #include <compiler.h>
 
-#define CHECKSUM_OFFSET		(14*1024-4)
+#include <config.h>
+
+/* The BL2 checksum is 2KB below the nominal BL2 size */
+#define CHECKSUM_OFFSET		(CONFIG_BL2_SIZE - 0x800 - 4)
 #define FILE_PERM		(S_IRUSR | S_IWUSR | S_IRGRP \
 				| S_IWGRP | S_IROTH | S_IWOTH)
 /*
