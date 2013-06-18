@@ -11,12 +11,10 @@
 
 /dts-v1/;
 /include/ "exynos52xx.dtsi"
-#ifdef CONFIG_CHROMEOS
 /include/ "flashmap-exynos-ro.dtsi"
 /include/ "flashmap-4mb-rw.dtsi"
 /include/ "chromeos-exynos.dtsi"
 /include/ "cros5250-common.dtsi"
-#endif
 
 / {
 	model = "SAMSUNG SMDK5250 board based on EXYNOS5250";
@@ -46,6 +44,12 @@
 		mmc3 = "/mmc@12230000";
 		serial0 = "/serial@12C30000";
 		console = "/serial@12C30000";
+	};
+
+	flash@0 {
+		spl { /* spl size override */
+			size = <0x8000>;
+		};
 	};
 
 	sromc@12250000 {
