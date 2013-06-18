@@ -69,6 +69,7 @@ struct s3c24x0_i2c_bus {
 	struct s3c24x0_i2c *regs;
 	struct exynos5_hsi2c *hsregs;
 	int is_highspeed;	/* High speed type, rather than I2C */
+	unsigned clock_frequency;
 	int id;
 	unsigned clk_cycle;
 	unsigned clk_div;

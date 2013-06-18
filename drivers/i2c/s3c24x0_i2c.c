@@ -98,11 +98,6 @@
 
 #define HSI2C_SLV_ADDR_MAS(x)		((x & 0x3ff) << 10)
 
-/* Controller operating frequency, timing values for operation
- * are calculated against this frequency
- */
-#define HSI2C_FS_TX_CLOCK		1000000
-
 /* S3C I2C Controller bits */
 #define I2CSTAT_BSY	0x20	/* Busy bit */
 #define I2CSTAT_NACK	0x01	/* Nack bit */
@@ -269,7 +264,7 @@ static int hsi2c_get_clk_details(struct s3c24x0_i2c_bus *i2c_bus)
 {
 	struct exynos5_hsi2c *hsregs = i2c_bus->hsregs;
 	ulong clkin = get_i2c_clk();
-	unsigned int op_clk = HSI2C_FS_TX_CLOCK;
+	unsigned int op_clk = i2c_bus->clock_frequency;
 	unsigned int i = 0, utemp0 = 0, utemp1 = 0;
 	unsigned int t_ftl_cycle;
 
@@ -378,7 +373,7 @@ int i2c_set_bus_num(unsigned int bus)
 			return -1;
 		hsi2c_ch_init(i2c_bus);
 	} else {
-		i2c_ch_init(i2c_bus->regs, CONFIG_SYS_I2C_SPEED,
+		i2c_ch_init(i2c_bus->regs, i2c_bus->clock_frequency,
 						CONFIG_SYS_I2C_SLAVE);
 	}
 
@@ -905,6 +900,9 @@ static void process_nodes(const void *blob, int node_list[], int count,
 					fdtdec_get_addr(blob, node, "reg");
 
 		bus->id = pinmux_decode_periph_id(blob, node);
+		bus->clock_frequency = fdtdec_get_int(blob, node,
+						      "clock-frequency",
+						      CONFIG_SYS_I2C_SPEED);
 		bus->node = node;
 		bus->bus_num = i2c_busses++;
 		exynos_pinmux_config(bus->id, 0);
@@ -970,7 +968,7 @@ int i2c_reset_port_fdt(const void *blob, int node)
 			return -1;
 		hsi2c_ch_init(i2c_bus);
 	} else {
-		i2c_ch_init(i2c_bus->regs, CONFIG_SYS_I2C_SPEED,
+		i2c_ch_init(i2c_bus->regs, i2c_bus->clock_frequency,
 						CONFIG_SYS_I2C_SLAVE);
 	}
 
