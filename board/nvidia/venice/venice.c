@@ -52,6 +52,17 @@ void pinmux_init(void)
 
 /* TODO(twarren@nvidia.com): Move to pmic infrastructure (pmic_common_init) */
 
+/* Read reg @ chip address pmu */
+void i2c_read_pmic(uchar pmu, uchar reg, uchar *val)
+{
+	int ret;
+
+	ret = i2c_read(pmu, reg, 1, val, 1);
+	if (ret)
+		printf("%s: PMU i2c_read %02X returned %d\n",
+		       __func__, reg, ret);
+}
+
 /* Writes val to reg @ chip address pmu */
 void i2c_write_pmic(uchar pmu, uchar reg, uchar val)
 {
@@ -89,6 +100,8 @@ void board_sdmmc_voltage_init(void)
 void board_vreg_init(void)
 {
 	int ret = i2c_set_bus_num(0);	/* PMU is on bus 0 */
+	uchar val;
+
 	if (ret)
 		printf("%s: i2c_set_bus_num returned %d\n", __func__, ret);
 
@@ -174,6 +187,13 @@ void board_vreg_init(void)
 
 	/* Enable LCD backlight */
 	gpio_direction_output(DSI_PANEL_BL_EN_GPIO, 1);
+
+	/* change LPK_TIME (Long Press Key) to 8 seconds */
+	i2c_read_pmic(PMU_I2C_ADDRESS, 0xa9, &val); /* A9:LPK reg */
+	/* LPK_TIME: bits 3:2, b00:6S, b01:8S, b10:10S, b11:12S */
+	val &= ~0xc;
+	val |= 0x4;
+	i2c_write_pmic(PMU_I2C_ADDRESS, 0xa9, val); /* A9:LPK reg */
 }
 
 /*
