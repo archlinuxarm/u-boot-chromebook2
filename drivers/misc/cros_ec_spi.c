@@ -71,9 +71,9 @@ int cros_ec_spi_command(struct cros_ec_dev *dev, uint8_t cmd, int cmd_version,
 	int csum, len;
 	int rv;
 
-	if (!dev->cmd_version_is_supported) {
-		debug("%s: Can't talk to EC not supporting command versions\n",
-		      __func__);
+	if (dev->protocol_version != 2) {
+		debug("%s: Unsupported EC protcol version %d\n",
+		      __func__, dev->protocol_version);
 		return -1;
 	}
 

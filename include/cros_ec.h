@@ -51,7 +51,7 @@ struct cros_ec_dev {
 	} u;
 	unsigned int max_frequency;	/* Maximum interface frequency */
 	struct fdt_gpio_state ec_int;	/* GPIO used as EC interrupt line */
-	int cmd_version_is_supported:1; /* Device supports command versions */
+	int protocol_version;           /* Protocol version to use */
 	int optimise_flash_write:1;	/* Don't write erased flash blocks */
 
 	/*
@@ -267,8 +267,7 @@ int cros_ec_spi_decode_fdt(struct cros_ec_dev *dev, const void *blob);
  * Check whether the LPC interface supports new-style commands.
  *
  * LPC has its own way of doing this, which involves checking LPC values
- * visible to the host. Do this, and update dev->cmd_version_is_supported
- * accordingly.
+ * visible to the host. Do this, and update dev->protocol_version accordingly.
  *
  * @param dev		CROS-EC device to check
  */
