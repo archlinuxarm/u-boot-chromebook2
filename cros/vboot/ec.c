@@ -230,8 +230,8 @@ VbError_t VbExEcGetExpectedRW(enum VbSelectFirmware_t select,
 		return VBERROR_UNKNOWN;
 	}
 
-	offset = fw_entry->ec_rwbin.offset;
-	size = fw_entry->ec_rwbin.length;
+	offset = fw_entry->ec_rw.image.offset;
+	size = fw_entry->ec_rw.image.length;
 	VBDEBUG("EC-RW image offset %#x size %#x.\n", offset, size);
 
 	/* Sanity-check; we don't expect EC images > 1MB */
@@ -271,22 +271,24 @@ VbError_t VbExEcGetExpectedRWHash(enum VbSelectFirmware_t select,
 		       const uint8_t **hash, int *hash_size)
 {
 	struct twostop_fmap fmap;
+	struct fmap_ec_image *ec;
+
 	*hash = NULL;
 
 	/* TODO: Decode the flashmap once and reuse throughout. */
 	cros_fdtdec_flashmap(gd->fdt_blob, &fmap);
 	switch (select) {
 	case VB_SELECT_FIRMWARE_A:
-		*hash = fmap.readwrite_a.ec_hash;
-		*hash_size = fmap.readwrite_a.ec_hash_size;
+		ec = &fmap.readwrite_a.ec_rw;
 		break;
 	case VB_SELECT_FIRMWARE_B:
-		*hash = fmap.readwrite_b.ec_hash;
-		*hash_size = fmap.readwrite_b.ec_hash_size;
+		ec = &fmap.readwrite_b.ec_rw;
 		break;
 	default:
-		break;
+		return VBERROR_UNKNOWN;
 	}
+	*hash = ec->hash;
+	*hash_size = ec->hash_size;
 
 	return VBERROR_SUCCESS;
 }

@@ -45,7 +45,8 @@ enum section_t {
 	SECTION_GBB,
 	SECTION_VBLOCK,
 	SECTION_FMAP,
-	SECTION_EC,
+	SECTION_ECRW,
+	SECTION_ECRO,
 
 	SECTION_COUNT,
 	SECTION_NONE = -1,
@@ -59,7 +60,8 @@ static const char *section_name[SECTION_COUNT] = {
 	"gbb",
 	"vblock",
 	"fmap",
-	"ec",
+	"ecrw",
+	"ecro",
 };
 
 /**
@@ -119,10 +121,22 @@ static int read_entry(const void *blob, int node, const char *name,
  *			read the ro section; if *rwp == &config->readwrite_a
  *			then we read the rw-a section. This is used to work
  *			out which section we are referring to at depth 2.
+ * @param ecp		Indicates the EC node that we are currently
+ *			processing (this is used at depth 2 to refer back
+ *			to the EC node). We get the flash offset of the EC
+ *			node so we can work out the absolute position of the
+ *			EC in flash. Plus we write the EC hash.
+ *
+ * Both rwp and ecp start as NULL and are updated when we see an RW and an
+ * EC region respectively. This function is called for every node in the
+ * device tree and these variables maintain the state that we need to
+ * process the nodes correctly.
+ *
  * @return 0 if ok, -ve on error
  */
 static int process_fmap_node(const void *blob, int node, int depth,
-		struct twostop_fmap *config, struct fmap_firmware_entry **rwp)
+		struct twostop_fmap *config, struct fmap_firmware_entry **rwp,
+		struct fmap_ec_image **ecp)
 {
 	struct fmap_firmware_entry *rw = *rwp;
 	enum section_t section;
@@ -130,34 +144,30 @@ static int process_fmap_node(const void *blob, int node, int depth,
 	const char *name, *subname, *prop;
 	int len;
 
-	/* At depth 2, we are looking for our ecbin subnode */
+	/*
+	 * At depth 2, we are looking for our ec subnode. There really is no
+	 * need for this situation - we no longer have multiple images in
+	 * each region so that hashes could be stored up one level.
+	 * crbug.com/254311
+	 */
 	name = fdt_get_name(blob, node, &len);
 	if (depth == 2) {
+		struct fmap_ec_image *ec = *ecp;
 		struct fmap_entry *entry;
-		ulong offset;
+		ulong offset = 0;
 
-		/* TODO(sjg@chromium.org): Remove ecbin */
-		if (rw) {
-			if (0 == strcmp(name, "ecbin") ||
-					0 == strcmp(name, "ecrw")) {
-				rw->ec_hash = fdt_getprop(blob, node, "hash",
-							  &rw->ec_hash_size);
-				entry = &rw->ec_rwbin;
-				offset = rw->ec_rwbin.offset;
-			} else if (0 == strcmp(name, "boot")) {
+		if (ec) {
+			entry = &ec->image;
+			offset = entry->offset;
+			ec->hash = fdt_getprop(blob, node, "hash",
+					       &ec->hash_size);
+		} else if (rw) {
+			if (0 == strcmp(name, "boot")) {
 				entry = &rw->boot_rwbin;
 				offset = rw->boot.offset;
 			} else {
 				return 0;
 			}
-		} else if (!rw) {
-			offset = config->readonly.boot.offset;
-			if (0 == strcmp(name, "ecro"))
-				entry = &config->readonly.ec_robin;
-			else if (0 == strcmp(name, "ecrw"))
-				entry = &config->readonly.ec_rwbin;
-			else
-				return 0;
 		} else {
 			return 0;
 		}
@@ -169,6 +179,7 @@ static int process_fmap_node(const void *blob, int node, int depth,
 		return 0;
 	}
 
+	*ecp = NULL;
 	if (name && !strcmp("rw-vblock-dev", name)) {
 		/* handle optional dev key */
 		if (read_entry(blob, node, name, &config->readwrite_devkey))
@@ -225,10 +236,9 @@ static int process_fmap_node(const void *blob, int node, int depth,
 			rw->compress = prop && (0 == strcmp(prop, "lzo")) ?
 				CROS_COMPRESS_LZO : CROS_COMPRESS_NONE;
 			break;
-		case SECTION_EC:
-			rw->ec_hash = fdt_getprop(blob, node, "hash",
-						  &rw->ec_hash_size);
-			rw->ec_rwbin = entry;
+		case SECTION_ECRW:
+			rw->ec_rw.image = entry;
+			*ecp = &rw->ec_rw;
 			break;
 		default:
 			return 0;
@@ -247,6 +257,14 @@ static int process_fmap_node(const void *blob, int node, int depth,
 		case SECTION_BOOT:
 			config->readonly.boot = entry;
 			break;
+		case SECTION_ECRO:
+			config->readonly.ec_ro.image = entry;
+			*ecp = &config->readonly.ec_ro;
+			break;
+		case SECTION_ECRW:
+			config->readonly.ec_rw.image = entry;
+			*ecp = &config->readonly.ec_rw;
+			break;
 		default:
 			return 0;
 		}
@@ -259,6 +277,7 @@ static int process_fmap_node(const void *blob, int node, int depth,
 int cros_fdtdec_flashmap(const void *blob, struct twostop_fmap *config)
 {
 	struct fmap_firmware_entry *rw = NULL;
+	struct fmap_ec_image *ec = NULL;
 	struct fmap_entry entry;
 	int offset;
 	int depth;
@@ -283,7 +302,7 @@ int cros_fdtdec_flashmap(const void *blob, struct twostop_fmap *config)
 		node = fdt_next_node(blob, offset, &depth);
 		if (node > 0 && depth > 0) {
 			if (process_fmap_node(blob, node, depth, config,
-						&rw)) {
+						&rw, &ec)) {
 				VBDEBUG("Failed to process Flashmap\n");
 				return -1;
 			}
@@ -359,7 +378,7 @@ int cros_fdtdec_chrome_ec(const void *blob, struct fdt_chrome_ec *config)
 
 	flash_node = fdt_subnode_offset(blob, node, "flash");
 	if (flash_node < 0) {
-		VBDEBUG("Failed to find flash node'\n");
+		VBDEBUG("Failed to find flash node\n");
 		return -1;
 	}
 

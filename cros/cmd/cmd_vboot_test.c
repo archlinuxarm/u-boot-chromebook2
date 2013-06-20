@@ -204,18 +204,13 @@ static int do_vboot_poweroff(cmd_tbl_t *cmdtp,
 }
 
 static void show_ec_bin(const char *name, const char *region,
-			struct fmap_entry *entry,
-			struct fmap_firmware_entry *fw_entry)
+			struct fmap_ec_image *ec)
 {
 	printf("EC %s binary %s at %#x, length %#x\n", region, name,
-	       entry->offset, entry->length);
-	if (fw_entry) {
-		printf("EC Hash size %d:\n", fw_entry->ec_hash_size);
-		if (fw_entry->ec_hash_size > 0) {
-			print_buffer(0, fw_entry->ec_hash, 1,
-				     fw_entry->ec_hash_size, 0);
-		}
-	}
+	       ec->image.offset, ec->image.length);
+	printf("EC Hash size %d:\n", ec->hash_size);
+	if (ec->hash_size > 0)
+		print_buffer(0, ec->hash, 1, ec->hash_size, 0);
 }
 
 static void show_entry(const char *name, struct fmap_entry *entry)
@@ -231,8 +226,8 @@ static void show_firmware_entry(const char *name,
 	show_entry("boot", &fw_entry->boot);
 	show_entry("vblock", &fw_entry->vblock);
 	show_entry("firmware_id", &fw_entry->firmware_id);
-	printf("block_offset: %llx\n", fw_entry->block_offset);
-	show_ec_bin(name, "RW", &fw_entry->ec_rwbin, fw_entry);
+	printf("block_offset: %llx\n", (long long)fw_entry->block_offset);
+	show_ec_bin(name, "RW", &fw_entry->ec_rw);
 	puts("\n");
 }
 
@@ -252,8 +247,8 @@ static int do_vboot_fmap(cmd_tbl_t *cmdtp, int flag,
 	show_entry("fmap", &fmap.readonly.fmap);
 	show_entry("gbb", &fmap.readonly.gbb);
 	show_entry("firmware_id", &fmap.readonly.firmware_id);
-	show_ec_bin("ro", "RO", &fmap.readonly.ec_robin, NULL);
-	show_ec_bin("ro", "RW", &fmap.readonly.ec_rwbin, NULL);
+	show_ec_bin("ro", "RO", &fmap.readonly.ec_ro);
+	show_ec_bin("ro", "RW", &fmap.readonly.ec_rw);
 	printf("flash_base: %u\n", fmap.flash_base);
 
 	show_firmware_entry("rw-a", &fmap.readwrite_a);

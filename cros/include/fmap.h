@@ -25,6 +25,12 @@ struct fmap_entry {
 	uint32_t length;
 };
 
+struct fmap_ec_image {
+	struct fmap_entry image;
+	const uint8_t *hash;
+	int hash_size;
+};
+
 struct fmap_firmware_entry {
 	struct fmap_entry all;		/* how big is the whole RW section? */
 	struct fmap_entry boot;		/* U-Boot */
@@ -35,9 +41,8 @@ struct fmap_firmware_entry {
 	uint64_t block_offset;
 
 	/* Sub-entry for EC RW binary, and RO binary if present */
-	struct fmap_entry ec_rwbin;
-	const uint8_t *ec_hash;
-	int ec_hash_size;
+	struct fmap_ec_image ec_rw;
+
 	/* Sub-entry for U-Boot RW binary */
 	struct fmap_entry boot_rwbin;
 	enum cros_compress_t compress;		/* Compression type */
@@ -46,14 +51,15 @@ struct fmap_firmware_entry {
 /*
  * Only sections that are used during booting are put here. More sections will
  * be added if required.
+ * TODO(sjg@chromium.org): Unify readonly into struct fmap_firmware_entry
  */
 struct twostop_fmap {
 	struct {
 		struct fmap_entry fmap;
 		struct fmap_entry gbb;
 		struct fmap_entry firmware_id;
-		struct fmap_entry ec_robin;
-		struct fmap_entry ec_rwbin;
+		struct fmap_ec_image ec_ro;
+		struct fmap_ec_image ec_rw;
 		struct fmap_entry boot;		/* U-Boot */
 	} readonly;
 
