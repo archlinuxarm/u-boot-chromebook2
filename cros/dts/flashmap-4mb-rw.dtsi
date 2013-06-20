@@ -60,7 +60,7 @@
 		rw-a-ec {
 			label = "ec-rw-a";
 			reg = <0x002e0000 0x0000ff00>;
-			type = "blob ecbin";
+			type = "blob ecrw";
 			add-hash;
 		};
 		rw-a-firmware-id {
@@ -99,7 +99,7 @@
 		rw-b-ec {
 			label = "ec-rw-b";
 			reg = <0x003e0000 0x0000ff00>;
-			type = "blob ecbin";
+			type = "blob ecrw";
 			add-hash;
 		};
 		rw-b-firmware-id {

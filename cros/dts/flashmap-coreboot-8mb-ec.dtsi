@@ -8,11 +8,11 @@
 	/* Add our EC binary into RW binaries */
 	flash@ff800000 {
 		rw-a-ec {
-			type = "blob ecbin";
+			type = "blob ecrw";
 			add-hash;
 		};
 		rw-b-ec {
-			type = "blob ecbin";
+			type = "blob ecrw";
 			add-hash;
 		};
 	};

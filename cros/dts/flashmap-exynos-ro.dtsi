@@ -60,23 +60,37 @@
 
 		ro-boot {
 			label = "u-boot";
-			size = <0xc0000>;
+			size = <0xa0000>;
 			read-only;
-			type = "blob boot,dtb,ecrw,ecro";
+			type = "blob boot,dtb";
 			required;
 		};
 
-		ro-fmap {
-			label = "fmap";
+		ro-ecro {
+			label = "ro-ecro";
+			size = <0xf000>;
+			type = "blob ecro";
+			add-hash;
+		};
 
-			/* We encourage to align FMAP partition in as large
+		ro-ecrw {
+			label = "ro-ecrw";
+			size = <0xf000>;
+			type = "blob ecrw";
+			add-hash;
+		};
+
+		ro-fdtmap {
+			label = "fdtmap";
+
+			/* We encourage to align FDTMAP partition in as large
 			 * block as possible so that flashrom can find it soon.
 			 * For example, aligning to 512KB is better than to
 			 * 256KB. */
-
-			size = <0x00001000>;
+			size = <0x8000>;
+			align = <0x10000>;
 			read-only;
-			type = "fmap";
+			type = "fdtmap";
 			ver-major = <1>;
 			ver-minor = <0>;
 		};
