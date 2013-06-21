@@ -565,6 +565,9 @@ twostop_make_selection(struct twostop_fmap *fmap, firmware_storage_t *file,
 	vlength = fmap->readwrite_a.vblock.length;
 	assert(vlength == fmap->readwrite_b.vblock.length);
 
+	/* crbug.com/205554 */
+	vlength = 8192;
+
 	fparams.verification_size_A = fparams.verification_size_B = vlength;
 
 	fparams.verification_block_A = cros_memalign_cache(vlength);
