@@ -599,7 +599,7 @@ static inline ushort *configuration_get_cmap(void)
 	return (ushort *)&(cp->lcd_cmap[255 * sizeof(ushort)]);
 #elif defined(CONFIG_ATMEL_LCD)
 	return (ushort *)(panel_info.mmio + ATMEL_LCDC_LUT(0));
-#elif !defined(CONFIG_ATMEL_HLCD) && !defined(CONFIG_EXYNOS_FB)
+#elif !defined(CONFIG_ATMEL_HLCD)
 	return panel_info.cmap;
 #elif defined(CONFIG_LCD_LOGO)
 	return bmp_logo_palette;
@@ -646,7 +646,11 @@ void bitmap_plot(int x, int y)
 #else
 		cmap = configuration_get_cmap();
 #endif
-
+		if (!cmap) {
+			printf("%s:%d: error: no place to store cmap\n",
+			       __func__, __LINE__);
+			return;
+		}
 		WATCHDOG_RESET();
 
 		/* Set color map */
@@ -938,6 +942,11 @@ int lcd_display_bitmap(ulong bmp_image, int x, int y)
 	/* MCC200 LCD doesn't need CMAP, supports 1bpp b&w only */
 	if (bmp_bpix == 8) {
 		cmap = configuration_get_cmap();
+		if (!cmap) {
+			printf("%s:%d: error: no place to store cmap\n",
+			       __func__, __LINE__);
+			return 1;
+		}
 		cmap_base = cmap;
 
 		/* Set color map */

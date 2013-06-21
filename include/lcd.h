@@ -249,6 +249,7 @@ typedef struct vidinfo {
 	unsigned int sclk_div;
 
 	unsigned int dual_lcd_enabled;
+	void	*cmap;		/* Points at 8 to 16 bit conversion map. */
 } vidinfo_t;
 
 void init_panel_info(vidinfo_t *vid);

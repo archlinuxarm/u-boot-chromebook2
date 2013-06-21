@@ -25,6 +25,7 @@
 #include <lcd.h>
 #include <fdtdec.h>
 #include <libfdt.h>
+#include <malloc.h>
 #include <asm/io.h>
 #include <asm/arch/cpu.h>
 #include <asm/arch/clock.h>
@@ -65,6 +66,14 @@ static void exynos_lcd_init_mem(void *lcdbase, vidinfo_t *vid)
 
 	exynos_fimd_lcd_init_mem((unsigned long)lcdbase,
 			(unsigned long)fb_size, palette_size);
+
+	/*
+	 * Allocate memory to keep BMP color conversion map. This is required
+	 * for 8 bit BMPs only (hence 256 colors). If malloc fails - keep
+	 * going, it is not even clear if displyaing the bitmap will be
+	 * required on the way up.
+	 */
+	vid->cmap = malloc(256 * NBITS(vid->vl_bpix) / 8);
 }
 
 static void exynos_lcd_init(vidinfo_t *vid)
