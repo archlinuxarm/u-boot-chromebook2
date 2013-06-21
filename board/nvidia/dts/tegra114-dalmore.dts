@@ -1,9 +1,11 @@
 /dts-v1/;
 
 /include/ "tegra114.dtsi"
+#ifdef CONFIG_CHROMEOS
 /include/ "flashmap-tegra-ro.dtsi"
 /include/ "flashmap-tegra-4mb-rw.dtsi"
 /include/ "chromeos-tegra.dtsi"
+#endif
 
 / {
 	model = "NVIDIA Dalmore";
