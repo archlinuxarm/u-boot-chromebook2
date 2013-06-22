@@ -32,6 +32,53 @@
 
 DECLARE_GLOBAL_DATA_PTR;
 
+#ifdef CONFIG_CONSOLE_RECORDING
+
+#ifdef CONFIG_RECORDED_CONSOLE_SIZE
+#define CONSOLE_BUFFER_SIZE  CONFIG_RECORDED_CONSOLE_SIZE
+#else
+/* 4K should be enough for most cases. */
+#define CONSOLE_BUFFER_SIZE  4000
+#endif
+
+static char console_record_buffer[CONSOLE_BUFFER_SIZE];
+static int buffer_index;
+
+/* By default starting in recording mode. */
+static bool console_recording_on = 1;
+
+void console_dump_record(void)
+{
+	int index = 0;
+
+	console_recording_on = 0;
+
+	if (!(gd->flags & (GD_FLG_SILENT | GD_FLG_DISABLE_CONSOLE)))
+		return; /* It was not suppressed. */
+
+	/* Make sure it will show up. */
+	gd->flags &= ~(GD_FLG_SILENT | GD_FLG_DISABLE_CONSOLE);
+	while (index < buffer_index)
+		putc(console_record_buffer[index++]);
+
+	buffer_index = 0;
+}
+
+/* Record character sent to the console if there is room in the buffer. */
+static void record_console_putc(char c)
+{
+	if (console_recording_on && (gd->flags & GD_FLG_RELOC)) {
+		/*
+		 * Pre relocate recoding not supported yet, we don't want to
+		 * write into bss and don't have a mechanism yet to carry a
+		 * smaller buffer from pre-relocation time.
+		 */
+		if (buffer_index < sizeof(console_record_buffer))
+			console_record_buffer[buffer_index++] = c;
+	}
+}
+#endif
+
 static int on_console(const char *name, const char *value, enum env_op op,
 	int flags)
 {
@@ -432,6 +479,9 @@ static inline void print_pre_console_buffer(void) {}
 
 void putc(const char c)
 {
+#ifdef CONFIG_CONSOLE_RECORDING
+	record_console_putc(c);
+#endif
 #ifdef CONFIG_SILENT_CONSOLE
 	if (gd->flags & GD_FLG_SILENT)
 		return;
@@ -456,6 +506,14 @@ void putc(const char c)
 
 void puts(const char *s)
 {
+#ifdef CONFIG_CONSOLE_RECORDING
+	{
+		const char *p = s;
+		while (*p)
+			record_console_putc(*p++);
+	}
+#endif
+
 #ifdef CONFIG_SILENT_CONSOLE
 	if (gd->flags & GD_FLG_SILENT)
 		return;

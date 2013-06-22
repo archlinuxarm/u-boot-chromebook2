@@ -863,6 +863,16 @@ int	printf(const char *fmt, ...)
 		__attribute__ ((format (__printf__, 1, 2)));
 int	vprintf(const char *fmt, va_list args);
 
+/*
+ * Stop console recording. If console output is disabled - enable it and dump
+ * the record buffer contents on the console.
+ *
+ * Typical use case is as follows: during normal boot the console is silent,
+ * its output is recorded but not printed. In case of boot error this function
+ * should be called to enable console and display recorded information.
+ */
+void console_dump_record(void);
+
 /* stderr */
 #define eputc(c)		fputc(stderr, c)
 #define eputs(s)		fputs(stderr, s)

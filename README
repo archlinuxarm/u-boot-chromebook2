@@ -696,6 +696,14 @@ The following options need to be configured:
 		the "silent" environment variable. See
 		doc/README.silent for more information.
 
+		CONFIG_CONSOLE_RECORDING
+		Enables storing all console output in a buffer, until the
+		buffer is full. Buffer overflows are silently ignored.
+
+	       CONFIG_RECORDED_CONSOLE_SIZE
+	       Size of the buffer to record console output in. If not defined,
+	       the default size of 4KBytes is used.
+
 - Console Baudrate:
 		CONFIG_BAUDRATE - in bps
 		Select one of the baudrates listed in
