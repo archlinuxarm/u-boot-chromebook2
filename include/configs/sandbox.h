@@ -61,7 +61,7 @@
 /*
  * Size of malloc() pool, although we don't actually use this yet.
  */
-#define CONFIG_SYS_MALLOC_LEN		(4 << 20)	/* 4MB  */
+#define CONFIG_SYS_MALLOC_LEN		(32 << 20)	/* 32MB  */
 
 #define CONFIG_SYS_PROMPT		"=>"	/* Command Prompt */
 #define CONFIG_SYS_HUSH_PARSER
