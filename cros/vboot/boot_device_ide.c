@@ -35,14 +35,9 @@ static int boot_device_ide_scan(block_dev_desc_t **desc, int max_devs,
 	return found;
 }
 
-static struct boot_interface ide_interface = {
+CROS_BOOT_DEVICE(ide_interface) = {
 	.name = "ide",
 	.type = IF_TYPE_IDE,
 	.start = boot_device_ide_start,
 	.scan = boot_device_ide_scan,
 };
-
-int boot_device_ide_probe(void)
-{
-	return boot_device_register_interface(&ide_interface);
-}

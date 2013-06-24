@@ -64,14 +64,9 @@ static int boot_device_mmc_scan(block_dev_desc_t **desc, int max_devs,
 	return found;
 }
 
-static struct boot_interface mmc_interface = {
+CROS_BOOT_DEVICE(mmc_interface) = {
 	.name = "mmc",
 	.type = IF_TYPE_MMC,
 	.start = boot_device_mmc_start,
 	.scan = boot_device_mmc_scan,
 };
-
-int boot_device_mmc_probe(void)
-{
-	return boot_device_register_interface(&mmc_interface);
-}

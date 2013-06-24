@@ -9,6 +9,7 @@
  */
 
 #include <common.h>
+#include <bootstage.h>
 #include <part.h>
 #include <cros/common.h>
 #include <cros/boot_device.h>
@@ -29,18 +30,6 @@ enum {
 	VBERROR_DISK_READ_ERROR,
 	VBERROR_DISK_WRITE_ERROR,
 };
-
-/* Boot interfaces that we know about */
-struct boot_interface *interface[IF_TYPE_MAX];
-int interface_count;
-
-int boot_device_register_interface(struct boot_interface *iface)
-{
-	if (interface_count >= ARRAY_SIZE(interface))
-		return -1;
-	interface[interface_count++] = iface;
-	return 0;
-}
 
 int boot_device_matches(const block_dev_desc_t *dev,
 				    uint32_t disk_flags, uint32_t *flags)
@@ -100,6 +89,8 @@ VbError_t VbExDiskGetInfo(VbDiskInfo **infos_ptr, uint32_t *count_ptr,
 	uint32_t max_count;	/* maximum devices to scan for */
 	uint32_t count = 0;	/* number of matching devices found */
 	block_dev_desc_t *dev[MAX_DISK_INFO];
+	struct boot_interface *start, *iface;
+	int interface_count;
 	int upto;
 
 	/* We return as many disk infos as possible. */
@@ -109,9 +100,13 @@ VbError_t VbExDiskGetInfo(VbDiskInfo **infos_ptr, uint32_t *count_ptr,
 
 	bootstage_start(BOOTSTAGE_ACCUM_VBOOT_BOOT_DEVICE_INFO,
 			"boot_device_info");
+	start = ll_entry_start(struct boot_interface, boot_interface);
+	interface_count = ll_entry_count(struct boot_interface, boot_interface);
+
 	/* Scan through all the interfaces looking for devices */
-	for (upto = 0; upto < interface_count && count < max_count; upto++) {
-		struct boot_interface *iface = interface[upto];
+	for (upto = 0, iface = start;
+	     upto < interface_count && count < max_count;
+	     iface++, upto++) {
 		int found;
 
 		found = iface->start(disk_flags);
@@ -201,23 +196,4 @@ VbError_t VbExDiskWrite(VbExDiskHandle_t handle, uint64_t lba_start,
 		return VBERROR_DISK_WRITE_ERROR;
 
 	return VBERROR_SUCCESS;
-}
-
-int boot_device_init(void)
-{
-	int err = 0;
-
-#ifdef CONFIG_CHROMEOS_USB
-	err |= boot_device_usb_probe();
-#endif
-#ifdef CONFIG_MMC
-	err |= boot_device_mmc_probe();
-#endif
-#ifdef CONFIG_CHROMEOS_IDE
-	err |= boot_device_ide_probe();
-#endif
-#ifdef CONFIG_SCSI_AHCI
-	err |= boot_device_scsi_probe();
-#endif
-	return err;
 }

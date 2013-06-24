@@ -103,14 +103,9 @@ static int boot_device_usb_scan(block_dev_desc_t **desc, int max_devs,
 	return index;
 }
 
-static struct boot_interface usb_interface = {
+CROS_BOOT_DEVICE(usb_interface) = {
 	.name = "usb",
 	.type = IF_TYPE_USB,
 	.start = boot_device_usb_start,
 	.scan = boot_device_usb_scan,
 };
-
-int boot_device_usb_probe(void)
-{
-	return boot_device_register_interface(&usb_interface);
-}

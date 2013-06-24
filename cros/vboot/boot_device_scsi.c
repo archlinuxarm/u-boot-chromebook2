@@ -37,14 +37,9 @@ static int boot_device_scsi_scan(block_dev_desc_t **desc, int max_devs,
 	return found;
 }
 
-static struct boot_interface scsi_interface = {
+CROS_BOOT_DEVICE(scsi_interface) = {
 	.name = "scsi",
 	.type = IF_TYPE_SCSI,
 	.start = boot_device_scsi_start,
 	.scan = boot_device_scsi_scan,
 };
-
-int boot_device_scsi_probe(void)
-{
-	return boot_device_register_interface(&scsi_interface);
-}

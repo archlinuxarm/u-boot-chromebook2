@@ -11,6 +11,8 @@
 #ifndef CHROMEOS_BOOT_DEVICE_H_
 #define CHROMEOS_BOOT_DEVICE_H_
 
+#include <linker_lists.h>
+
 /*
  * This is an interface that we can boot from. It provides a function to start
  * up the peripheral and also one to scan for available devices attached to
@@ -72,21 +74,8 @@ int boot_device_matches(const block_dev_desc_t *dev, uint32_t disk_flags,
 int boot_device_present_and_matches(const block_dev_desc_t *dev,
 		uint32_t disk_flags, uint32_t *flags);
 
-/**
- * Probe functions for available interfaces
- *
- * @return 0 if ok, -1 on error
- */
-int boot_device_usb_probe(void);
-int boot_device_mmc_probe(void);
-int boot_device_ide_probe(void);
-int boot_device_scsi_probe(void);
-
-/**
- * Register all the available boot devices.
- *
- * @return 0 if ok, -1 on error
- */
-int boot_device_init(void);
+/* Declare a boot device, capable of loading a kernel */
+#define CROS_BOOT_DEVICE(_name) \
+	ll_entry_declare(struct boot_interface, _name, boot_interface)
 
 #endif /* CHROMEOS_BOOT_DEVICE_H_ */

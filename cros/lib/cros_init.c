@@ -19,10 +19,6 @@
 int cros_init(void)
 {
 	bootstage_set_next_id(BOOTSTAGE_VBOOT_LAST);
-	if (boot_device_init()) {
-		VBDEBUG("boot_device_init failed\n");
-		return -1;
-	}
 
 	if (nvstorage_init()) {
 		VBDEBUG("nvstorage_init failed\n");
