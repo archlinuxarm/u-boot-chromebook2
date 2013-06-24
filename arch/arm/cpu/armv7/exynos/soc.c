@@ -61,6 +61,15 @@ static void exynos5_set_l2cache_params(void)
 		CACHE_DATA_RAM_LATENCY;
 
 	asm volatile("mcr p15, 1, %0, c9, c0, 2\n" : : "r"(val));
+
+#ifdef CONFIG_EXYNOS5420
+	/* Read CP15 L2ACTLR value */
+	asm volatile("mrc	p15, 1, %0, c15, c0, 0" : "=r" (val));
+	/* Disable clean/evict push to external */
+	val |= (0x1 << 3);
+	/* Write new vlaue to L2ACTLR */
+	asm volatile("mcr	p15, 1, %0, c15, c0, 0" : : "r" (val));
+#endif
 }
 
 /*
