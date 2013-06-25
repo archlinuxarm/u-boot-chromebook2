@@ -38,7 +38,7 @@
 #define CONFIG_CHROMEOS_PEACH
 
 #undef CONFIG_DEFAULT_DEVICE_TREE
-#define CONFIG_DEFAULT_DEVICE_TREE	exynos5420-peach_pit
+#define CONFIG_DEFAULT_DEVICE_TREE	exynos5420-peach-pit
 
 #define CONFIG_SYS_PROMPT	"Peach # "
 #define CONFIG_IDENT_STRING	" for Peach"

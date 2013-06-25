@@ -38,8 +38,8 @@
 #define CONFIG_IRAM_TOP			0x02074000
 
 #define CONFIG_MAX_I2C_NUM      11
-#define CONFIG_DEVICE_TREE_LIST "exynos5420-peach-pit-adv" \
-	" exynos5420-peach_pit exynos5420-smdk5420"
+#define CONFIG_DEVICE_TREE_LIST "exynos5420-peach-pit" \
+	" exynos5420-peach-pit-rev1 exynos5420-smdk5420"
 
 /* This defines maximum number of channels available for dwmmc */
 #define	DWMMC_MAX_CH_NUM		3

@@ -1,23 +1,12 @@
 /*
- * SAMSUNG Peach board device tree source
+ * Common device tree include for all Peach Pit board revisions
  *
  * Copyright (c) 2013 The Chromium OS Authors. All rights reserved.
  * Use of this source code is governed by a BSD-style license that can be
  * found in the LICENSE file.
  */
 
-/dts-v1/;
-/include/ "exynos54xx.dtsi"
-#ifdef CONFIG_CHROMEOS
-/include/ "flashmap-exynos-ro.dtsi"
-/include/ "flashmap-4mb-rw.dtsi"
-/include/ "chromeos-exynos.dtsi"
-#endif
 / {
-	model = "SAMSUNG Peach board based on EXYNOS5420";
-	compatible = "google,pit-rev1", "google,pit", "samsung,exynos5420",
-		"samsung,exynos5";
-
 	aliases {
 		serial0 = "/serial@12C30000";
 		console = "/serial@12C30000";
