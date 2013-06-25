@@ -73,6 +73,11 @@ static const struct macronix_spi_flash_params macronix_spi_flash_table[] = {
 		.name = "MX25L12805D",
 	},
 	{
+		.idcode = 0x2536,
+		.nr_blocks = 64,
+		.name = "MX25U3235E/F",
+	},
+	{
 		.idcode = 0x2618,
 		.nr_blocks = 256,
 		.name = "MX25L12855E",
