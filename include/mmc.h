@@ -164,6 +164,7 @@
  * EXT_CSD fields
  */
 #define EXT_CSD_PARTITIONING_SUPPORT	160	/* RO */
+#define EXT_CSD_BOOT_WP			173	/* R/W */
 #define EXT_CSD_ERASE_GROUP_DEF		175	/* R/W */
 #define EXT_CSD_BOOT_BUS_WIDTH		177
 #define EXT_CSD_PART_CONF		179	/* R/W */
@@ -199,6 +200,10 @@
 #define EXT_CSD_BOOT_PART_NUM(x)	(x << 3)
 #define EXT_CSD_PARTITION_ACCESS(x)	(x << 0)
 
+/* Enable boot power-on write protect */
+#define EXT_CSD_BOOT_WP_PWR_WP_EN	(1 << 0)
+/* Disable use of boot power-on write protect */
+#define EXT_CSD_BOOT_WP_PWR_WP_DIS	(1 << 6)
 
 #define R1_ILLEGAL_COMMAND		(1 << 22)
 #define R1_APP_CMD			(1 << 5)
@@ -320,6 +325,14 @@ int mmc_boot_partition_size_change(struct mmc *mmc, unsigned long bootsize,
 					unsigned long rpmbsize);
 /* Function to send commands to open/close the specified boot partition */
 int mmc_boot_part_access(struct mmc *mmc, u8 ack, u8 part_num, u8 access);
+
+/**
+ * Apply power-on write protect to boot partitions of eMMC.
+ *
+ * @param mmc	Pointer to a MMC device struct
+ * @return 0 on success, -ve on error.
+ */
+int mmc_boot_power_on_write_protect(struct mmc *mmc);
 
 /**
  * Start device initialization and return immediately; it does not block on

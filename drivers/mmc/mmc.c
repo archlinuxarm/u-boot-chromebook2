@@ -26,6 +26,7 @@
 #include <config.h>
 #include <common.h>
 #include <command.h>
+#include <errno.h>
 #include <mmc.h>
 #include <part.h>
 #include <malloc.h>
@@ -1578,6 +1579,41 @@ int mmc_boot_part_access(struct mmc *mmc, u8 ack, u8 part_num, u8 access)
 			return err;
 		}
 	}
+	return 0;
+}
+
+int mmc_boot_power_on_write_protect(struct mmc *mmc)
+{
+	int err;
+	u8 boot_wp;
+	ALLOC_CACHE_ALIGN_BUFFER(u8, ext_csd, MMC_MAX_BLOCK_LEN);
+
+	err =  mmc_switch(mmc, EXT_CSD_CMD_SET_NORMAL, EXT_CSD_BOOT_WP,
+			  EXT_CSD_BOOT_WP_PWR_WP_EN);
+	if (err)
+		return err;
+
+	/* Now check to see that it worked */
+	err = mmc_send_ext_csd(mmc, ext_csd);
+	if (err)
+		return err;
+
+	boot_wp = ext_csd[EXT_CSD_BOOT_WP];
+
+	if (!(boot_wp & EXT_CSD_BOOT_WP_PWR_WP_EN)) {
+		if (boot_wp & EXT_CSD_BOOT_WP_PWR_WP_DIS) {
+			debug(
+			      "%s: Use of boot partition power-on write protect disabled\n",
+			      __func__);
+			return -EPERM;
+		} else {
+			debug(
+			      "%s: Failed to enable boot partition power-on write protect\n",
+			      __func__);
+			return -EIO;
+		}
+	}
+
 	return 0;
 }
 #endif
