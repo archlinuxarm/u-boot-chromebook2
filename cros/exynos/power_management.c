@@ -24,6 +24,9 @@ int is_processor_reset(void)
 /* This function never returns */
 void cold_reboot(void)
 {
+#ifdef CONFIG_CONSOLE_RECORDING
+	console_dump_record();
+#endif
 	VBDEBUG("Reboot\n");
 
 	/* Add a delay to allow serial output to drain */
@@ -34,6 +37,9 @@ void cold_reboot(void)
 /* This function never returns */
 void power_off(void)
 {
+#ifdef CONFIG_CONSOLE_RECORDING
+	console_dump_record();
+#endif
 	VBDEBUG("Power off\n");
 
 	/* Add a delay to allow serial output to drain */
