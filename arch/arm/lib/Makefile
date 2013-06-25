@@ -59,6 +59,8 @@ COBJS-y	+= reset.o
 COBJS-y	+= cache.o
 COBJS-y	+= cache-cp15.o
 
+COBJS-$(CONFIG_FTHREAD) += fthread_mctx.o
+
 SRCS	:= $(GLSOBJS:.o=.S) $(GLCOBJS:.o=.c) \
 	   $(SOBJS-y:.o=.S) $(COBJS-y:.o=.c)
 OBJS	:= $(addprefix $(obj),$(SOBJS-y) $(COBJS-y))

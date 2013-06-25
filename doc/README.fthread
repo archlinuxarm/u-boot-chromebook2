@@ -89,5 +89,6 @@ to use fthread must provide implementations of the following:
 
 More extensive documentation on these functions is available in
 lib/fthread/fthread_priv.h.  Please see
-arch/sandbox/cpu/fthread_mctx.c for an example of how these are
-implemented for sandbox.
+arch/sandbox/cpu/fthread_mctx.c and arch/arm/lib/fthread_mctx.c for
+examples of how these are implemented for sandbox and ARM,
+respectively.
