@@ -34,6 +34,9 @@
 
 #define CONFIG_MAX_I2C_NUM	8
 
+/* Enable Macronix SPI flash support for Spring board */
+#define CONFIG_SPI_FLASH_MACRONIX
+
 /* This defines maximum number of channels available for dwmmc */
 #define	DWMMC_MAX_CH_NUM		4
 #define CONFIG_DEVICE_TREE_LIST "exynos5250-smdk5250" \
