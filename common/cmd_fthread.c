@@ -190,9 +190,9 @@ static int do_fthread_demo(cmd_tbl_t *cmdtp, int flag, int argc,
 {
 	struct fthread *p1;
 	struct fthread *p2;
-	char ping[] = "ping";
-	char pong[] = "pong";
-	char whoo[] = "whoo-hoo";
+	const char *ping = "ping";
+	const char *pong = "pong";
+	const char *whoo = "whoo-hoo";
 	int err;
 
 	puts("Initializing threading library...\n");
@@ -201,9 +201,9 @@ static int do_fthread_demo(cmd_tbl_t *cmdtp, int flag, int argc,
 		printf("Error during initialization: %d\n", err);
 
 	puts("Spawning ping-pong threads...\n");
-	fthread_spawn(threadmsg, ping, FTHREAD_PRIO_STD, "thread 1",
+	fthread_spawn(threadmsg, (void *)ping, FTHREAD_PRIO_STD, "thread 1",
 		      FTHREAD_DEFAULT_STACKSIZE, &p1);
-	fthread_spawn(threadmsg, pong, FTHREAD_PRIO_STD, "thread 2",
+	fthread_spawn(threadmsg, (void *)pong, FTHREAD_PRIO_STD, "thread 2",
 		      FTHREAD_DEFAULT_STACKSIZE, &p2);
 
 	puts("Waiting to join with spawned threads...\n");
@@ -211,7 +211,7 @@ static int do_fthread_demo(cmd_tbl_t *cmdtp, int flag, int argc,
 	fthread_join(p2, NULL);
 
 	puts("Spawning whoo-hoo thread...\n");
-	fthread_spawn(threadmsg, whoo, FTHREAD_PRIO_STD, "whoo-hoo",
+	fthread_spawn(threadmsg, (void *)whoo, FTHREAD_PRIO_STD, "whoo-hoo",
 		      FTHREAD_DEFAULT_STACKSIZE, &p1);
 
 	puts("Main thread sleeping for 2 seconds...\n");
