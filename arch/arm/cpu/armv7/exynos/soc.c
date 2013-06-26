@@ -24,6 +24,7 @@
 #include <common.h>
 #include <asm/io.h>
 #include <asm/system.h>
+#include <asm/arch/system.h>
 
 enum l2_cache_params {
 	CACHE_TAG_RAM_SETUP = (1 << 9),
@@ -63,12 +64,21 @@ static void exynos5_set_l2cache_params(void)
 	asm volatile("mcr p15, 1, %0, c9, c0, 2\n" : : "r"(val));
 
 #ifdef CONFIG_EXYNOS5420
-	/* Read CP15 L2ACTLR value */
-	asm volatile("mrc	p15, 1, %0, c15, c0, 0" : "=r" (val));
-	/* Disable clean/evict push to external */
-	val |= (0x1 << 3);
-	/* Write new vlaue to L2ACTLR */
-	asm volatile("mcr	p15, 1, %0, c15, c0, 0" : : "r" (val));
+	mrc_l2_aux_ctlr(val);
+
+	/* L2ACTLR[3]: Disable clean/evict push to external */
+	val |= (1 << 3);
+
+	/* L2ACTLR[7]: Enable hazard detect timeout for A15 */
+	val |= (1 << 7);
+
+	/* L2ACTLR[27]: Prevents stopping the L2 logic clock */
+	val |= (1 << 27);
+
+	mcr_l2_aux_ctlr(val);
+
+	/* Read the l2 control register to force things to take effect? */
+	mrc_l2_ctlr(val);
 #endif
 }
 
