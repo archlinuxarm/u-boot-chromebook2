@@ -55,6 +55,17 @@
 			compatible = "google,cros-ec";
 			i2c-max-frequency = <100000>;
 			ec-interrupt = <&gpio 182 1>;
+
+			/*
+			* This describes the flash memory within the EC. Note
+			* that the STM32L flash erases to 0, not 0xff.
+			*/
+			#address-cells = <1>;
+			#size-cells = <1>;
+			flash@8000000 {
+				reg = <0x08000000 0x20000>;
+				erase-value = <0>;
+			};
 		};
 
 		power-regulator@48 {
@@ -66,14 +77,6 @@
 	spi@131b0000 {
 		spi-max-frequency = <1000000>;
 		spi-deactivate-delay = <100>;
-		cros-ec@0 {
-			reg = <0>;
-			compatible = "google,cros-ec";
-			spi-max-frequency = <5000000>;
-			ec-interrupt = <&gpio 182 1>;
-			optimise-flash-write;
-			status = "disabled";
-		};
 	};
 
 	sound@12d60000 {
