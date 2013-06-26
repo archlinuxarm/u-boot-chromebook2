@@ -284,9 +284,6 @@ static void evt0_cores_configure(void)
  */
 static void evt1_cores_configure(void)
 {
-	/* Setup L2 cache */
-	set_l2cache();
-
 	/* Clear secondary boot iRAM base */
 	writel(0x0, (CONFIG_IROM_WORKAROUND_BASE + 0x1C));
 
