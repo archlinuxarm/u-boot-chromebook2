@@ -200,6 +200,8 @@ enum {
 #define MAX77802_BUCK1DVS1_1V	0x3E
 /* Buck2 1.0 volt value (P1.0V_VDD_ARM) */
 #define MAX77802_BUCK2DVS1_1V	0x40
+/* Buck2 1.2625 volt value (P1.2625V_VDD_ARM) */
+#define MAX77802_BUCK2DVS1_1_2625V	0x6A
 /* Buck3 1.0 volt value (P1.0V_VDD_INT) */
 #define MAX77802_BUCK3DVS1_1V	0x40
 /* Buck4 1.0 volt value (P1.0V_VDD_G3D) */

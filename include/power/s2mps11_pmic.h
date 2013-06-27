@@ -128,6 +128,7 @@ enum s2mps11_reg {
  * correct.
  */
 #define S2MPS11_BUCK_CTRL2_1V		0x40
+#define S2MPS11_BUCK_CTRL2_1_2625V	0x6A
 
 /* Value to set voltage as 1.2V: 600mV + 96 * 6.25mV */
 #define S2MPS11_BUCK_CTRL2_1_2V	0x60
