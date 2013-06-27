@@ -687,7 +687,7 @@ static void exynos5420_system_clock_init(void)
 
 	/* Set APLL */
 	writel(APLL_CON1_VAL, &clk->apll_con1);
-	val = set_pll(0xc8, 0x3, 0x1);
+	val = set_pll(0xe1, 0x3, 0x0);
 	writel(val, &clk->apll_con0);
 	while ((readl(&clk->apll_con0) & PLL_LOCKED) == 0)
 		;
