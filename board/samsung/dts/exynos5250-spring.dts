@@ -20,7 +20,7 @@
 	compatible = "google,spring", "samsung,exynos5";
 
 	config {
-		hwid = "spring TEST A-A 1228";
+		hwid = "SPRING TEST A-A 9737";
 	};
 
 	aliases {
