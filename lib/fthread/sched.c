@@ -77,6 +77,8 @@ void fthread_scheduler_eventmanager(unsigned long now, bool block)
 	unsigned long minwait = -1;	/* initialize to max long */
 	struct fthread *mintid = NULL;
 
+	debug("%s: entering in %s mode\n", __func__, block ?
+	      "blocking" : "non-blocking");
 	t = fthread_pqueue_head(&fthread_wq);
 	while (t != NULL) {
 		wake = false;
@@ -104,6 +106,8 @@ void fthread_scheduler_eventmanager(unsigned long now, bool block)
 		tlast = t;
 		t = fthread_pqueue_walk(&fthread_wq, t, FTHREAD_WALK_NEXT);
 		if (wake) {
+			debug("%s: thread \"%s\" will be woken up\n",
+			      __func__, tlast->name);
 			tlast->state = FTHREAD_STATE_READY;
 			tlast->waitevent = FTHREAD_EVENT_NONE;
 			fthread_pqueue_delete(&fthread_wq, tlast);
@@ -113,6 +117,8 @@ void fthread_scheduler_eventmanager(unsigned long now, bool block)
 
 	if (block && fthread_pqueue_length(&fthread_rq) == 0) {
 		/* sleep until at least one thread can wake up */
+		debug("%s: sleeping for %lu microseconds\n",
+		      __func__, minwait);
 		udelay(minwait);
 		mintid->state = FTHREAD_STATE_READY;
 		mintid->waitevent = FTHREAD_EVENT_NONE;
@@ -126,6 +132,7 @@ void *fthread_scheduler(void *unused)
 	unsigned long snapshot;
 	struct fthread *t;
 
+	debug("%s: bootstrapping\n", __func__);
 	fthread_sched->state = FTHREAD_STATE_SCHEDULER;
 	snapshot = fthread_get_current_time_us();
 
@@ -134,6 +141,8 @@ void *fthread_scheduler(void *unused)
 		/* Move all threads off the new queue */
 		t = fthread_pqueue_pop(&fthread_nq);
 		while (t != NULL) {
+			debug("%s: thread \"%s\" moved to ready queue\n",
+			      __func__, t->name);
 			t->state = FTHREAD_STATE_READY;
 			fthread_pqueue_insert(&fthread_rq, t->prio, t);
 			t = fthread_pqueue_pop(&fthread_nq);
@@ -155,12 +164,17 @@ void *fthread_scheduler(void *unused)
 			panic("FTHREAD ERROR: no more threads to schedule\n");
 		}
 
+		debug("%s: thread \"%s\" selected (prio=%d, qprio=%d)\n",
+		      __func__, fthread_current->name,
+		      fthread_current->prio, fthread_current->q_prio);
 		/* Update thread time */
 		fthread_current->lastran_us = fthread_get_current_time_us();
 
 		/* Update scheduler times */
 		fthread_sched->running_us += (fthread_current->lastran_us -
 					      snapshot);
+		debug("%s: running for %lu microseconds\n",
+		      __func__, fthread_sched->running_us);
 
 		/* ***CONTEXT SWITCH*** */
 		fthread_current->dispatches++;
@@ -172,8 +186,14 @@ void *fthread_scheduler(void *unused)
 		/* Update thread runtime */
 		fthread_current->running_us += (snapshot -
 						fthread_current->lastran_us);
+		debug("%s: thread \"%s\" running for %lu microseconds\n",
+		      __func__, fthread_current->name,
+		      fthread_current->running_us);
+
 		/* If terminated, move to dead queue */
 		if (fthread_current->state == FTHREAD_STATE_DEAD) {
+			debug("%s: marking thread \"%s\" as dead\n",
+			      __func__, fthread_current->name);
 			fthread_pqueue_insert(&fthread_dq, FTHREAD_PRIO_STD,
 					      fthread_current);
 			fthread_current = NULL;
@@ -182,6 +202,8 @@ void *fthread_scheduler(void *unused)
 		/* If waiting, move to waiting queue */
 		if (fthread_current != NULL &&
 		    fthread_current->state == FTHREAD_STATE_WAITING) {
+			debug("%s: moving thread \"%s\" to wait queue\n",
+			      __func__, fthread_current->name);
 			fthread_pqueue_insert(&fthread_wq, FTHREAD_PRIO_STD,
 					      fthread_current);
 			fthread_current = NULL;

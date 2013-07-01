@@ -40,6 +40,8 @@ int fthread_init(void)
 	if (timer_init())
 		return -EBUSY;
 
+	debug("%s: enter\n", __func__);
+
 	/* initilize the scheduler */
 	fthread_scheduler_init();
 
@@ -73,6 +75,7 @@ int fthread_init(void)
 	fthread_mctx_switch(fthread_main->mctx, fthread_sched->mctx);
 
 	/* we will come right back to here after the scheduler initializes */
+	debug("%s: exit\n", __func__);
 	return 0;
 }
 
@@ -83,11 +86,13 @@ int fthread_shutdown(void)
 	if (fthread_current != fthread_main)
 		return -EPERM;
 
+	debug("%s: enter\n", __func__);
 	fthread_scheduler_kill();
 	fthread_initialized = false;
 	fthread_tcb_free(fthread_sched);
 	fthread_tcb_free(fthread_main);
 
+	debug("%s: exit\n", __func__);
 	return 0;
 }
 
@@ -149,6 +154,7 @@ int fthread_spawn(void *(*func)(void *), void *arg, int prio, const char *name,
 	struct fthread *t;
 	int err;
 
+	debug("%s: spawning thread \"%s\"\n", __func__, name);
 	if (func == NULL)
 		return -EINVAL;
 
@@ -191,12 +197,17 @@ int fthread_spawn(void *(*func)(void *), void *arg, int prio, const char *name,
 	}
 
 	*threadp = t;
+	debug("%s: exit\n", __func__);
 	return 0;
 }
 
 inline void fthread_yield(void)
 {
+	debug("%s: thread \"%s\" giving up control to scheduler\n",
+	      __func__, fthread_current->name);
 	fthread_mctx_switch(fthread_current->mctx, fthread_sched->mctx);
+	debug("%s: returning to thread \"%s\"\n",  __func__,
+	      fthread_current->name);
 }
 
 void fthread_usleep(unsigned long waittime)
@@ -213,6 +224,7 @@ void fthread_usleep(unsigned long waittime)
 
 int fthread_join(struct fthread *tid, void **value)
 {
+	debug("%s: joining thread \"%s\"\n", __func__, tid->name);
 	if (tid == NULL)
 		return -EINVAL;
 	if (tid == fthread_current)
@@ -261,6 +273,8 @@ static int fthread_exit_main_cb(void)
 
 void fthread_exit(void *value)
 {
+	debug("%s: thread \"%s\" has terminated\n", __func__,
+	      fthread_current->name);
 	/*
 	 * The main thread is special, because its termination would terminate
 	 * the whole program, so we use a special predicate function event to
@@ -274,6 +288,8 @@ void fthread_exit(void *value)
 		 */
 		fthread_current->join_arg = value;
 		fthread_current->state = FTHREAD_STATE_DEAD;
+		debug("%s: switching from \"%s\" to scheduler\n",
+		      __func__, fthread_current->name);
 		fthread_yield();
 	} else {
 		if (!fthread_exit_main_cb()) {
