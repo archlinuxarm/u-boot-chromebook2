@@ -873,6 +873,19 @@ int	vprintf(const char *fmt, va_list args);
  */
 void console_dump_record(void);
 
+/*
+ * Structure describing the console recording buffer state: where it is
+ * located and how much data there is in it.
+ */
+struct record_descriptor {
+	void *buffer_addr;
+	unsigned buffer_size;
+	unsigned char_count;
+};
+
+/* Function to get access to the console buffer */
+void console_get_record(struct record_descriptor *prd);
+
 /* stderr */
 #define eputc(c)		fputc(stderr, c)
 #define eputs(s)		fputs(stderr, s)

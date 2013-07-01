@@ -511,6 +511,21 @@ int boot_relocate_fdt(struct lmb *lmb, char **of_flat_tree, ulong *of_size);
 int boot_ramdisk_high(struct lmb *lmb, ulong rd_data, ulong rd_len,
 		  ulong *initrd_start, ulong *initrd_end);
 int boot_get_cmdline(struct lmb *lmb, ulong *cmd_start, ulong *cmd_end);
+
+/**
+ * boot_fdt_add_console_buffer() - add console recorded information to fdt
+ *
+ * The fdt is supposed to have enough room to grow to fit the console record
+ * buffer (image_setup_linux() takes care of that). The buffer contents are
+ * added as "/chosen/ap-console-buffer" object.
+ *
+ * If anything fails when attempting to add it, a non-zero return value is
+ * returned. There is no point in stalling boot because of problems here.
+ *
+ * @param fdt_blob	Address of the fdt to modify.
+ */
+int boot_fdt_add_console_buffer(void *fdt_blob);
+
 #ifdef CONFIG_SYS_BOOT_GET_KBD
 int boot_get_kbd(struct lmb *lmb, bd_t **kbd);
 #endif /* CONFIG_SYS_BOOT_GET_KBD */

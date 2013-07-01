@@ -105,6 +105,26 @@ void boot_fdt_add_mem_rsv_regions(struct lmb *lmb, void *fdt_blob)
 	}
 }
 
+#ifdef CONFIG_CONSOLE_RECORDING
+int boot_fdt_add_console_buffer(void *fdt_blob)
+{
+	int node_offset;
+	struct record_descriptor rd;
+
+	console_get_record(&rd);
+
+	if (!rd.char_count)
+		return -FDT_ERR_INTERNAL;
+
+	node_offset = fdt_path_offset(fdt_blob, "/chosen");
+	if (node_offset < 0)
+		return FDT_ERR_NOTFOUND;
+
+	return fdt_setprop(fdt_blob, node_offset, "ap-console-buffer",
+			   rd.buffer_addr, rd.char_count);
+}
+#endif
+
 /**
  * boot_relocate_fdt - relocate flat device tree
  * @lmb: pointer to lmb handle, will be used for memory mgmt
@@ -143,6 +163,14 @@ int boot_relocate_fdt(struct lmb *lmb, char **of_flat_tree, ulong *of_size)
 	/* position on a 4K boundary before the alloc_current */
 	/* Pad the FDT by a specified amount */
 	of_len = *of_size + CONFIG_SYS_FDT_PAD;
+#ifdef CONFIG_CONSOLE_RECORDING
+	{
+		struct record_descriptor rd;
+
+		console_get_record(&rd);
+		of_len += rd.buffer_size;
+	}
+#endif
 
 	/* If fdt_high is set use it to select the relocation address */
 	fdt_high = getenv("fdt_high");
@@ -471,7 +499,6 @@ int image_setup_libfdt(bootm_headers_t *images, void *blob,
 {
 	ulong *initrd_start = &images->initrd_start;
 	ulong *initrd_end = &images->initrd_end;
-	int ret;
 
 	if (fdt_chosen(blob, 1) < 0) {
 		puts("ERROR: /chosen node create failed");
@@ -487,10 +514,16 @@ int image_setup_libfdt(bootm_headers_t *images, void *blob,
 	lmb_free(lmb, (phys_addr_t)(u32)(uintptr_t)blob,
 		 (phys_size_t)fdt_totalsize(blob));
 
-	ret = fdt_resize(blob);
-	if (ret < 0)
-		return ret;
-	of_size = ret;
+#ifndef CONFIG_CONSOLE_RECORDING
+	{
+		int ret;
+
+		ret = fdt_resize(blob);
+		if (ret < 0)
+			return ret;
+		of_size = ret;
+	}
+#endif
 
 	if (*initrd_start && *initrd_end) {
 		of_size += FDT_RAMDISK_OVERHEAD;

@@ -77,6 +77,13 @@ static void record_console_putc(char c)
 			console_record_buffer[buffer_index++] = c;
 	}
 }
+
+void console_get_record(struct record_descriptor *rd)
+{
+	rd->buffer_addr = console_record_buffer;
+	rd->char_count = buffer_index;
+	rd->buffer_size = sizeof(console_record_buffer);
+}
 #endif
 
 static int on_console(const char *name, const char *value, enum env_op op,

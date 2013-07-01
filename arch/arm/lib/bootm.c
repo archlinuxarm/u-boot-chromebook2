@@ -71,9 +71,10 @@ void arch_lmb_reserve(struct lmb *lmb)
 /**
  * announce_and_cleanup() - Print message and prepare for kernel boot
  *
- * @fake: non-zero to do everything except actually boot
+ * @param fake: non-zero to do everything except actually boot
+ * @param dt:   pointer to the device tree passed to the kernel
  */
-static void announce_and_cleanup(int fake)
+static void announce_and_cleanup(int fake, void *dt)
 {
 	printf("\nStarting kernel ...%s\n\n", fake ?
 		"(fake run for tracing)" : "");
@@ -81,6 +82,16 @@ static void announce_and_cleanup(int fake)
 
 #ifdef CONFIG_USB_DEVICE
 	udc_disconnect();
+#endif
+#ifdef CONFIG_CONSOLE_RECORDING
+	{
+		int rv;
+
+		rv = boot_fdt_add_console_buffer(dt);
+		if (rv)
+			printf("%s: Console recording failed (%d)\n",
+			       __func__, rv);
+	}
 #endif
 	cleanup_before_linux();
 }
@@ -247,7 +258,7 @@ static void boot_jump_linux(bootm_headers_t *image, int flag)
 	debug("## Transferring control to Linux (at address %08lx)" \
 		"...\n", (ulong) kernel_entry);
 	bootstage_mark(BOOTSTAGE_ID_RUN_OS);
-	announce_and_cleanup(fake);
+	announce_and_cleanup(fake, image->ft_addr);
 
 	if (IMAGE_ENABLE_OF_LIBFDT && image->ft_len)
 		r2 = (unsigned long)image->ft_addr;
