@@ -51,6 +51,11 @@
 /* Support vboot flag reading from EC */
 #define CONFIG_CHROMEOS_CROS_EC_FLAG
 
+/* eMMC boot partition power-on WP */
+#define CONFIG_SPL_MMC_SUPPORT
+#define CONFIG_SPL_MMC_SIMPLE
+#define CONFIG_SPL_MMC_BOOT_WP
+
 /* Enable LCD connected to FIMD/DP display pipe */
 #define CONFIG_LCD
 #define CONFIG_EXYNOS_FB
