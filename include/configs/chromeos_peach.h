@@ -39,9 +39,20 @@
 
 #undef CONFIG_DEFAULT_DEVICE_TREE
 #define CONFIG_DEFAULT_DEVICE_TREE	exynos5420-peach-pit
+#define CONFIG_STD_DEVICES_SETTINGS    EXYNOS_DEVICE_SETTINGS
 
 #define CONFIG_SYS_PROMPT	"Peach # "
 #define CONFIG_IDENT_STRING	" for Peach"
+
+/*
+ * Extra bootargs used for direct booting, but not for vboot.
+ * - console of the board
+ * - debug and earlyprintk: easier to debug; they could be removed later
+ */
+#define CONFIG_DIRECT_BOOTARGS \
+	"console=ttySAC3," STRINGIFY(CONFIG_BAUDRATE) " debug earlyprintk"
+
+#define CONFIG_EXTRA_BOOTARGS ""
 
 #define ANX1120_I2C_BUS		7
 
@@ -57,6 +68,20 @@
 #define CONFIG_RUN_TIME_BANK_NUMBER
 #define CONFIG_CHROMEOS_GPIO_FLAG
 #define CONFIG_CHROMEOS_CROS_EC_FLAG
+
+/* Replace default CONFIG_EXTRA_ENV_SETTINGS */
+#ifdef CONFIG_EXTRA_ENV_SETTINGS
+#undef CONFIG_EXTRA_ENV_SETTINGS
+#endif
+#define CONFIG_EXTRA_ENV_SETTINGS \
+	EXYNOS_DEVICE_SETTINGS \
+	CONFIG_CHROMEOS_EXTRA_ENV_SETTINGS
+
+/* Replace default CONFIG_BOOTCOMMAND */
+#ifdef CONFIG_BOOTCOMMAND
+#undef CONFIG_BOOTCOMMAND
+#endif
+#define CONFIG_BOOTCOMMAND CONFIG_NON_VERIFIED_BOOTCOMMAND
 
 #define CONFIG_CROS_EC_SPI		/* Support CROS_EC over SPI */
 
