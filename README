@@ -2954,6 +2954,11 @@ FIT uImage format:
 		CONFIG_SPL_MMC_SUPPORT
 		Support for drivers/mmc/libmmc.o in SPL binary
 
+		CONFIG_SPL_MMC_SIMPLE
+		Build simplified libmmc.  Builds libmmc without complete MMC
+		framework, only a simplified drivers for the specific MMC
+		peripherals enabled.
+
 		CONFIG_SYS_MMCSD_RAW_MODE_U_BOOT_SECTOR,
 		CONFIG_SYS_U_BOOT_MAX_SIZE_SECTORS,
 		CONFIG_SYS_MMC_SD_FAT_BOOT_PARTITION

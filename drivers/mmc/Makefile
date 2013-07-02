@@ -25,7 +25,15 @@ include $(TOPDIR)/config.mk
 
 LIB	:= $(obj)libmmc.o
 
+ifdef CONFIG_SPL_BUILD
+ifdef CONFIG_SPL_MMC_SIMPLE
+BUILD_SIMPLE_MMC=1
+endif
+endif
 
+ifeq ($(BUILD_SIMPLE_MMC),1)
+COBJS-$(CONFIG_DWMMC) += dw_mmc_simple.o
+else
 COBJS-$(CONFIG_BFIN_SDH) += bfin_sdh.o
 COBJS-$(CONFIG_DAVINCI_MMC) += davinci_mmc.o
 COBJS-$(CONFIG_FSL_ESDHC) += fsl_esdhc.o
@@ -47,6 +55,7 @@ COBJS-$(CONFIG_SPEAR_SDHCI) += spear_sdhci.o
 COBJS-$(CONFIG_TEGRA_MMC) += tegra_mmc.o
 COBJS-$(CONFIG_DWMMC) += dw_mmc.o
 COBJS-$(CONFIG_EXYNOS_DWMMC) += exynos_dw_mmc.o
+endif
 
 COBJS	:= $(COBJS-y)
 SRCS	:= $(COBJS:.o=.c)
