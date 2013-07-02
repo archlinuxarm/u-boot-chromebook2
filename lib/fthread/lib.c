@@ -21,13 +21,26 @@
 
 #include <common.h>
 #include <errno.h>
-#include <malloc.h>
-
+#include <fdtdec.h>
 #include <fthread.h>
+#include <malloc.h>
+#include <asm/global_data.h>
+
 #include "fthread_priv.h"
+
+DECLARE_GLOBAL_DATA_PTR;
 
 /* thread library should only be initialized once */
 static bool fthread_initialized;
+
+/* Thread state printed information */
+static const char * const fthread_state_names[] = {
+	[FTHREAD_STATE_SCHEDULER] = "SCHEDULER",
+	[FTHREAD_STATE_NEW] = "NEW",
+	[FTHREAD_STATE_READY] = "READY",
+	[FTHREAD_STATE_WAITING] = "WAITING",
+	[FTHREAD_STATE_DEAD] = "DEAD"
+};
 
 int fthread_init(void)
 {
@@ -83,12 +96,77 @@ int fthread_shutdown(void)
 		return -EPERM;
 
 	debug("%s: enter\n", __func__);
+#ifdef CONFIG_FTHREAD_REPORT
+	fthread_report();
+#endif
 	fthread_scheduler_kill();
 	fthread_initialized = false;
 	fthread_tcb_free(fthread_sched);
 	fthread_tcb_free(fthread_main);
 
 	debug("%s: exit\n", __func__);
+	return 0;
+}
+
+void fthread_print_stats(struct fthread *t)
+{
+	/* Spawned time */
+	print_grouped_ull(t->spawned_us, FTHREAD_REPORT_DIGITS);
+
+	/* State */
+	printf("%11s", fthread_state_names[t->state]);
+
+	/* Running time */
+	print_grouped_ull(t->running_us, FTHREAD_REPORT_DIGITS);
+
+	/* Last time the thread ran */
+	print_grouped_ull(t->lastran_us, FTHREAD_REPORT_DIGITS);
+
+	/* Name */
+	printf("  %s\n", t->name);
+}
+
+void fthread_print_pqueue_stats(struct fthread_pqueue *q)
+{
+	struct fthread *t;
+
+	for (t = fthread_pqueue_head(q); t != NULL;
+	     t = fthread_pqueue_walk(q, t, FTHREAD_WALK_NEXT)) {
+		fthread_print_stats(t);
+	}
+}
+
+int fthread_report(void)
+{
+	unsigned long gdflags = gd->flags;
+
+	if (!fthread_initialized)
+		return -EPERM;
+
+	/* Unsilence the console if necessary */
+	if (fdtdec_get_config_int(gd->fdt_blob, "force-fthread-report", 0))
+		gd->flags &= ~GD_FLG_SILENT;
+
+	puts("Thread summary in microseconds:\n");
+	printf("%15s%11s%15s%15s  %s\n", "Spawned", "State", "Running",
+	       "Lastran", "Name");
+
+	/* Print runtime information for each queue */
+	fthread_print_pqueue_stats(&fthread_nq);
+	fthread_print_pqueue_stats(&fthread_rq);
+	fthread_print_pqueue_stats(&fthread_wq);
+	fthread_print_pqueue_stats(&fthread_dq);
+
+	/*
+	 * The current thread and the scheduler will not be in any queue so we
+	 * must explicitly print their runtime information
+	 */
+	fthread_print_stats(fthread_current);
+	fthread_print_stats(fthread_sched);
+
+	/* Restore global data flags */
+	gd->flags = gdflags;
+
 	return 0;
 }
 
@@ -237,8 +315,12 @@ int fthread_join(struct fthread *tid, void **value)
 
 	if (value != NULL)
 		*value = tid->join_arg;
+
+#ifndef CONFIG_FTHREAD_REPORT
+	/* Only delete joined threads if we aren't reporting stats */
 	fthread_pqueue_delete(&fthread_dq, tid);
 	fthread_tcb_free(tid);
+#endif
 
 	return 0;
 }

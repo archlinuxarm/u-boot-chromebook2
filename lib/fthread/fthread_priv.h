@@ -34,6 +34,9 @@
  */
 #define FTHREAD_MAIN_FUNC	(void *(*)(void *))(-1)
 
+/* Number of digits to show in a report */
+#define FTHREAD_REPORT_DIGITS	11
+
 /* Thread state information */
 enum fthread_state {
 	FTHREAD_STATE_SCHEDULER = 0,

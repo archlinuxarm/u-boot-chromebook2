@@ -43,7 +43,7 @@ To enable fthread support, build U-Boot with:
 
 #define CONFIG_FTHREAD
 
-To enable tests, also build with:
+To enable fthread commands at the U-Boot prompt, also build with:
 
 #define CONFIG_CMD_FTHREAD
 
@@ -51,6 +51,20 @@ Both of these options are enabled by default for sandbox.  To test
 fthread, launch U-Boot and run the following command at the prompt:
 
 > fthread test
+
+Additionally, to view runtime statistics for all threads spawned by
+the library, build with:
+
+#define CONFIG_FTHREAD_REPORT
+
+This will print out a table of of runtime statistics when the library
+is killed with fthread_shutdown().  To enable the report command at
+the the U-Boot prompt, build with:
+
+#define CONFIG_CMD_FTHREAD_REPORT
+
+Thread information that is reported includes the thread's state,
+spawned time, running time, the last time it was run, and its name.
 
 Please see include/fthread.h for the public API and
 common/cmd_fthread.c for examples on how to use the library.

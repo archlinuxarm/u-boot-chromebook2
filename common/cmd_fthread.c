@@ -223,9 +223,21 @@ static int do_fthread_demo(cmd_tbl_t *cmdtp, int flag, int argc,
 	return 0;
 }
 
+#ifdef CONFIG_CMD_FTHREAD_REPORT
+static int do_fthread_report(cmd_tbl_t *cmdtp, int flag, int argc,
+			      char * const argv[])
+{
+	fthread_report();
+	return 0;
+}
+#endif
+
 static cmd_tbl_t cmd_fthread_sub[] = {
 	U_BOOT_CMD_MKENT(demo, 2, 0, do_fthread_demo, "", ""),
 	U_BOOT_CMD_MKENT(test, 2, 0, do_fthread_test, "", ""),
+#ifdef CONFIG_CMD_FTHREAD_REPORT
+	U_BOOT_CMD_MKENT(report, 2, 0, do_fthread_report, "", ""),
+#endif
 };
 
 /*
@@ -253,6 +265,9 @@ static int do_fthread(cmd_tbl_t *cmdtp, int flag, int argc,
 U_BOOT_CMD(fthread, 2, 1, do_fthread,
 	   "multithreading command",
 	   " - run a cooperatively multithreaded process\n"
-	   "demo                     - Run a simple demo\n"
-	   "test                     - Test the library\n"
+	   "demo     - Run a simple demo\n"
+	   "test     - Test the library"
+#ifdef CONFIG_CMD_FTHREAD_REPORT
+	   "\nreport   - Report thread runtime statistics"
+#endif
 );

@@ -59,6 +59,16 @@ int fthread_init(void);
 int fthread_shutdown(void);
 
 /**
+ * fthread_report() - Report statistics
+ *
+ * Report running statistics on all the threads in the system.  Can be called by
+ * any thread.
+ *
+ * @return 0 on success, -EPERM if fthread is not initialized
+ */
+int fthread_report(void);
+
+/**
  * fthread_spawn() - Spawn a new thread of execution
  *
  * Spawn a new thread of execution which calls @a func the first time it is

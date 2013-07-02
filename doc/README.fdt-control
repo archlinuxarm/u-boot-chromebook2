@@ -191,6 +191,14 @@ force-bootstage-report
 	Since the console can slow down boot, this permits accurate boot
 	timing using a silent console, while still getting a report.
 
+force-fthread-report
+	Similar to force-bootstage-report, a report showing the
+	runtime statistics of all the threads in the system will be
+	printed, even on a silent console.  Since printing to the
+	console can slow down a thread, this option allows accurate
+	thread timing on a silent console, while still reporting
+	statistics.
+
 google,bad-wake-gpios
 	If present, this GPIO will be placed in the machine params for the
 	SPL's use.  When the SPL is waking up from sleep it will check the
