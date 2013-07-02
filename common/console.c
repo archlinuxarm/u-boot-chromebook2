@@ -25,6 +25,7 @@
 #include <fdtdec.h>
 #include <stdarg.h>
 #include <malloc.h>
+#include <os.h>
 #include <serial.h>
 #include <stdio_dev.h>
 #include <exports.h>
@@ -489,6 +490,13 @@ void putc(const char c)
 #ifdef CONFIG_CONSOLE_RECORDING
 	record_console_putc(c);
 #endif
+#ifdef CONFIG_SANDBOX
+	if (!gd) {
+		os_putc(c);
+		return;
+	}
+#endif
+
 #ifdef CONFIG_SILENT_CONSOLE
 	if (gd->flags & GD_FLG_SILENT)
 		return;
@@ -520,6 +528,12 @@ void puts(const char *s)
 			record_console_putc(*p++);
 	}
 #endif
+#ifdef CONFIG_SANDBOX
+	if (!gd) {
+		os_puts(s);
+		return;
+	}
+#endif
 
 #ifdef CONFIG_SILENT_CONSOLE
 	if (gd->flags & GD_FLG_SILENT)
@@ -549,7 +563,7 @@ int printf(const char *fmt, ...)
 	uint i;
 	char printbuffer[CONFIG_SYS_PBSIZE];
 
-#ifndef CONFIG_PRE_CONSOLE_BUFFER
+#if !defined(CONFIG_SANDBOX) && !defined(CONFIG_PRE_CONSOLE_BUFFER)
 	if (!gd->have_console)
 		return 0;
 #endif
