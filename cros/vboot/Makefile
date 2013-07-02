@@ -13,6 +13,7 @@ include $(TOPDIR)/config.mk
 LIB	= $(obj)libvboot.o
 
 COBJS-$(CONFIG_CHROMEOS) += boot_device.o
+COBJS-$(CONFIG_SANDBOX) += boot_device_host.o
 COBJS-$(CONFIG_CHROMEOS_IDE) += boot_device_ide.o
 COBJS-$(CONFIG_MMC) += boot_device_mmc.o
 COBJS-$(CONFIG_CHROMEOS_USB) += boot_device_usb.o
