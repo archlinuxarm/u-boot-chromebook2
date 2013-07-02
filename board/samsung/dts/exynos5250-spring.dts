@@ -23,10 +23,6 @@
 		hwid = "SPRING TEST A-A 9737";
 	};
 
-	aliases {
-		sdmmc1 = "/mshci@12210000";
-	};
-
 	board-rev {
 		compatible = "google,board-revision";
 		google,board-rev-gpios = <&gpio 88 0>, <&gpio 89 0>;
