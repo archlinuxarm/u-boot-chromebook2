@@ -28,6 +28,7 @@ $(shell mkdir -p $(obj)slb9635_i2c)
 COBJS-$(CONFIG_TPM_TIS_LPC) = tpm_tis_lpc.o
 COBJS-$(CONFIG_INFINEON_TPM_I2C) += tis_i2c.o slb9635_i2c/tpm.o
 COBJS-$(CONFIG_INFINEON_TPM_I2C) += slb9635_i2c/tpm_tis_i2c.o
+COBJS-$(CONFIG_TPM_TIS_SANDBOX) += tpm_tis_sandbox.o
 
 COBJS	:= $(COBJS-y)
 SRCS	:= $(COBJS:.o=.c)

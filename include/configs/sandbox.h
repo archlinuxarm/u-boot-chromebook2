@@ -143,4 +143,6 @@
 					"stdout=serial\0" \
 					"stderr=serial\0"
 
+#define CONFIG_TPM_TIS_SANDBOX
+
 #endif
