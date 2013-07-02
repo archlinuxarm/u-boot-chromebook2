@@ -20,10 +20,8 @@ enum cros_compress_t {
 
 /* Structures to hold Chrome OS specific configuration from the FMAP. */
 
-struct fmap_entry {
-	uint32_t offset;
-	uint32_t length;
-};
+/* struct fmap_entry is now defined in fdtdec.h */
+#include <fdtdec.h>
 
 struct fmap_ec_image {
 	struct fmap_entry image;
