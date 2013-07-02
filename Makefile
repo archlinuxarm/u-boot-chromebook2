@@ -249,7 +249,11 @@ HAVE_VENDOR_COMMON_LIB = $(if $(wildcard board/$(VENDOR)/common/Makefile),y,n)
 LIBS-$(CONFIG_CHROMEOS) += cros/cmd/libcros_cmd.o
 LIBS-$(CONFIG_CHROMEOS) += cros/lib/libcros.o
 LIBS-$(CONFIG_CHROMEOS) += cros/vboot/libvboot.o
+ifdef SOC
 LIBS-$(CONFIG_CHROMEOS) += cros/$(SOC)/libcros_board.o
+else
+LIBS-$(CONFIG_CHROMEOS) += cros/$(ARCH)/libcros_board.o
+endif
 
 LIBS-y += lib/libgeneric.o
 LIBS-y += lib/rsa/librsa.o
@@ -409,7 +413,7 @@ CFLAGS_VBOOT = $(filter-out -Wstrict-prototypes, $(CFLAGS))
 #    This can be either a real hardware architecture for which vboot
 #    can be built, or it can be unset.  When unset, vboot will be
 #    built for the host architecture.  When set, it has to be one of
-#    arm, i386, and x86_64.
+#    arm, i386, amd64 and x86_64.
 #
 #  ARCH:
 #
@@ -423,9 +427,11 @@ CFLAGS_VBOOT = $(filter-out -Wstrict-prototypes, $(CFLAGS))
 #  command line.  However, since, without 'override', it is not
 #  possible to change the value of Make variables set on the command
 #  line, both FIRMWARE_ARCH and ARCH both must be set correctly before
-#  invoking the sub-make.
+#  invoking the sub-make. For sandbox we specify the architecture as
+#  amd64 - we don't support i386 since the chroot does not support
+#  that anyway.
 #
-VBOOT_SUBMAKE_FIRMWARE_ARCH=$(filter-out sandbox,$(subst x86,i386,$(ARCH)))
+VBOOT_SUBMAKE_FIRMWARE_ARCH=$(subst sandbox,amd64,$(subst x86,i386,$(ARCH)))
 VBOOT_SUBMAKE_ARCH=$(subst sandbox,amd64,$(ARCH))
 .PHONY : vboot
 vboot:
