@@ -22,12 +22,16 @@
 
 #include <common.h>
 #include <config.h>
+#include <errno.h>
 #include <mmc.h>
+#include <dwmmc.h>
+#include <dwmmc_simple.h>
 #include <asm/gpio.h>
 #include <asm/arch/clock.h>
 #include <asm/arch/clk.h>
 #include <asm/arch/cpu.h>
 #include <asm/arch/dmc.h>
+#include <asm/arch/gpio.h>
 #include <asm/arch/pinmux.h>
 #include <asm/arch/periph.h>
 #include <asm/arch/power.h>
@@ -192,7 +196,7 @@ static void exynos_spi_copy(unsigned int uboot_size, unsigned int uboot_addr)
 * COPY_BL2_FNPTR_ADDR: Address in iRAM, which Contains
 * Pointer to API (Data transfer from mmc to ram)
 */
-void copy_uboot_to_ram(void)
+enum boot_mode copy_uboot_to_ram(void)
 {
 	int is_cr_z_set;
 	unsigned int sec_boot_check;
@@ -257,6 +261,8 @@ void copy_uboot_to_ram(void)
 	default:
 		break;
 	}
+
+	return bootmode;
 }
 
 /* Tell the loaded U-Boot that it was loaded from SPL */
@@ -320,10 +326,93 @@ static void reset_if_invalid_wakeup(void)
 	}
 }
 
+#ifdef CONFIG_SPL_MMC_BOOT_WP
+/**
+ * Assert eMMC boot partition write protection
+ *
+ * Initialize the eMMC and send a command to assert power-on write
+ * protection of the eMMC boot partitions.
+ *
+ * @return 0 on success, -ve on error
+ */
+static int spl_set_boot_wp(void)
+{
+	struct dwmci_host host;
+	struct mmc_cmd cmd;
+	int ret;
+
+	/* Configure mmc pins */
+	ret = exynos_pinmux_config(DWMMC_SIMPLE_PERIPH_ID,
+				   DWMMC_SIMPLE_PINMUX_FLAGS);
+	if (ret)
+		return ret;
+
+	/* Initialize dwmci peripheral */
+	ret = dwmci_simple_init(&host);
+	if (ret)
+		return ret;
+
+	/* Startup mmc */
+	ret = dwmci_simple_startup(&host);
+	if (ret)
+		return ret;
+
+	/* Set power-on write protect on boot partitions */
+	cmd.cmdidx = MMC_CMD_SWITCH;
+	cmd.resp_type = MMC_RSP_R1b;
+	cmd.cmdarg = (MMC_SWITCH_MODE_WRITE_BYTE << 24) |
+				 (EXT_CSD_BOOT_WP << 16) |
+				 (EXT_CSD_BOOT_WP_PWR_WP_EN << 8);
+
+	return dwmci_simple_send_cmd(&host, &cmd);
+}
+
+/**
+ * Initialize the write protect GPIO to an input and floating.
+ *
+ * It will take a while for the input value to settle after this
+ * initialization.
+ */
+static void spl_boot_wp_init(void)
+{
+	struct spl_machine_param *param = spl_get_machine_params();
+
+	/* Invalid value */
+	if (param->write_protect_gpio == 0xffffffff)
+		return;
+
+	gpio_direction_input(param->write_protect_gpio);
+	gpio_set_pull(param->write_protect_gpio, 0);
+}
+
+/**
+ * Check if write protection should be asserted, if so, assert it.
+ *
+ * @return 0 on success, -ve on error
+ */
+static int check_and_set_wp(void)
+{
+	struct spl_machine_param *param = spl_get_machine_params();
+
+	/* Invalid value */
+	if (param->write_protect_gpio == 0xffffffff)
+		return 0;
+
+	/* Active low WP input */
+	if (!gpio_get_value(param->write_protect_gpio))
+		return spl_set_boot_wp();
+
+	return 0;
+}
+#endif
+
 void board_init_f(unsigned long bootflag)
 {
 	__attribute__((aligned(8))) gd_t local_gd;
 	__attribute__((noreturn)) void (*uboot)(void);
+#ifdef CONFIG_SPL_MMC_BOOT_WP
+	enum boot_mode bootmode;
+#endif
 
 	exynos5_set_spl_marker();
 	setup_global_data(&local_gd);
@@ -333,7 +422,27 @@ void board_init_f(unsigned long bootflag)
 		power_exit_wakeup();
 	}
 
+#ifdef CONFIG_SPL_MMC_BOOT_WP
+	/*
+	 * GPIOs on the Exynos 5250 default to pulled down.  It will take a
+	 * while for the GPIO to settle after being changed, so initialize it
+	 * before copying U-Boot, giving it that time to settle.
+	 */
+	spl_boot_wp_init();
+
+	bootmode = copy_uboot_to_ram();
+
+	/* Only set eMMC write protection if booting from eMMC */
+	if (bootmode == BOOT_MODE_EMMC && check_and_set_wp()) {
+		/*
+		 * TODO(mpratt@chromium.org):
+		 * Reboot or retry if write protection fails to apply.
+		 */
+		hang();
+	}
+#else
 	copy_uboot_to_ram();
+#endif
 
 	/* Jump to U-Boot image */
 	uboot = (void *)CONFIG_SYS_TEXT_BASE;

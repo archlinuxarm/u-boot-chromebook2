@@ -2959,6 +2959,10 @@ FIT uImage format:
 		framework, only a simplified drivers for the specific MMC
 		peripherals enabled.
 
+		CONFIG_SPL_MMC_BOOT_WP
+		Support for enabling power-on write protection of MMC boot
+		partitions in SPL.
+
 		CONFIG_SYS_MMCSD_RAW_MODE_U_BOOT_SECTOR,
 		CONFIG_SYS_U_BOOT_MAX_SIZE_SECTORS,
 		CONFIG_SYS_MMC_SD_FAT_BOOT_PARTITION
