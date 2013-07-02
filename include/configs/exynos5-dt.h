@@ -88,12 +88,13 @@
 #define CONFIG_BAUDRATE			115200
 #define EXYNOS5_DEFAULT_UART_OFFSET	0x010000
 
-#define CONFIG_CROS_EC		/* CROS_EC protocol */
+#ifdef CONFIG_CROS_EC
 #define CONFIG_CROS_EC_KEYB	/* CROS_EC keyboard input */
 #define CONFIG_CMD_CROS_EC
 
 /* Enable keyboard */
 #define CONFIG_KEYBOARD
+#endif
 
 /* Console configuration */
 #define CONFIG_CONSOLE_MUX

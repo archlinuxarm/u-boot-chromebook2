@@ -25,6 +25,8 @@
 #ifndef __CONFIG_SMDK_H
 #define __CONFIG_SMDK_H
 
+#define CONFIG_CROS_EC
+
 #include <configs/exynos5250.h>
 #include <configs/exynos5-dt.h>
 
