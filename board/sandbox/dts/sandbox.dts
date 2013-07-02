@@ -1,5 +1,11 @@
 /dts-v1/;
 
+#ifdef CONFIG_CHROMEOS
+/include/ "chromeos-sandbox.dtsi"
+/include/ "flashmap-sandbox-ro.dtsi"
+/include/ "flashmap-16mb-rw.dtsi"
+#endif
+
 / {
 	model = "Sandbox test environment";
 
@@ -23,4 +29,44 @@
 		colour = "white";
 		sides = <6>;
 	};
+	spi {
+		firmware_storage_spi: flash@0 {
+			reg = <0>;
+		};
+	};
+
+	gpio: gpio {
+	};
+
+	host@0 {
+		compatible = "sandbox,host-emulation";
+		cros-ec@0 {
+			reg = <0>;
+			compatible = "google,cros-ec";
+			ec-interrupt = <&gpio 93 1>; /* GPX1_5 */
+
+			/*
+			 * This describes the flash memory within the EC. Note
+			 * that the STM32L flash erases to 0, not 0xff.
+			 */
+			#address-cells = <1>;
+			#size-cells = <1>;
+			flash@8000000 {
+				reg = <0x08000000 0x20000>;
+				erase-value = <0>;
+
+				/* Information for sandbox */
+				ro {
+					reg = <0 0xf000>;
+				};
+				wp-ro {
+					reg = <0xf000 0x1000>;
+				};
+				rw {
+					reg = <0x10000 0x10000>;
+				};
+			};
+		};
+	};
+
 };

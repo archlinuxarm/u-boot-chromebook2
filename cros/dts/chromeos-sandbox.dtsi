@@ -1,0 +1,77 @@
+/*
+ * Copyright (c) 2013 The Chromium OS Authors. All rights reserved.
+ * Use of this source code is governed by a BSD-style license that can be
+ * found in the LICENSE file.
+ */
+
+/*
+ * This file holds Chrome OS-specific options for sandbox, kept within a
+ * chromeos-config node.
+ */
+
+/include/ "factory-friendly.dtsi"
+
+/ {
+	config {
+		hwid = "sandbox TEST A-A 1968";
+	};
+
+	chromeos-config {
+		twostop;		/* Two-stop boot */
+		twostop-optional;       /* One-stop optimization enabled */
+		vblock-read-size = <8192>;
+
+		textbase = <0>;/* Address where U-Boot loads */
+		firmware-storage = <&firmware_storage_spi>;
+		nvstorage-media = "cros-ec";
+		ec-software-sync;       /* EC firmware in sync with BIOS */
+
+		/*
+		 * Memory regions' offsets from DRAM base and sizes for
+		 * kernel, cros-system and gbb.
+		 */
+		kernel-offset = <0x01008000 0x00800000>;
+		cros-system-data-offset = <0x01808000 0x8000>;
+		google-binary-block-offset = <0x01810000 0x100000>;
+
+		virtual-dev-switch;
+
+		vboot-flag-write-protect {
+			compatible = "google,gpio-flag";
+			/* APU1_SPI_WP#, XEINT_24 aka gpx30 */
+			gpio = <&gpio 104 1>;
+		};
+		vboot-flag-developer {
+			compatible = "google,const-flag";
+			value = <0>;
+		};
+		vboot-flag-lid-open {
+			compatible = "google,gpio-flag";
+			/* APU1_LID_OPEN, XEINT_28, aka gpx34. */
+			gpio = <&gpio 108 0>;
+			sandbox-value = <1>;
+		};
+		vboot-flag-power-off {
+			compatible = "google,gpio-flag";
+			/* PMC1_ONO#,  XEINT_10 aka gpx12 */
+			gpio = <&gpio 90 1>;
+		};
+		vboot-flag-oprom-loaded {
+			compatible = "google,const-flag";
+			value = <0>;
+		};
+		vboot-flag-ec-in-rw {
+			compatible = "google,gpio-flag";
+			/* APU1_EC_EN_RW, XEINT_19 aka gpx23 */
+			gpio = <&gpio 99 0>;
+		};
+	};
+
+	config {
+		silent-console = <0>;
+	};
+
+	chosen {
+		bootargs = "";
+	};
+};

@@ -1,0 +1,158 @@
+/*
+* Copyright (c) 2012 The Chromium OS Authors. All rights reserved.
+* Use of this source code is governed by a BSD-style license that can be
+* found in the LICENSE file.
+*/
+
+/*
+* This is the flash map (fmap) for a twostop firmware. It defines all the areas
+* that Chrome OS expects to find in its firmware device. The device is split
+* into a number of top-level sections, and within each are several areas.
+*
+* Available flags for each entry are: read-only, compresed.
+* All sections will be marked static in the fmap.
+*/
+
+/ {
+	flash@0 {
+		#address-cells = <1>;
+		#size-cells = <1>;
+		compatible = "winbond,W25Q32BVSSIG", "cfi-flash",
+			"chromeos,flashmap";
+		reg = <0x00000000 0x01000000>;
+
+		/*
+		 * Note: rw-a and rw-b are used by auto-update. They must be
+		 * the same size, and must include the vblock, boot and
+		 * firmware-id parts within them. There is no check on this
+		 * at present so you need to manually verify that it is
+		 * correct.
+		 *
+		 * The rw-b section must not overlap/include the rw-vpd
+		 * section.
+		 */
+
+		/* ---- Section: Rewritable slot A ---- */
+		rw-a {
+			label = "rw-section-a";
+			/* Alignment: 4k (for updating) */
+			reg = <0x00800000 0x00300000>;
+			block-offset = /bits/ 64 <0x00004400>;
+		};
+		rw-a-vblock {
+			label = "vblock-a";
+			/* Alignment: 4k (for updating) and must be in start of
+			 * each RW_SECTION. */
+			size = <0x2000>;
+			type = "keyblock boot,dtb";
+			keyblock = "firmware.keyblock";
+			signprivate = "firmware_data_key.vbprivk";
+			version = <1>;
+			kernelkey = "kernel_subkey.vbpubk";
+			preamble-flags = <1>;
+		};
+		rw-a-boot {
+			/* Alignment: no requirement (yet). */
+			label = "fw-main-a";
+			size = <0x300000>;
+			type = "blob boot,dtb";
+		};
+		rw-a-ec {
+			label = "ec-rw-a";
+			size = <0xf0000>;
+			type = "blob ecrw";
+			add-hash;
+		};
+		rw-a-firmware-id {
+			/* Alignment: no requirement. */
+			label = "rw-fwid-a";
+			size = <0x100>;
+			read-only;
+			type = "blobstring fwid";
+		};
+
+		/* ---- Section: Rewritable slot B ---- */
+		rw-b {
+			label = "rw-section-b";
+			/* Alignment: 4k (for updating) */
+			reg = <0x00c00000 0x00300000>;
+			block-offset = /bits/ 64 <0x00084400>;
+		};
+		rw-b-vblock {
+			label = "vblock-b";
+			/* Alignment: 4k (for updating) and must be in start of
+			 * each RW_SECTION. */
+			reg = <0xc00000 0x2000>;
+			type = "keyblock boot,dtb";
+			keyblock = "firmware.keyblock";
+			signprivate = "firmware_data_key.vbprivk";
+			version = <1>;
+			kernelkey = "kernel_subkey.vbpubk";
+			preamble-flags = <1>;
+		};
+		rw-b-boot {
+			label = "fw-main-b";
+			/* Alignment: no requirement (yet). */
+			size = <0x300000>;
+			type = "blob boot,dtb";
+		};
+		rw-b-ec {
+			label = "ec-rw-b";
+			size = <0xf000>;
+			type = "blob ecrw";
+			add-hash;
+		};
+		rw-b-firmware-id {
+			label = "rw-fwid-b";
+			/* Alignment: no requirement. */
+			size = <0x100>;
+			read-only;
+			type = "blobstring fwid";
+		};
+
+		/* ---- Section: Rewritable VPD 32 KB ---- */
+		rw-vpd {
+			label = "rw-vpd";
+			/* Alignment: 4k (for updating) */
+			reg = <0x00f80000 0x00008000>;
+			type = "wiped";
+			wipe-value = [ff];
+		};
+
+		/* ---- Section: Rewritable shared 16 KB---- */
+		shared-section {
+			/* Alignment: 4k (for updating).
+			 * Anything in this range may be updated in recovery. */
+			label = "rw-shared";
+			reg = <0x00ff8000 0x00004000>;
+		};
+		shared-data {
+			label = "shared-data";
+			/* Alignment: 4k (for random read/write).
+			 * RW firmware can put calibration data here. */
+			reg = <0x00ff8000 0x00004000>;
+			type = "wiped";
+			wipe-value = [00];
+		};
+		/* ---- Section: Rewritable private 16 KB---- */
+		private-section {
+			/* Anything in this range will never be updated */
+			label = "rw-private";
+			reg = <0x00ffc000 0x00004000>;
+		};
+		rw-environment {
+			label = "rw-environment";
+			/* Alignment: 4k, and must occupy bottom of U-Boot
+			 * firmware -- check CONFIG_ENV_OFFSET */
+			reg = <0x00ffc000 0x00004000>;
+
+			/*
+			 * We could put the dev environment here, but U-Boot has
+			 * a default built in. Devs can 'saveenv' to set this
+			 * up.
+			 */
+			type = "wiped";
+			wipe-value = [00];
+		};
+	};
+};
