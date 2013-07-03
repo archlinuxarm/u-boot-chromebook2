@@ -430,7 +430,7 @@ VBOOT_SUBMAKE_ARCH=$(subst sandbox,amd64,$(ARCH))
 .PHONY : vboot
 vboot:
 	FIRMWARE_ARCH=$(VBOOT_SUBMAKE_FIRMWARE_ARCH) \
-		CFLAGS="$(CFLAGS_VBOOT)" \
+		CFLAGS="$(subst ",\",$(CFLAGS_VBOOT))" \
 		$(MAKE) -C $(VBOOT_SOURCE) \
 		BUILD=$(OBJTREE)/include/generated/vboot \
 		ARCH=$(VBOOT_SUBMAKE_ARCH)
