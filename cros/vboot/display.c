@@ -206,6 +206,8 @@ VbError_t VbExDecompress(void *inbuf, uint32_t in_size,
 {
 	switch (compression_type) {
 	case COMPRESS_NONE:
+		if (in_size > *out_size)
+			return VBERROR_INVALID_PARAMETER;
 		memcpy(outbuf, inbuf, in_size);
                 *out_size = in_size;
 		return VBERROR_SUCCESS;
