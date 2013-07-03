@@ -36,10 +36,6 @@ int fthread_init(void)
 	if (fthread_initialized)
 		return -EBUSY;
 
-	/* Start the timer */
-	if (timer_init())
-		return -EBUSY;
-
 	debug("%s: enter\n", __func__);
 
 	/* initilize the scheduler */
