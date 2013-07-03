@@ -171,13 +171,23 @@ static int exynos5420_mmc_config(int peripheral, int flags)
 		}
 	}
 	for (i = 0; i < 3; i++) {
-		gpio_cfg_pin(start + i, S5P_GPIO_FUNC(0x2));
-		gpio_set_pull(start + i, S5P_GPIO_PULL_NONE);
-		gpio_set_drv(start + i, S5P_GPIO_DRV_4X);
+		/*
+		 * MMC0 is intended to be used for eMMC. The
+		 * card detect pin is used as a VDDEN signal to
+		 * power on the eMMC. The 5420 iROM makes
+		 * this same assumption.
+		 */
+		if ((peripheral == PERIPH_ID_SDMMC0) && (i == 2)) {
+			gpio_set_drv(start + i, S5P_GPIO_DRV_4X);
+			gpio_set_value(start + i, 1);
+			gpio_cfg_pin(start + i, S5P_GPIO_OUTPUT);
+			gpio_set_pull(start + i, S5P_GPIO_PULL_NONE);
+		} else {
+			gpio_set_drv(start + i, S5P_GPIO_DRV_4X);
+			gpio_cfg_pin(start + i, gpio_func);
+			gpio_set_pull(start + i, S5P_GPIO_PULL_NONE);
+		}
 	}
-
-	if (peripheral == PERIPH_ID_SDMMC0)
-		gpio_set_pull(start + 2, S5P_GPIO_PULL_UP);
 
 	for (i = 3; i <= 6; i++) {
 		gpio_cfg_pin(start +  i, S5P_GPIO_FUNC(0x2));
