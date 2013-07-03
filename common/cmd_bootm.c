@@ -393,7 +393,6 @@ static int bootm_load_os(image_info_t os, ulong *load_end, int boot_progress)
 			memmove_wd(load_buf, image_buf, image_len, CHUNKSZ);
 		}
 		*load_end = load + image_len;
-		puts("OK\n");
 		break;
 #ifdef CONFIG_GZIP
 	case IH_COMP_GZIP:
