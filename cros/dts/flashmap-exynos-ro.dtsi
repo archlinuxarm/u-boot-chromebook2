@@ -95,6 +95,20 @@
 			ver-minor = <0>;
 		};
 
+		/*
+		 * Add an FMAP for backwards compatibility for now. This is
+		 * needed by dump_fmap which is used by the firmware signer.
+		 */
+		ro-fmap {
+			label = "fmap";
+			size = <0x4000>;
+			align = <0x10000>;
+			read-only;
+			type = "fmap";
+			ver-major = <1>;
+			ver-minor = <0>;
+		};
+
 		ro-gbb {
 			label = "gbb";
 
