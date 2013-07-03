@@ -68,6 +68,7 @@ struct spl_machine_param {
 	 *			(lower halfword=tit 2, upper=tit 3)
 	 * M		Memory Manufacturer name
 	 * w		Bad Wake GPIO number
+	 * W		Write protect firmware GPIO
 	 * \0		termination
 	 */
 	char		params[16];	/* Length must be word-aligned */
@@ -89,6 +90,7 @@ struct spl_machine_param {
 	u32		board_rev_gpios[2];	/* Board revision GPIOs: r,R */
 	enum mem_manuf	mem_manuf;	/* Memory Manufacturer */
 	u32		bad_wake_gpio;	/* If high at wake time disallow wake */
+	u32		write_protect_gpio;	/* Firmware write protect */
 } __attribute__((__packed__));
 #endif
 
