@@ -84,7 +84,7 @@
 	spi@12d40000 { /* spi2 */
 		/* TODO(sjg@chromium.org): Speed this up! */
 		spi-max-frequency = <500000>;
-		spi-deactivate-delay = <50>;
+		spi-deactivate-delay = <200>;
 		cros-ec@0 {
 			reg = <0>;
 			compatible = "google,cros-ec";
