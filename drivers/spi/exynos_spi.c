@@ -408,10 +408,6 @@ void spi_cs_activate(struct spi_slave *slave)
 	}
 	clrbits_le32(&spi_slave->regs->cs_reg, SPI_SLAVE_SIG_INACT);
 	debug("Activate CS, bus %d\n", spi_slave->slave.bus);
-
-	/* Remember time of this transaction so we can honour the bus delay */
-	if (spi_slave->bus->deactivate_delay_us)
-		spi_slave->last_transaction_us = timer_get_us();
 }
 
 /**
@@ -425,6 +421,10 @@ void spi_cs_deactivate(struct spi_slave *slave)
 	struct exynos_spi_slave *spi_slave = to_exynos_spi(slave);
 
 	setbits_le32(&spi_slave->regs->cs_reg, SPI_SLAVE_SIG_INACT);
+
+	/* Remember time of this transaction so we can honour the bus delay */
+	if (spi_slave->bus->deactivate_delay_us)
+		spi_slave->last_transaction_us = timer_get_us();
 	debug("Deactivate CS, bus %d\n", spi_slave->slave.bus);
 }
 
