@@ -17,7 +17,7 @@
 
 / {
 	model = "Google Spring";
-	compatible = "google,spring", "samsung,exynos5";
+	compatible = "google,spring", "samsung,exynos5250", "samsung,exynos5";
 
 	config {
 		hwid = "SPRING TEST A-A 9737";
