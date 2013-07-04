@@ -717,23 +717,90 @@ int cros_ec_check_version(struct cros_ec_dev *dev)
 }
 #endif
 
+static int run_ec_test(struct cros_ec_dev *dev, int iterations, int delay_us,
+		       int *passp)
+{
+	struct ec_params_test_protocol treq;
+	struct ec_response_test_protocol *tresp;
+	struct ec_params_hello hreq;
+	struct ec_response_hello *hresp;
+	int pass, i, ret = 0;
+
+#ifdef CONFIG_CROS_EC_SPI
+	spi_set_deactivate_delay_us(dev->u.spi, delay_us);
+#endif
+	for (pass = 0; pass < iterations; pass++) {
+		ret = -1;
+		hreq.in_data = 0x12345678 + pass;
+		if (ec_command_inptr(dev, EC_CMD_HELLO, 0, &hreq, sizeof(hreq),
+				     (uint8_t **)&hresp, sizeof(*hresp)) <
+						sizeof(*hresp)) {
+			printf("ec_command_inptr() returned error 1\n");
+			break;
+		}
+		if (hresp->out_data != hreq.in_data + 0x01020304) {
+			printf("Received invalid handshake %x\n",
+			       hresp->out_data);
+			break;
+		}
+
+		treq.ec_result = EC_RES_SUCCESS;
+		treq.ret_len = sizeof(treq.buf);
+		for (i = 0; i < treq.ret_len; i++)
+			treq.buf[i] = pass + i;
+		if (ec_command_inptr(dev, EC_CMD_TEST_PROTOCOL, 0, &treq,
+				     sizeof(treq), (uint8_t **)&tresp,
+				     sizeof(*tresp)) < sizeof(*tresp)) {
+			printf("ec_command_inptr() returned error 2\n");
+			break;
+		}
+		for (i = 0; i < treq.ret_len; i++) {
+			if (tresp->buf[i] != ((pass + i) & 0xff)) {
+				printf("At byte %d: expected %#02x, got %#02x\n",
+				       i, (pass + i) & 0xff, tresp->buf[i]);
+				goto err;
+			}
+		}
+		ret = 0;
+		if (((pass & 0xff) == 0) && ctrlc())
+			break;
+	}
+
+err:
+	*passp = pass;
+	return ret;
+}
+
 int cros_ec_test(struct cros_ec_dev *dev)
 {
-	struct ec_params_hello req;
-	struct ec_response_hello *resp;
+	/* Try different SPI delays if we can */
+#ifdef CONFIG_CROS_EC_SPI
+	const int max_delay_us = 200;
+#else
+	const int max_delay_us = 0;
+#endif
+	const int iterations = 100000;
+	int pass, ret, delay_us;
+	bool ok;
 
-	req.in_data = 0x12345678;
-	if (ec_command_inptr(dev, EC_CMD_HELLO, 0, &req, sizeof(req),
-		       (uint8_t **)&resp, sizeof(*resp)) < sizeof(*resp)) {
-		printf("ec_command_inptr() returned error\n");
-		return -1;
-	}
-	if (resp->out_data != req.in_data + 0x01020304) {
-		printf("Received invalid handshake %x\n", resp->out_data);
-		return -1;
+	printf("Testing, %d iterations, press Ctrl-C to stop\n", iterations);
+	ok = true;
+	for (delay_us = 0; delay_us <= max_delay_us; delay_us += 5) {
+		ret = run_ec_test(dev, iterations, delay_us, &pass);
+		printf("%dus: %d/%d iterations, %s\n", delay_us, pass,
+		       iterations, ret ? "FAIL" : "pass");
+
+		/*
+		 * If this fails, note this, but continue trying larger
+		 * delays.
+		 */
+		if (ret)
+			ok = false;
+		if (ctrlc())
+			break;
 	}
 
-	return 0;
+	return ok ? 0 : -1;
 }
 
 int cros_ec_flash_offset(struct cros_ec_dev *dev, enum ec_flash_region region,
