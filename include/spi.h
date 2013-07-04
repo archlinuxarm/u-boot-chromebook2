@@ -273,4 +273,12 @@ struct spi_slave *spi_setup_slave_fdt(const void *blob,
  */
 int spi_get_bus_by_node(const void *blob, unsigned spi_node);
 
+/**
+ * Set the deactivation delay for the SPI slave
+ *
+ * @param slave		SPI slave to change
+ * @param delay_us	New delay in microseconds
+ */
+void spi_set_deactivate_delay_us(struct spi_slave *slave, int delay_us);
+
 #endif	/* _SPI_H_ */

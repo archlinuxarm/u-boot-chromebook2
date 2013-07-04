@@ -437,6 +437,13 @@ static inline struct exynos_spi *get_spi_base(int dev_index)
 					(dev_index - 3);
 }
 
+void spi_set_deactivate_delay_us(struct spi_slave *slave, int delay_us)
+{
+	struct exynos_spi_slave *spi_slave = to_exynos_spi(slave);
+
+	spi_slave->bus->deactivate_delay_us = delay_us;
+}
+
 #ifdef CONFIG_OF_CONTROL
 /*
  * Read the SPI config from the device tree node.
