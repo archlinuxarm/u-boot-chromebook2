@@ -48,4 +48,7 @@
 #define CONFIG_NR_DRAM_BANKS	7
 #define SDRAM_BANK_SIZE		(512UL << 20)	/* 512 MB */
 
+/* Multiple USB controller support */
+#define CONFIG_USB_MAX_CONTROLLER_COUNT		2
+
 #endif
