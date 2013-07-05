@@ -167,14 +167,13 @@ void *fthread_scheduler(void *unused)
 		debug("%s: thread \"%s\" selected (prio=%d, qprio=%d)\n",
 		      __func__, fthread_current->name,
 		      fthread_current->prio, fthread_current->q_prio);
-		/* Update thread time */
-		fthread_current->lastran_us = fthread_get_current_time_us();
 
 		/* Update thread state */
 		fthread_current->state = FTHREAD_STATE_RUNNING;
 
 		/* Update scheduler times */
-		fthread_sched->running_us += (fthread_current->lastran_us -
+		fthread_sched->lastran_us = fthread_get_current_time_us();
+		fthread_sched->running_us += (fthread_sched->lastran_us -
 					      snapshot);
 		debug("%s: running for %lu microseconds\n",
 		      __func__, fthread_sched->running_us);
@@ -183,12 +182,11 @@ void *fthread_scheduler(void *unused)
 		fthread_current->dispatches++;
 		fthread_mctx_switch(fthread_sched->mctx, fthread_current->mctx);
 
-		/* Update scheduler runtime */
-		snapshot = fthread_get_current_time_us();
-
 		/* Update thread runtime */
+		snapshot = fthread_get_current_time_us();
+		fthread_current->lastran_us = snapshot;
 		fthread_current->running_us += (snapshot -
-						fthread_current->lastran_us);
+						fthread_sched->lastran_us);
 		debug("%s: thread \"%s\" running for %lu microseconds\n",
 		      __func__, fthread_current->name,
 		      fthread_current->running_us);
