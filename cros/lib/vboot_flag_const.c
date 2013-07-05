@@ -34,8 +34,9 @@ static int vboot_flag_fetch_const(enum vboot_flag_id id,
 	return 0;
 }
 
-struct vboot_flag_driver vboot_flag_driver_const = {
-	.type	= COMPAT_GOOGLE_CONST_FLAG,
+CROS_VBOOT_FLAG_DRIVER(const) = {
+	.name	= "const",
+	.compat	= COMPAT_GOOGLE_CONST_FLAG,
 	.setup	= NULL,
 	.fetch	= vboot_flag_fetch_const,
 };

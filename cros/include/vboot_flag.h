@@ -53,8 +53,9 @@ struct vboot_flag_details {
 
 /* API function pointers of the driver to get vboot flag info */
 struct vboot_flag_driver {
+	const char *name;
 	/* the fdt compatible type */
-	enum fdt_compat_id type;
+	enum fdt_compat_id compat;
 	/**
 	 * The setup() function will be call in vboot_flag_init()
 	 *
@@ -84,14 +85,6 @@ struct vboot_flag_driver {
 const char *vboot_flag_node_name(enum vboot_flag_id id);
 
 /**
- * Return the type of the required vboot flag
- *
- * @param id		ID of VBoot flag
- * @return COMPAT_GOOGLE_*_FLAG on success and COMPAT_UNKNOWN on failures
- */
-enum fdt_compat_id vboot_flag_type(enum vboot_flag_id id);
-
-/**
  * Fetch the details of the required vboot flag
  *
  * @param id		ID of VBoot flag
@@ -108,5 +101,16 @@ int vboot_flag_fetch(enum vboot_flag_id id, struct vboot_flag_details *details);
  * @return zero on success and non-zero on failures
  */
 int vboot_flag_dump(enum vboot_flag_id id, struct vboot_flag_details *details);
+
+/**
+ * Set up the vboot flags
+ *
+ * @return 0 if OK, non-zero on failure
+ */
+int vboot_flag_init(void);
+
+/* Declare a verified boot flag driver */
+#define CROS_VBOOT_FLAG_DRIVER(_name) \
+	ll_entry_declare(struct vboot_flag_driver, _name, vboot_flag_driver)
 
 #endif /* __VBOOT_FLAG_H__ */

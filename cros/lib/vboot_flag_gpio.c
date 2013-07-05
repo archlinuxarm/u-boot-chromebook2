@@ -101,8 +101,9 @@ static int vboot_flag_fetch_gpio(enum vboot_flag_id id,
 	return 0;
 }
 
-struct vboot_flag_driver vboot_flag_driver_gpio = {
-	.type	= COMPAT_GOOGLE_GPIO_FLAG,
+CROS_VBOOT_FLAG_DRIVER(gpio) = {
+	.name	= "gpio",
+	.compat	= COMPAT_GOOGLE_GPIO_FLAG,
 	.setup	= vboot_flag_setup_gpio,
 	.fetch	= vboot_flag_fetch_gpio,
 };

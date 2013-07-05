@@ -34,5 +34,10 @@ int cros_init(void)
 		return -1;
 	}
 
+	if (vboot_flag_init()) {
+		VBDEBUG(" vboot_flag_init() failed\n");
+		return -1;
+	}
+
 	return 0;
 }

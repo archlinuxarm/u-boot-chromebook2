@@ -46,8 +46,9 @@ static int vboot_flag_fetch_cros_ec(enum vboot_flag_id id,
 	return 0;
 }
 
-struct vboot_flag_driver vboot_flag_driver_cros_ec = {
-	.type	= COMPAT_GOOGLE_CONST_FLAG,
+CROS_VBOOT_FLAG_DRIVER(cros_ec) = {
+	.name	= "cros-ec",
+	.compat	= COMPAT_GOOGLE_CROS_EC_FLAG,
 	.setup	= NULL,
 	.fetch	= vboot_flag_fetch_cros_ec,
 };
