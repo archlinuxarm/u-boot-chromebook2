@@ -12,6 +12,7 @@
 #define CHROMEOS_NVSTORAGE_H_
 
 #include <vboot_api.h>
+#include <crossystem_data.h>
 
 /*
  * The VbNvContext is stored in block 0, which is also the MBR on x86
@@ -40,21 +41,15 @@ uint8_t nvstorage_get_type(void);
  */
 int nvstorage_set_type(uint8_t type);
 
-/*
- * Declarations of implementations of VbExNvStorageRead and
- * VbExNvStorageWrite on various storage media.
- */
+struct nvstorage_method {
+	const char *name;
+	enum vboot_nvstorage_type type;
+	VbError_t (*read)(uint8_t *buf);
+	VbError_t (*write)(const uint8_t *buf);
+};
 
-typedef VbError_t (*nvstorage_read_funcptr)(uint8_t *buf);
-typedef VbError_t (*nvstorage_write_funcptr)(const uint8_t *buf);
-
-VbError_t nvstorage_read_nvram(uint8_t *buf);
-VbError_t nvstorage_write_nvram(const uint8_t *buf);
-
-VbError_t nvstorage_read_disk(uint8_t *buf);
-VbError_t nvstorage_write_disk(const uint8_t *buf);
-
-VbError_t nvstorage_read_cros_ec(uint8_t *buf);
-VbError_t nvstorage_write_cros_ec(const uint8_t *buf);
+/* Declare a non-volatile storage method, capable of accessing vb context */
+#define CROS_NVSTORAGE_METHOD(_name) \
+	ll_entry_declare(struct nvstorage_method, _name, nvstorage_method)
 
 #endif /* CHROMEOS_NVSTORAGE_H_ */

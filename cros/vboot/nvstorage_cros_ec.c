@@ -15,7 +15,7 @@
 
 #include <vboot_api.h>
 
-VbError_t nvstorage_read_cros_ec(uint8_t *buf)
+static VbError_t nvstorage_read_cros_ec(uint8_t *buf)
 {
 	struct cros_ec_dev *dev;
 
@@ -31,7 +31,7 @@ VbError_t nvstorage_read_cros_ec(uint8_t *buf)
 	return VBERROR_SUCCESS;
 }
 
-VbError_t nvstorage_write_cros_ec(const uint8_t *buf)
+static VbError_t nvstorage_write_cros_ec(const uint8_t *buf)
 {
 	struct cros_ec_dev *dev;
 
@@ -46,3 +46,10 @@ VbError_t nvstorage_write_cros_ec(const uint8_t *buf)
 
 	return VBERROR_SUCCESS;
 }
+
+CROS_NVSTORAGE_METHOD(cros_ec) = {
+	.name = "cros_ec",
+	.type = NONVOLATILE_STORAGE_CROS_EC,
+	.read = nvstorage_read_cros_ec,
+	.write = nvstorage_write_cros_ec,
+};

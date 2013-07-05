@@ -19,16 +19,53 @@
 
 DECLARE_GLOBAL_DATA_PTR;
 
-static uint8_t nv_type = NONVOLATILE_STORAGE_NONE;
-static nvstorage_read_funcptr nv_read;
-static nvstorage_write_funcptr nv_write;
+static struct nvstorage_method *nvstorage_method;
+
+struct nvstorage_method *nvstorage_find_name(const char *name)
+{
+	struct nvstorage_method *method, *start;
+	int upto, count;
+
+	start = ll_entry_start(struct nvstorage_method, nvstorage_method);
+	count = ll_entry_count(struct nvstorage_method, nvstorage_method);
+	for (upto = 0, method = start; upto < count; method++, upto++) {
+		if (!strcmp(method->name, name))
+			return method;
+	}
+
+	/* Work-around for old 'mkbp' name */
+	if (!strcmp(name, "mkbp"))
+		return nvstorage_find_name("cros_ec");
+
+	VBDEBUG("Unknown/unsupport storage name: '%s', count=%d\n", name,
+		count);
+	return NULL;
+}
+
+int nvstorage_set_name(const char *name)
+{
+	struct nvstorage_method *method;
+
+	method = nvstorage_find_name(name);
+	if (!method)
+		return -1;
+
+	nvstorage_method = method;
+	VBDEBUG("Method = %s\n", method->name);
+
+	return 0;
+}
+
+struct nvstorage_method *nvstorage_get_method(void)
+{
+	return nvstorage_method;
+}
 
 int nvstorage_init(void)
 {
 	const void *blob = gd->fdt_blob;
 	int croscfg_node, length;
 	const char *media;
-	uint8_t type;
 
 	croscfg_node = cros_fdtdec_config_node(blob);
 	if (croscfg_node < 0)
@@ -40,63 +77,43 @@ int nvstorage_init(void)
 		return 1;
 	}
 
-	if (!strcmp(media, "nvram"))
-		type = NONVOLATILE_STORAGE_NVRAM;
-	else if (!strcmp(media, "mkbp"))
-		type = NONVOLATILE_STORAGE_CROS_EC;
-	else if (!strcmp(media, "disk"))
-		type = NONVOLATILE_STORAGE_DISK;
-	else
-		type = NONVOLATILE_STORAGE_NONE;
-
-	if (type == NONVOLATILE_STORAGE_NONE) {
-		VBDEBUG("Unknown/unsupport storage media: %s\n", media);
-		return 1;
-	}
-
-	return nvstorage_set_type(type);
+	return nvstorage_set_name(media);
 }
 
 uint8_t nvstorage_get_type(void)
 {
-	return nv_type;
+	return nvstorage_method ? nvstorage_method->type :
+			NONVOLATILE_STORAGE_NONE;
 }
 
 int nvstorage_set_type(uint8_t type)
 {
-#ifdef CONFIG_SYS_COREBOOT
-	if (type == NONVOLATILE_STORAGE_NVRAM) {
-		nv_type = type;
-		nv_read = nvstorage_read_nvram;
-		nv_write = nvstorage_write_nvram;
-		return 0;
-	}
-#endif
-#ifdef CONFIG_CROS_EC
-	if (type == NONVOLATILE_STORAGE_CROS_EC) {
-		nv_type = type;
-		nv_read = nvstorage_read_cros_ec;
-		nv_write = nvstorage_write_cros_ec;
-		return 0;
-	}
-#endif
-	if (type == NONVOLATILE_STORAGE_DISK) {
-		nv_type = type;
-		nv_read = nvstorage_read_disk;
-		nv_write = nvstorage_write_disk;
-		return 0;
+	struct nvstorage_method *method, *start;
+	int upto, count;
+
+	start = ll_entry_start(struct nvstorage_method, nvstorage_method);
+	count = ll_entry_count(struct nvstorage_method, nvstorage_method);
+	for (upto = 0, method = start; upto < count; method++, upto++) {
+		if (method->type == type) {
+			nvstorage_method = method;
+			return 0;
+		}
 	}
 
-	VBDEBUG("Unknown/unsupport storage type: %d\n", type);
-	return 1;
+	VBDEBUG("Unknown/unsupport storage type: %d, count=%d\n", type, count);
+	return -1;
 }
 
 VbError_t VbExNvStorageRead(uint8_t* buf)
 {
-	return nv_read(buf);
+	if (!nvstorage_method)
+		return VBERROR_UNKNOWN;
+	return nvstorage_method->read(buf);
 }
 
 VbError_t VbExNvStorageWrite(const uint8_t* buf)
 {
-	return nv_write(buf);
+	if (!nvstorage_method)
+		return VBERROR_UNKNOWN;
+	return nvstorage_method->write(buf);
 }

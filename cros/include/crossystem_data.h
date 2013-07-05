@@ -53,11 +53,11 @@ enum {
 };
 /* TODO(reinauer) other recovery reasons? */
 
-enum {
+enum vboot_nvstorage_type {
 	NONVOLATILE_STORAGE_NONE	= 0,
-	NONVOLATILE_STORAGE_NVRAM	= 1,
-	NONVOLATILE_STORAGE_DISK	= 2,
-	NONVOLATILE_STORAGE_CROS_EC	= 3,
+	NONVOLATILE_STORAGE_NVRAM,
+	NONVOLATILE_STORAGE_DISK,
+	NONVOLATILE_STORAGE_CROS_EC,
 };
 
 /* the data blob format */

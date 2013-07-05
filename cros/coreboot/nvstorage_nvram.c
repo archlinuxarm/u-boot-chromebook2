@@ -29,7 +29,7 @@
  * @param addr The NVRAM address to read a byte from.
  * @return The byte at the given NVRAM address.
  */
-u8 nvram_read(u8 addr)
+static u8 nvram_read(u8 addr)
 {
 	u16 rtc_port = addr < 128 ? RTC_PORT_STANDARD : RTC_PORT_EXTENDED;
 
@@ -43,7 +43,7 @@ u8 nvram_read(u8 addr)
  * @param val The byte to write to NVRAM.
  * @param addr The NVRAM address to write to.
  */
-void nvram_write(u8 val, u8 addr)
+static void nvram_write(u8 val, u8 addr)
 {
 	u16 rtc_port = addr < 128 ? RTC_PORT_STANDARD : RTC_PORT_EXTENDED;
 
@@ -51,7 +51,7 @@ void nvram_write(u8 val, u8 addr)
 	outb(val, rtc_port + 1);
 }
 
-VbError_t nvstorage_read_nvram(uint8_t *buf)
+static VbError_t nvstorage_read_nvram(uint8_t *buf)
 {
 	int i;
 
@@ -67,7 +67,7 @@ VbError_t nvstorage_read_nvram(uint8_t *buf)
 	return VBERROR_SUCCESS;
 }
 
-VbError_t nvstorage_write_nvram(const uint8_t *buf)
+static VbError_t nvstorage_write_nvram(const uint8_t *buf)
 {
 	int i;
 
@@ -82,3 +82,10 @@ VbError_t nvstorage_write_nvram(const uint8_t *buf)
 
 	return VBERROR_SUCCESS;
 }
+
+CROS_NVSTORAGE_METHOD(nvram) = {
+	.name = "nvram",
+	.type = NONVOLATILE_STORAGE_NVRAM,
+	.read = nvstorage_read_nvram,
+	.write = nvstorage_write_nvram,
+};

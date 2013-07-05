@@ -70,7 +70,7 @@ static int get_nvcxt_block_of_disk(const VbDiskInfo *disk,
 	return 0;
 }
 
-VbError_t nvstorage_read_disk(uint8_t *buf)
+static VbError_t nvstorage_read_disk(uint8_t *buf)
 {
 	VbDiskInfo *internal_disk;
 	uint8_t *block_buf;
@@ -87,7 +87,7 @@ VbError_t nvstorage_read_disk(uint8_t *buf)
 	return VBERROR_SUCCESS;
 }
 
-VbError_t nvstorage_write_disk(const uint8_t *buf)
+static VbError_t nvstorage_write_disk(const uint8_t *buf)
 {
 	VbDiskInfo *internal_disk;
 	uint8_t *block_buf;
@@ -120,3 +120,10 @@ VbError_t nvstorage_write_disk(const uint8_t *buf)
 
 	return VBERROR_SUCCESS;
 }
+
+CROS_NVSTORAGE_METHOD(disk) = {
+	.name = "disk",
+	.type = NONVOLATILE_STORAGE_DISK,
+	.read = nvstorage_read_disk,
+	.write = nvstorage_write_disk,
+};
