@@ -110,6 +110,7 @@ struct tegra_spi_ctrl {
 	unsigned int mode;
 	int periph_id;
 	int valid;
+	int node;
 };
 
 struct tegra_spi_slave {
@@ -214,6 +215,8 @@ int tegra114_spi_init(int *node_list, int count)
 		}
 		ctrl->valid = 1;
 		found = 1;
+
+		ctrl->node = node;
 
 		debug("%s: found controller at %p, freq = %u, periph_id = %d\n",
 		      __func__, ctrl->regs, ctrl->freq, ctrl->periph_id);
@@ -403,3 +406,22 @@ int tegra114_spi_xfer(struct spi_slave *slave, unsigned int bitlen,
 
 	return 0;
 }
+
+#ifdef CONFIG_OF_CONTROL
+/**
+ * Get the SPI bus for an fdt node
+ *
+ * @param blob         Device tree blob
+ * @param spi_node     cached pointer to the SPI interface this node belongs to
+ * @return spi bus # if ok, -1 on error
+ */
+int spi_get_bus_by_node(const void *blob, unsigned spi_node)
+{
+	int i;
+
+	for (i = 0; i < ARRAY_SIZE(spi_ctrls); i++)
+		if (spi_ctrls[i].node == spi_node)
+			return i;
+	return -1;
+}
+#endif

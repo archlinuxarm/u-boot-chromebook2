@@ -49,6 +49,10 @@
 #define CONFIG_TPM
 #define CONFIG_INFINEON_TPM_I2C
 
+#define CONFIG_OF_SPI_FLASH
+#define CONFIG_OF_SPI
+#define CONFIG_CROS_EC_SPI
+
 #endif
 
 #include <configs/dalmore.h>
