@@ -170,6 +170,9 @@ void *fthread_scheduler(void *unused)
 		/* Update thread time */
 		fthread_current->lastran_us = fthread_get_current_time_us();
 
+		/* Update thread state */
+		fthread_current->state = FTHREAD_STATE_RUNNING;
+
 		/* Update scheduler times */
 		fthread_sched->running_us += (fthread_current->lastran_us -
 					      snapshot);
@@ -216,6 +219,7 @@ void *fthread_scheduler(void *unused)
 		 */
 		fthread_pqueue_inc_prio(&fthread_rq);
 		if (fthread_current != NULL) {
+			fthread_current->state = FTHREAD_STATE_READY;
 			fthread_pqueue_insert(&fthread_rq,
 					      fthread_current->prio,
 					      fthread_current);
