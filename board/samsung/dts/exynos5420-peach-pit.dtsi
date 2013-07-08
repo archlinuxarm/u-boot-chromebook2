@@ -219,4 +219,12 @@
 			gpio = <&gpio 99 0>;
 		};
 	};
+
+	xhci@12000000 {
+		samsung,vbus-gpio = <&gpio 0x40 0>; /* H00 */
+	};
+
+	xhci@12400000 {
+		samsung,vbus-gpio = <&gpio 0x41 0>; /* H01 */
+	};
 };
