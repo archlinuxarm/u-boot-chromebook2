@@ -17,6 +17,8 @@
 static int is_enumerated;
 
 #ifdef CONFIG_USB_KEYBOARD
+DECLARE_GLOBAL_DATA_PTR;
+
 int board_use_usb_keyboard(int boot_mode)
 {
 	struct vboot_flag_details devsw;
