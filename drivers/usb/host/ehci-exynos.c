@@ -29,6 +29,7 @@
 #include <asm/arch/ehci.h>
 #include <asm/arch/system.h>
 #include <asm/arch/power.h>
+#include <asm/gpio.h>
 #include <asm-generic/errno.h>
 #include <linux/compat.h>
 #include "ehci.h"
@@ -53,11 +54,18 @@ static int exynos_usb_parse_dt(const void *blob, struct exynos_ehci *exynos)
 	fdt_addr_t addr;
 	unsigned int node;
 	int depth;
+	struct fdt_gpio_state vbus_gpio;
 
 	node = fdtdec_next_compatible(blob, 0, COMPAT_SAMSUNG_EXYNOS_EHCI);
 	if (node <= 0) {
 		debug("EHCI: Can't get device node for ehci\n");
 		return -ENODEV;
+	}
+
+	/* Turn the USB VBUS GPIO on, if it exists */
+	if (!fdtdec_decode_gpio(blob, node, "samsung,vbus-gpio", &vbus_gpio)) {
+		fdtdec_setup_gpio(&vbus_gpio);
+		gpio_direction_output(vbus_gpio.gpio, 1);
 	}
 
 	/*

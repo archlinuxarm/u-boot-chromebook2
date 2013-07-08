@@ -35,6 +35,7 @@
 #include <asm/arch/cpu.h>
 #include <asm/arch/power.h>
 #include <asm/arch/xhci-exynos.h>
+#include <asm/gpio.h>
 #include <asm-generic/errno.h>
 #include <linux/compat.h>
 #include <linux/usb/dwc3.h>
@@ -65,6 +66,7 @@ static int exynos_usb3_parse_dt(const void *blob,
 	int depth, count;
 	unsigned int node = 0;
 	int nodes[CONFIG_USB_MAX_CONTROLLER_COUNT];
+	struct fdt_gpio_state vbus_gpio;
 
 	count = fdtdec_find_aliases_for_id(blob, "xhci",
 			COMPAT_SAMSUNG_EXYNOS5_XHCI, nodes,
@@ -78,6 +80,12 @@ static int exynos_usb3_parse_dt(const void *blob,
 	if (node <= 0) {
 		printf("XHCI: Can't get device node for xhci\n");
 		return -ENODEV;
+	}
+
+	/* Turn the USB VBUS GPIO on, if it exists */
+	if (!fdtdec_decode_gpio(blob, node, "samsung,vbus-gpio", &vbus_gpio)) {
+		fdtdec_setup_gpio(&vbus_gpio);
+		gpio_direction_output(vbus_gpio.gpio, 1);
 	}
 
 	/*

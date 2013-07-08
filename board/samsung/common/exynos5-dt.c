@@ -44,19 +44,6 @@
 
 DECLARE_GLOBAL_DATA_PTR;
 
-#ifdef CONFIG_USB_EHCI_EXYNOS
-int board_usb_vbus_init(void)
-{
-	/* Enable VBUS power switch */
-	gpio_direction_output(EXYNOS5_GPIO_X26, 1);
-
-	/* VBUS turn ON time */
-	mdelay(3);
-
-	return 0;
-}
-#endif
-
 #ifdef CONFIG_SOUND_MAX98095
 int board_enable_audio_codec(void)
 {
@@ -94,9 +81,6 @@ int power_init_board(void)
 
 int exynos_init(void)
 {
-#ifdef CONFIG_USB_EHCI_EXYNOS
-	board_usb_vbus_init();
-#endif
 	return 0;
 }
 
