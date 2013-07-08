@@ -257,32 +257,10 @@ void power_exit_wakeup(void)
 		exynos4_power_exit_wakeup();
 }
 
-/*
- * HACK out power to the A7s so they don't come up and mess us up.
- *
- * TODO: Belongs in some better place, needs new structure def, etc.
- */
-void hack_off_a7s(void)
-{
-	if (proid_is_exynos5420()) {
-		int i;
-		void *kfc_base = ((void*)samsung_get_base_power()) + 0x2200;
-
-		for (i = 0; i < 4; i++) {
-			void *kfc_coreN_base = kfc_base + (i * 0x80);
-			u32 *kfc_coreN_configuration = kfc_coreN_base + 0;
-
-			writel(0, kfc_coreN_configuration);
-		}
-	}
-}
-
 int power_init(void)
 {
 	/* Assert PS_HOLD to indicate that we're up and running */
 	set_ps_hold_ctrl();
-
-	hack_off_a7s();
 
 	return 0;
 }
