@@ -115,12 +115,6 @@ static struct mem_timings ares_ddr3_timings = {
 		.gate_leveling_enable = 1,
 };
 
-/* TODO (samsung) */
-/* 'reset' field is currently ignored, this will be added/removed
- * once we have more info about LPDDR3PHY_CTRL register for SCP silicon
- * see chrome-os-partner:18991 for more
- */
-
 int ddr3_mem_ctrl_init(int reset)
 {
 	struct exynos5420_clock *clk =
@@ -270,9 +264,15 @@ int ddr3_mem_ctrl_init(int reset)
 	writel(mem->timing_power, &drex0->timingpower);
 	writel(mem->timing_power, &drex1->timingpower);
 
-	/* Send NOP, MRS and ZQINIT commands */
-	dmc_config_mrs(mem, drex0);
-	dmc_config_mrs(mem, drex1);
+	/* Send NOP, MRS and ZQINIT commands
+	 * Sending MRS command will reset the DRAM. We should not be
+	 * reseting the DRAM after resume, this will lead to memory
+	 * corruption as DRAM content is lost after DRAM reset
+	 */
+	if (reset) {
+		dmc_config_mrs(mem, drex0);
+		dmc_config_mrs(mem, drex1);
+	}
 
 	if (mem->gate_leveling_enable) {
 
