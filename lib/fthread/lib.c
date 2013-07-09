@@ -285,7 +285,7 @@ inline void fthread_yield(void)
 	      fthread_current->name);
 }
 
-void fthread_usleep(unsigned long waittime)
+unsigned long fthread_usleep(unsigned long waittime)
 {
 	if (waittime != 0) {
 		fthread_current->state = FTHREAD_STATE_WAITING;
@@ -294,7 +294,12 @@ void fthread_usleep(unsigned long waittime)
 		fthread_current->ev_tid = NULL;
 		fthread_current->ev_func = NULL;
 		fthread_yield();
+
+		/* return the length of time we have been sleeping */
+		return fthread_sched->lastran_us - fthread_current->lastran_us;
 	}
+
+	return waittime;
 }
 
 int fthread_join(struct fthread *tid, void **value)

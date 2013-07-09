@@ -99,8 +99,9 @@ void fthread_yield(void);
  * passed.
  *
  * @waittime:	Number of microseconds to sleep for
+ * @return Number of microseconds that this thread was actually sleeping
  */
-void fthread_usleep(unsigned long waittime);
+unsigned long fthread_usleep(unsigned long waittime);
 
 /**
  * fthread_msleep() - Sleep for @a waittime milliseconds
@@ -110,10 +111,11 @@ void fthread_usleep(unsigned long waittime);
  * passed.
  *
  * @waittime:	Number of milliseconds to sleep for
+ * @return Number of milliseconds that this thread was actually sleeping
  */
-static inline void fthread_msleep(unsigned long waittime)
+static inline unsigned long fthread_msleep(unsigned long waittime)
 {
-	fthread_usleep(waittime * 1000);
+	return fthread_usleep(waittime * 1000) / 1000;
 }
 
 /**
@@ -123,10 +125,11 @@ static inline void fthread_msleep(unsigned long waittime)
  * the calling thread again until at least @a waittime seconds have passed.
  *
  * @waittime:	Number of seconds to sleep for
+ * @return Number of seconds that this thread was actually sleeping
  */
-static inline void fthread_sleep(unsigned long waittime)
+static inline unsigned long fthread_sleep(unsigned long waittime)
 {
-	fthread_usleep(waittime * 1000000);
+	return fthread_usleep(waittime * 1000000) / 1000000;
 }
 
 /**

@@ -110,6 +110,8 @@ void test_basic_thread_operation(void)
 	struct fthread *tid;
 	void *ret;
 	struct thread_data data;
+	const unsigned long sleeptime = 700;
+	unsigned long actualsleep;
 
 	printf("\n*** TESTING BASIC THREAD OPERATION ***\n\n");
 	printf("Spawning thread\n");
@@ -118,10 +120,11 @@ void test_basic_thread_operation(void)
 			    "123", FTHREAD_DEFAULT_STACKSIZE, &tid);
 	FAIL_COND(err, "simple thread spawn, errno = %d", err);
 
-	printf("Sleeping for 700 microseconds\n");
-	fthread_usleep(700);
+	printf("Sleeping for %lu microseconds\n", sleeptime);
+	actualsleep = fthread_usleep(sleeptime);
 
-	printf("Main thread woken up, yielding to spawned thread\n");
+	printf("Main thread slept for %lu microseconds, yielding\n",
+	       actualsleep);
 	fthread_yield();
 
 	printf("Main thread returned from yield, joining with child thread\n");
@@ -193,7 +196,9 @@ static int do_fthread_demo(cmd_tbl_t *cmdtp, int flag, int argc,
 	const char *ping = "ping";
 	const char *pong = "pong";
 	const char *whoo = "whoo-hoo";
+	const unsigned long sleeptime = 2000;
 	int err;
+	unsigned long actualsleep;
 
 	puts("Initializing threading library...\n");
 	err = fthread_init();
@@ -214,9 +219,10 @@ static int do_fthread_demo(cmd_tbl_t *cmdtp, int flag, int argc,
 	fthread_spawn(threadmsg, (void *)whoo, FTHREAD_PRIO_STD, "whoo-hoo",
 		      FTHREAD_DEFAULT_STACKSIZE, &p1);
 
-	puts("Main thread sleeping for 2 seconds...\n");
-	fthread_sleep(2);
+	printf("Main thread sleeping for %lu milliseconds...\n", sleeptime);
+	actualsleep = fthread_msleep(sleeptime);
 
+	printf("Main thread slept for %lu milliseconds\n", actualsleep);
 	puts("Exiting demo...\n");
 	fthread_exit(NULL);
 
