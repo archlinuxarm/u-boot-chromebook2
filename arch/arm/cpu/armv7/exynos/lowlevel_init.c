@@ -94,32 +94,9 @@ static void set_l2cache(void)
  */
 static void secondary_cpu_start(void)
 {
-	uint32_t temp, val;
-
-	svc32_mode_en();
-	mrc_mpafr(temp);
-
-	/* No need to reset if current cluster is Eagle */
-	if (!(temp & 0xf00))
-		goto no_reset;
-
-	/* Check reset status and jump if not reset */
-	val = readl(PMU_SPARE_2);
-	if (val == 0)
-		goto reset;
-
-	/* Clear reset flag */
-	writel(0x0, PMU_SPARE_2);
-no_reset:
 	enable_smp();
 	svc32_mode_en();
 	set_pc(CONFIG_IROM_WORKAROUND_BASE);
-reset:
-	/* Set reset flag */
-	writel(0x1, PMU_SPARE_2);
-
-	/* Clear secondary boot iRAM base */
-	writel(0x0, (CONFIG_IROM_WORKAROUND_BASE + 0x1C));
 }
 
 /*
