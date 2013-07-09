@@ -69,7 +69,7 @@ int cros_ec_if_command(struct cros_ec_dev *dev, uint8_t cmd, int cmd_version,
 	int csum;
 	int i;
 
-	if (dout_len > EC_HOST_PARAM_SIZE) {
+	if (dout_len > EC_PROTO2_MAX_PARAM_SIZE) {
 		debug("%s: Cannot send %d bytes\n", __func__, dout_len);
 		return -1;
 	}
@@ -174,7 +174,7 @@ int cros_ec_if_init(struct cros_ec_dev *dev, const void *blob)
 	byte = 0xff;
 	byte &= inb(EC_LPC_ADDR_HOST_CMD);
 	byte &= inb(EC_LPC_ADDR_HOST_DATA);
-	for (i = 0; i < EC_HOST_PARAM_SIZE && (byte == 0xff); i++)
+	for (i = 0; i < EC_PROTO2_MAX_PARAM_SIZE && (byte == 0xff); i++)
 		byte &= inb(EC_LPC_ADDR_HOST_PARAM + i);
 	if (byte == 0xff) {
 		debug("%s: CROS_EC device not found on LPC bus\n",

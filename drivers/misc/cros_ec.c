@@ -411,7 +411,7 @@ int cros_ec_read_version(struct cros_ec_dev *dev,
 int cros_ec_read_build_info(struct cros_ec_dev *dev, char **strp)
 {
 	if (ec_command_inptr(dev, EC_CMD_GET_BUILD_INFO, 0, NULL, 0,
-			(uint8_t **)strp, EC_HOST_PARAM_SIZE) < 0)
+			(uint8_t **)strp, EC_PROTO2_MAX_PARAM_SIZE) < 0)
 		return -1;
 
 	return 0;
@@ -743,15 +743,17 @@ int cros_ec_flash_erase(struct cros_ec_dev *dev, uint32_t offset, uint32_t size)
 static int cros_ec_flash_write_block(struct cros_ec_dev *dev,
 		const uint8_t *data, uint32_t offset, uint32_t size)
 {
-	struct ec_params_flash_write p;
+	uint8_t buf[EC_PROTO2_MAX_PARAM_SIZE];
+	struct ec_params_flash_write *p = (struct ec_params_flash_write *)buf;
+	uint32_t buf_used = sizeof(*p) + size;
 
-	p.offset = offset;
-	p.size = size;
-	assert(data && p.size <= sizeof(p.data));
-	memcpy(p.data, data, p.size);
+	p->offset = offset;
+	p->size = size;
+	assert(data && buf_used <= sizeof(buf));
+	memcpy(p + 1, data, size);
 
 	return ec_command_inptr(dev, EC_CMD_FLASH_WRITE, 0,
-			  &p, sizeof(p), NULL, 0) >= 0 ? 0 : -1;
+			  buf, buf_used, NULL, 0) >= 0 ? 0 : -1;
 }
 
 /**
@@ -759,8 +761,7 @@ static int cros_ec_flash_write_block(struct cros_ec_dev *dev,
  */
 static int cros_ec_flash_write_burst_size(struct cros_ec_dev *dev)
 {
-	struct ec_params_flash_write p;
-	return sizeof(p.data);
+	return EC_FLASH_WRITE_VER0_SIZE;
 }
 
 /**
@@ -1064,11 +1065,11 @@ int cros_ec_i2c_xfer(struct cros_ec_dev *dev, uchar chip, uint addr,
 {
 	union {
 		struct ec_params_i2c_passthru p;
-		uint8_t outbuf[EC_HOST_PARAM_SIZE];
+		uint8_t outbuf[EC_PROTO2_MAX_PARAM_SIZE];
 	} params;
 	union {
 		struct ec_response_i2c_passthru r;
-		uint8_t inbuf[EC_HOST_PARAM_SIZE];
+		uint8_t inbuf[EC_PROTO2_MAX_PARAM_SIZE];
 	} response;
 	struct ec_params_i2c_passthru *p = &params.p;
 	struct ec_response_i2c_passthru *r = &response.r;
