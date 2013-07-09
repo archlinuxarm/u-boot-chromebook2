@@ -70,7 +70,7 @@ static void enable_smp(void)
  * Set L2ACTLR[7] to reissue any memory transaction in the L2 that has been
  * stalled for 1024 cycles to verify that its hazard condition still exists.
  */
-static void set_l2cache(void)
+static void configure_l2actlr(void)
 {
 	uint32_t val;
 
@@ -85,7 +85,6 @@ static void set_l2cache(void)
 		val |= (1 << 7);
 		val |= (1 << 27);
 		mcr_l2_aux_ctlr(val);
-		mrc_l2_ctlr(val);
 	}
 }
 
@@ -115,7 +114,7 @@ static void low_power_start(void)
 
 	/* Set the CPU to SVC32 mode */
 	svc32_mode_en();
-	set_l2cache();
+	configure_l2actlr();
 
 	/* Invalidate L1 & TLB */
 	val = 0x0;
@@ -196,7 +195,7 @@ static void evt0_cores_configure(void)
 		writel((uint32_t)&low_power_start, CONFIG_PHY_IRAM_BASE + i);
 
 	/* Setup L2 cache */
-	set_l2cache();
+	configure_l2actlr();
 
 	/* Clear secondary boot iRAM base */
 	writel(0x0, (CONFIG_IROM_WORKAROUND_BASE + 0x1C));
