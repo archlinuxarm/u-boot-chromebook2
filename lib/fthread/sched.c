@@ -119,7 +119,7 @@ void fthread_scheduler_eventmanager(unsigned long now, bool block)
 		/* sleep until at least one thread can wake up */
 		debug("%s: sleeping for %lu microseconds\n",
 		      __func__, minwait);
-		udelay(minwait);
+		__udelay(minwait);
 		mintid->state = FTHREAD_STATE_READY;
 		mintid->waitevent = FTHREAD_EVENT_NONE;
 		fthread_pqueue_delete(&fthread_wq, mintid);

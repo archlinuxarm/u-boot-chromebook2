@@ -22,6 +22,7 @@
  */
 
 #include <common.h>
+#include <fthread.h>
 #include <watchdog.h>
 
 #ifndef CONFIG_WD_PERIOD
@@ -37,7 +38,13 @@ void udelay(unsigned long usec)
 	do {
 		WATCHDOG_RESET();
 		kv = usec > CONFIG_WD_PERIOD ? CONFIG_WD_PERIOD : usec;
+#if defined(CONFIG_FTHREAD) && !defined(CONFIG_SPL_BUILD)
+		kv = fthread_usleep(kv);
+		if (kv > usec)
+			break;
+#else
 		__udelay (kv);
+#endif
 		usec -= kv;
 	} while(usec);
 }

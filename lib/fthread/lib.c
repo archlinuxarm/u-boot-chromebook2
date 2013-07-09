@@ -287,7 +287,13 @@ inline void fthread_yield(void)
 
 unsigned long fthread_usleep(unsigned long waittime)
 {
-	if (waittime != 0) {
+	/*
+	 * If U-Boot has not relocated or if fthread isn't initialized then
+	 * don't do anything and just sleep
+	 */
+	if ((gd->flags & GD_FLG_RELOC) == 0 || !fthread_initialized) {
+		__udelay(waittime);
+	} else if (waittime != 0) {
 		fthread_current->state = FTHREAD_STATE_WAITING;
 		fthread_current->waitevent = FTHREAD_EVENT_SLEEP;
 		fthread_current->ev_time = waittime;
