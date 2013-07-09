@@ -362,6 +362,52 @@ static int ec_command(struct cros_ec_dev *dev, uint8_t cmd, int cmd_version,
 	return len;
 }
 
+/**
+ * Get the versions of the command supported by the EC.
+ *
+ * @param dev		Device pointer
+ * @param cmd		Command
+ * @param pmask		Destination for version mask; will be set to 0 on
+ *			error.
+ * @return 0 if success, <0 if error
+ */
+static int cros_ec_get_cmd_versions(struct cros_ec_dev *dev,
+				    int cmd, uint32_t *pmask)
+{
+	struct ec_params_get_cmd_versions p;
+	struct ec_response_get_cmd_versions *r;
+
+	*pmask = 0;
+
+	p.cmd = cmd;
+
+	if (ec_command_inptr(dev, EC_CMD_GET_CMD_VERSIONS, 0, &p, sizeof(p),
+			     (uint8_t **)&r, sizeof(*r)) < sizeof(*r))
+		return -1;
+
+	*pmask = r->version_mask;
+	return 0;
+}
+
+/**
+ * Return non-zero if the EC supports the command and version
+ *
+ * @param dev		Device pointer
+ * @param cmd		Command to check
+ * @param ver		Version to check
+ * @return non-zero if command version supported; 0 if not.
+ */
+static int cros_ec_cmd_version_supported(struct cros_ec_dev *dev,
+					 int cmd, int ver)
+{
+	uint32_t mask = 0;
+
+	if (cros_ec_get_cmd_versions(dev, cmd, &mask))
+		return 0;
+
+	return (mask & EC_VER_MASK(ver)) ? 1 : 0;
+}
+
 int cros_ec_scan_keyboard(struct cros_ec_dev *dev, struct mbkp_keyscan *scan)
 {
 	if (ec_command(dev, EC_CMD_MKBP_STATE, 0, NULL, 0, scan,
@@ -753,15 +799,36 @@ static int cros_ec_flash_write_block(struct cros_ec_dev *dev,
 	memcpy(p + 1, data, size);
 
 	return ec_command_inptr(dev, EC_CMD_FLASH_WRITE, 0,
-			  buf, buf_used, NULL, 0) >= 0 ? 0 : -1;
+				buf, buf_used, NULL, 0) >= 0 ? 0 : -1;
 }
 
 /**
- * Return optimal flash write burst size
+ * Return optimal flash write burst size or 0 if error.
  */
-static int cros_ec_flash_write_burst_size(struct cros_ec_dev *dev)
+static uint32_t cros_ec_flash_write_burst_size(struct cros_ec_dev *dev)
 {
-	return EC_FLASH_WRITE_VER0_SIZE;
+	struct ec_response_flash_info *info;
+	uint32_t pdata_max_size = EC_PROTO2_MAX_PARAM_SIZE -
+		sizeof(struct ec_params_flash_write);
+
+	/*
+	 * Determine whether we can use version 1 of the command with more
+	 * data, or only version 0.
+	 */
+	if (!cros_ec_cmd_version_supported(dev, EC_CMD_FLASH_WRITE,
+					   EC_VER_FLASH_WRITE))
+		return EC_FLASH_WRITE_VER0_SIZE;
+
+	/*
+	 * Determine step size.  This must be a multiple of the write block
+	 * size, and must also fit into the host parameter buffer.
+	 */
+	if (ec_command_inptr(dev, EC_CMD_FLASH_INFO, 0, NULL, 0,
+			     (uint8_t **)&info, sizeof(*info)) < sizeof(*info))
+		return 0;
+
+	return (pdata_max_size / info->write_block_size) *
+		info->write_block_size;
 }
 
 /**
@@ -791,6 +858,13 @@ int cros_ec_flash_write(struct cros_ec_dev *dev, const uint8_t *data,
 	uint32_t burst = cros_ec_flash_write_burst_size(dev);
 	uint32_t end, off;
 	int ret;
+
+	/*
+	 * Fail if we don't know how much data to write, or if we can't write
+	 * enough data at once.
+	 */
+	if (burst == 0)
+		return -1;
 
 	/*
 	 * TODO: round up to the nearest multiple of write size.  Can get away
