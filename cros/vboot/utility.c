@@ -109,30 +109,25 @@ void VbExSleepMs(uint32_t msec)
 VbError_t VbExBeep(uint32_t msec, uint32_t frequency)
 {
 #if defined CONFIG_SOUND
-	int ret;
+	if (sound_init(gd->fdt_blob)) {
+		VBDEBUG("Failed to initialize sound.\n");
+		return VBERROR_NO_SOUND;
+	}
 
 	VBDEBUG("About to beep for %d ms at %d Hz.\n", msec, frequency);
-	if (!msec || !frequency) {
-		if (msec)
+	if (msec) {
+		if (frequency) {
+			if (sound_play(msec, frequency)) {
+				VBDEBUG("Failed to play beep.\n");
+				return VBERROR_NO_SOUND;
+			}
+		} else {
 			VbExSleepMs(msec);
-		return VBERROR_NO_BACKGROUND_SOUND;
-	}
-
-	ret = sound_init(gd->fdt_blob);
-	if (ret) {
-		VbExError("Failed to initialize sound.\n");
-		return VBERROR_NO_SOUND;
-	}
-
-	ret = sound_play(msec, frequency);
-	if (ret) {
-		VbExError("Failed to play beep.\n");
-		return VBERROR_NO_SOUND;
+		}
 	}
 
 	return VBERROR_SUCCESS;
 #else
-	/* TODO Implement it later. */
 	VbExSleepMs(msec);
 	VBDEBUG("Beep!\n");
 	return VBERROR_NO_SOUND;
