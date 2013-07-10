@@ -96,7 +96,7 @@ static void secondary_cpu_start(void)
 {
 	enable_smp();
 	svc32_mode_en();
-	set_pc(CONFIG_IROM_WORKAROUND_BASE);
+	branch_bx(CONFIG_IROM_WORKAROUND_BASE);
 }
 
 /*
