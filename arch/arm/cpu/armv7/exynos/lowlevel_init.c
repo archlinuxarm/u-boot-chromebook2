@@ -41,6 +41,7 @@ enum {
 	DO_MEM_RESET	= 1 << 2,
 	DO_UART		= 1 << 3,
 	DO_POWER	= 1 << 4,
+	DO_TIMER	= 1 << 5,
 };
 
 #ifdef CONFIG_EXYNOS5420
@@ -259,7 +260,7 @@ int do_lowlevel_init(void)
 		break;
 	default:
 		/* This is a normal boot (not a wake from sleep) */
-		actions = DO_CLOCKS | DO_MEM_RESET | DO_POWER;
+		actions = DO_CLOCKS | DO_MEM_RESET | DO_POWER | DO_TIMER;
 	}
 
 	if (actions & DO_POWER)
@@ -270,6 +271,8 @@ int do_lowlevel_init(void)
 		mem_ctrl_init(actions & DO_MEM_RESET);
 		tzpc_init();
 	}
+	if (actions & DO_TIMER)
+		timer_init();
 
 #ifdef CONFIG_EXYNOS_SPL_UART
 	if (actions & DO_UART) {
