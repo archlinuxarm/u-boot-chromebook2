@@ -61,6 +61,16 @@
 		spi-max-frequency = <25000000>;
 	};
 
+	spi@7000d600 {
+		status = "okay";
+		spi-max-frequency = <25000000>;
+		cros-ec {
+			compatible = "google,cros-ec";
+			spi-max-frequency = <500000>;
+		        reg = <1>;
+		};
+	};
+
 	sdhci@78000400 {
 		cd-gpios = <&gpio 170 1>; /* gpio PV2 */
 		bus-width = <4>;
