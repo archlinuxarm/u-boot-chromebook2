@@ -19,6 +19,7 @@
 
 # Build tree
 /build-*
+/b
 
 #
 # Top-level generic files
