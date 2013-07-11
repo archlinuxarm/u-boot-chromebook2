@@ -37,6 +37,9 @@
 /* Number of digits to show in a report */
 #define FTHREAD_REPORT_DIGITS	11
 
+/* Num of characters to print for a category name in the report */
+#define FTHREAD_REPORT_NAME	(FTHREAD_REPORT_DIGITS + 4)
+
 /* Thread state information */
 enum fthread_state {
 	FTHREAD_STATE_SCHEDULER = 0,
@@ -75,6 +78,11 @@ struct fthread_mctx;
  * @spawned_us:	Time at which this thread was spawned (in microseconds)
  * @lastran_us:	Time at which this thread was last running (in microseconds)
  * @running_us:	Number of microseconds that this thread has been running
+ * @err_us:	Total accumulated difference in requested sleep time and actual
+ *		sleep time (in microseconds)
+ * @maxerr_s:	Biggest single difference in requested and actual sleep time (in
+ *		microseconds)
+ * @num_sleeps:	Number of times this thread called fthread_usleep()
  * @waitevent:	The type of the event this thread is waiting for, if any
  * @ev_time_us:	Number of microseconds that this thread is sleeping for
  * @ev_tid:	Thread whose termination this thread is waiting for
@@ -104,6 +112,9 @@ struct fthread {
 	unsigned long		spawned_us;
 	unsigned long		lastran_us;
 	unsigned long		running_us;
+	unsigned long		err_us;
+	unsigned long		maxerr_us;
+	unsigned long		num_sleeps;
 
 	/* event handling */
 	enum fthread_event	waitevent;

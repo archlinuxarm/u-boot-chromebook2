@@ -115,13 +115,23 @@ void fthread_print_stats(struct fthread *t)
 	print_grouped_ull(t->spawned_us, FTHREAD_REPORT_DIGITS);
 
 	/* State */
-	printf("%11s", fthread_state_names[t->state]);
+	printf("%*s", FTHREAD_REPORT_DIGITS, fthread_state_names[t->state]);
 
 	/* Running time */
 	print_grouped_ull(t->running_us, FTHREAD_REPORT_DIGITS);
 
 	/* Last time the thread ran */
 	print_grouped_ull(t->lastran_us, FTHREAD_REPORT_DIGITS);
+
+	/* Total sleep error */
+	print_grouped_ull(t->err_us, FTHREAD_REPORT_DIGITS);
+
+	/* Average sleep error */
+	print_grouped_ull(t->num_sleeps == 0 ? 0 : t->err_us / t->num_sleeps,
+			  FTHREAD_REPORT_DIGITS);
+
+	/* Biggest sleep error */
+	print_grouped_ull(t->maxerr_us, FTHREAD_REPORT_DIGITS);
 
 	/* Name */
 	printf("  %s\n", t->name);
@@ -149,8 +159,15 @@ int fthread_report(void)
 		gd->flags &= ~GD_FLG_SILENT;
 
 	puts("Thread summary in microseconds:\n");
-	printf("%15s%11s%15s%15s  %s\n", "Spawned", "State", "Running",
-	       "Lastran", "Name");
+	printf("%*s%*s%*s%*s%*s%*s%*s  %s\n",
+	       FTHREAD_REPORT_NAME, "Spawned",
+	       FTHREAD_REPORT_DIGITS, "State",
+	       FTHREAD_REPORT_NAME, "Running",
+	       FTHREAD_REPORT_NAME, "Lastran",
+	       FTHREAD_REPORT_NAME, "Wait Err(us)",
+	       FTHREAD_REPORT_NAME, "Avg Err(us)",
+	       FTHREAD_REPORT_NAME, "Max Err(us)",
+	       "Name");
 
 	/* Print runtime information for each queue */
 	fthread_print_pqueue_stats(&fthread_nq);
@@ -248,6 +265,9 @@ int fthread_spawn(void *(*func)(void *), void *arg, int prio, const char *name,
 	t->spawned_us = time;
 	t->lastran_us = time;
 	t->running_us = 0;
+	t->err_us = 0;
+	t->maxerr_us = 0;
+	t->num_sleeps = 0;
 
 	/* initialize starting and ending values */
 	t->start_func = func;
@@ -287,6 +307,9 @@ inline void fthread_yield(void)
 
 unsigned long fthread_usleep(unsigned long waittime)
 {
+	unsigned long actualtime = waittime;
+	unsigned long err;
+
 	/*
 	 * If U-Boot has not relocated or if fthread isn't initialized then
 	 * don't do anything and just sleep
@@ -301,11 +324,17 @@ unsigned long fthread_usleep(unsigned long waittime)
 		fthread_current->ev_func = NULL;
 		fthread_yield();
 
-		/* return the length of time we have been sleeping */
-		return fthread_sched->lastran_us - fthread_current->lastran_us;
+		/* track the actual sleeping time and error */
+		actualtime = fthread_sched->lastran_us -
+			     fthread_current->lastran_us;
+		err = actualtime - waittime;
+		fthread_current->num_sleeps++;
+		fthread_current->err_us += err;
+		if (err > fthread_current->maxerr_us)
+			fthread_current->maxerr_us = err;
 	}
 
-	return waittime;
+	return actualtime;
 }
 
 int fthread_join(struct fthread *tid, void **value)
