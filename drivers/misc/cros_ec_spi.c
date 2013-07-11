@@ -95,8 +95,23 @@ int cros_ec_if_command(struct cros_ec_dev *dev, uint8_t cmd, int cmd_version,
 	int csum, len;
 	int rv;
 
+#if defined(CONFIG_TEGRA)
+	/*
+	 * Total of 5 bytes (HEADER+TRAILER), i.e. MSG_PROTO_BYTES
+	 * TODO(twarren@nvidia.com): drop framing/status bytes in SPI driver.
+	 *  See chrome-os-partner:20867 bug. We also seem to need a slight
+	 *  delay here - if DEBUG is enabled, the debug() statement below is
+	 *  enough to make it work, otherwise the 3ms delay is needed. This
+	 *  should go away when the SPI driver is reworked, since Exynos
+	 *  doesn't seem to need it.
+	 */
+	in_bytes += MSG_TRAILER_BYTES;
+	mdelay(3);
+	debug("%s: cmd=0x%x, cmd_ver=0x%x, outlen=0x%x, inlen=0x%x\n",
+	      __func__, cmd, cmd_version, dout_len, din_len);
+#endif
 	if (dev->protocol_version != 2) {
-		debug("%s: Unsupported EC protcol version %d\n",
+		debug("%s: Unsupported EC protocol version %d\n",
 		      __func__, dev->protocol_version);
 		return -1;
 	}
@@ -146,9 +161,25 @@ int cros_ec_if_command(struct cros_ec_dev *dev, uint8_t cmd, int cmd_version,
 	/* transmit length includes checksum */
 	len = dout_len + EC_FRAME_OVERHEAD + 1;
 	cros_ec_dump_data("out", cmd, dev->dout, len);
+#if defined(CONFIG_TEGRA)
+	/*
+	 * Split transaction to avoid lost chars in RX_FIFO
+	 * TODO(twarren@nvidia.com): Fix in SPI driver (use half_duplex?)
+	 */
+	rv = spi_xfer(dev->u.spi, len * 8, dev->dout, 0,
+		      SPI_XFER_BEGIN);
+	if (!rv) {
+		mdelay(3);
+		rv = spi_xfer(dev->u.spi, in_bytes * 8, 0, p,
+			      SPI_XFER_END);
+	}
 
+	/* Account for the extra EC comm bytes (checksum, etc.) */
+	memmove(p, p+2, in_bytes);
+#else
 	rv = spi_xfer(dev->u.spi, max(len, in_bytes) * 8, dev->dout, p,
 		      SPI_XFER_BEGIN | SPI_XFER_END);
+#endif
 
 	spi_release_bus(dev->u.spi);
 
