@@ -33,6 +33,7 @@
 
 #include <common.h>
 #include <command.h>
+#include <fthread.h>
 #include <asm/system.h>
 #include <asm/cache.h>
 #include <asm/armv7.h>
@@ -43,6 +44,9 @@ void __weak arch_cleanup_before_linux(void){}
 
 int cleanup_before_linux(void)
 {
+#ifdef CONFIG_FTHREAD
+	fthread_shutdown();
+#endif
 #ifdef CONFIG_BOOTSTAGE_FDT
 	if (flag == BOOTM_STATE_OS_FAKE_GO)
 		bootstage_fdt_add_report();
