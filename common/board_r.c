@@ -36,6 +36,7 @@
 #endif
 #include <environment.h>
 #include <fdtdec.h>
+#include <fthread.h>
 #if defined(CONFIG_CMD_IDE)
 #include <ide.h>
 #endif
@@ -779,6 +780,9 @@ init_fnc_t init_sequence_r[] = {
 	bootstage_relocate,
 #ifdef CONFIG_ARCH_EARLY_INIT_R
 	arch_early_init_r,
+#endif
+#ifdef CONFIG_FTHREAD
+	fthread_init,
 #endif
 	power_init_board,
 #ifndef CONFIG_SYS_NO_FLASH
