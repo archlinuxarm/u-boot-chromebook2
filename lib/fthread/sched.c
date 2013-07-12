@@ -134,6 +134,7 @@ void *fthread_scheduler(void *unused)
 
 	debug("%s: bootstrapping\n", __func__);
 	fthread_sched->state = FTHREAD_STATE_SCHEDULER;
+	fthread_sched->dispatches++;
 	snapshot = fthread_get_current_time_us();
 
 	/* endless scheduler loop */
@@ -181,6 +182,7 @@ void *fthread_scheduler(void *unused)
 		/* ***CONTEXT SWITCH*** */
 		fthread_current->dispatches++;
 		fthread_mctx_switch(fthread_sched->mctx, fthread_current->mctx);
+		fthread_sched->dispatches++;
 
 		/* Update thread runtime */
 		snapshot = fthread_get_current_time_us();

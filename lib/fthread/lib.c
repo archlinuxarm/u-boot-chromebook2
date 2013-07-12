@@ -120,6 +120,9 @@ void fthread_print_stats(struct fthread *t)
 	/* Running time */
 	print_grouped_ull(t->running_us, FTHREAD_REPORT_DIGITS);
 
+	/* Number of dispatches */
+	print_grouped_ull(t->dispatches, FTHREAD_REPORT_DIGITS);
+
 	/* Last time the thread ran */
 	print_grouped_ull(t->lastran_us, FTHREAD_REPORT_DIGITS);
 
@@ -159,10 +162,11 @@ int fthread_report(void)
 		gd->flags &= ~GD_FLG_SILENT;
 
 	puts("Thread summary in microseconds:\n");
-	printf("%*s%*s%*s%*s%*s%*s%*s  %s\n",
+	printf("%*s%*s%*s%*s%*s%*s%*s%*s  %s\n",
 	       FTHREAD_REPORT_NAME, "Spawned",
 	       FTHREAD_REPORT_DIGITS, "State",
 	       FTHREAD_REPORT_NAME, "Running",
+	       FTHREAD_REPORT_NAME, "Dispatches",
 	       FTHREAD_REPORT_NAME, "Lastran",
 	       FTHREAD_REPORT_NAME, "Wait Err(us)",
 	       FTHREAD_REPORT_NAME, "Avg Err(us)",
@@ -265,6 +269,7 @@ int fthread_spawn(void *(*func)(void *), void *arg, int prio, const char *name,
 	t->spawned_us = time;
 	t->lastran_us = time;
 	t->running_us = 0;
+	t->dispatches = 0;
 	t->err_us = 0;
 	t->maxerr_us = 0;
 	t->num_sleeps = 0;
