@@ -1298,6 +1298,7 @@ static unsigned long exynos5420_get_i2c_clk(void)
 		(struct exynos5420_clock *)samsung_get_base_clock();
 	unsigned long aclk_66, sclk;
 	unsigned int ratio;
+	unsigned int sel;
 
 	/*
 	 * We make some strong assumptions about mux/gates and just read divs.
@@ -1307,7 +1308,14 @@ static unsigned long exynos5420_get_i2c_clk(void)
 	 * - mout_aclk66_peric
 	 */
 
-	sclk = get_pll_clk(MPLL);
+	sel = readl(&clk->clk_src_top1);
+	sel = (sel >> 8) & 0x3;
+	if (sel == 0)
+		sclk = get_pll_clk(CPLL);
+	else if (sel == 1)
+		sclk = get_pll_clk(DPLL);
+	else
+		sclk = get_pll_clk(MPLL);
 
 	ratio = (readl(&clk->clk_div_top1)) >> 8;
 	ratio &= 0x3f;
