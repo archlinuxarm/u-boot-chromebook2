@@ -694,8 +694,9 @@ static unsigned long exynos5420_get_uart_clk(int dev_index)
 	 */
 	sel = readl(&clk->clk_src_peric0);
 	sel = (sel >> ((dev_index * 4) + 4)) & 0x7;
-
-	if (sel == 0x3)
+	if (sel == 0x1)
+		sclk = get_pll_clk(CPLL);
+	else if (sel == 0x3)
 		sclk = get_pll_clk(MPLL);
 	else if (sel == 0x6)
 		sclk = get_pll_clk(EPLL);
