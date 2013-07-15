@@ -174,17 +174,25 @@ static int xhci_start(struct xhci_hcor *hcor)
 	return ret;
 }
 
+/*
+ * Weak alias function for any post-reset configuration
+ * and tuning done; overridden by any platform specific
+ * code for required tuning.
+ */
+__weak void xhci_hcd_tune(int index)
+{ }
+
 /**
  * Resets the XHCI Controller
  *
  * @param hcor	pointer to host controller operation registers
  * @return -1 if XHCI Controller is halted else status of handshake
  */
-int xhci_reset(struct xhci_hcor *hcor)
+static int xhci_reset(int index, struct xhci_hcor *hcor)
 {
 	u32 cmd;
 	u32 state;
-	int ret;
+	int ret = 0;
 
 	/* Halting the Host first */
 	debug("// Halt the HC\n");
@@ -216,7 +224,14 @@ int xhci_reset(struct xhci_hcor *hcor)
 	 * xHCI cannot write to any doorbells or operational registers other
 	 * than status until the "Controller Not Ready" flag is cleared.
 	 */
-	return handshake(&hcor->or_usbsts, STS_CNR, 0, XHCI_MAX_RESET_USEC);
+	ret = handshake(&hcor->or_usbsts, STS_CNR, 0, XHCI_MAX_RESET_USEC);
+	if (ret)
+		return ret;
+
+	/* call here Controller's tuning related stuff, if any */
+	xhci_hcd_tune(index);
+
+	return ret;
 }
 
 /**
@@ -954,7 +969,7 @@ int usb_lowlevel_init(int index, void **controller)
 	if (xhci_hcd_init(index, &hccr, (struct xhci_hcor **)&hcor) != 0)
 		return -ENODEV;
 
-	if (xhci_reset(hcor) != 0)
+	if (xhci_reset(index, hcor) != 0)
 		return -ENODEV;
 
 	ctrl = &xhcic[index];
@@ -992,7 +1007,7 @@ int usb_lowlevel_init(int index, void **controller)
 				| 0x01, &descriptor.hub.wHubCharacteristics);
 
 	if (xhci_start(hcor)) {
-		xhci_reset(hcor);
+		xhci_reset(index, hcor);
 		return -ENODEV;
 	}
 
@@ -1020,7 +1035,7 @@ int usb_lowlevel_stop(int index)
 	struct xhci_ctrl *ctrl = (xhcic + index);
 	u32 temp;
 
-	xhci_reset(ctrl->hcor);
+	xhci_reset(index, ctrl->hcor);
 
 	debug("// Disabling event ring interrupts\n");
 	temp = xhci_readl(&ctrl->hcor->or_usbsts);

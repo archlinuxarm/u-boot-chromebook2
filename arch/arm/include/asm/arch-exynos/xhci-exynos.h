@@ -53,6 +53,17 @@
 #define PHYCLKRST_PORTRESET			(0x1 << 1)
 #define PHYCLKRST_COMMONONN			(0x1 << 0)
 
+#define PHYREG0_SSC_REF_CLK_SEL			(1 << 21)
+#define PHYREG0_SSC_RANGE			(1 << 20)
+#define PHYREG0_CR_WRITE			(1 << 19)
+#define PHYREG0_CR_READ				(1 << 18)
+#define PHYREG0_CR_DATA_IN(_x)			((_x) << 2)
+#define PHYREG0_CR_CAP_DATA			(1 << 1)
+#define PHYREG0_CR_CAP_ADDR			(1 << 0)
+
+#define PHYREG1_CR_DATA_OUT(_x)			((_x) << 1)
+#define PHYREG1_CR_ACK				(1 << 0)
+
 #define PHYPARAM0_REF_USE_PAD			(0x1 << 31)
 #define PHYPARAM0_REF_LOSLEVEL_MASK		(0x1f << 26)
 #define PHYPARAM0_REF_LOSLEVEL			(0x9 << 26)
@@ -66,6 +77,18 @@
 #define PHYBATCHG_UTMI_CLKSEL			(0x1 << 2)
 
 #define FSEL_CLKSEL_24M				(0x5)
+
+/* USB 3.0 DRD PHY SS Function Control Reg; accessed by CR_PORT */
+#define PHYSS_LOSLEVEL_OVRD_IN			(0x15)
+
+#define LOSLEVEL_OVRD_IN_LOS_BIAS_5420		(0x5 << 13)
+#define LOSLEVEL_OVRD_IN_LOS_BIAS_DEFAULT	(0x0 << 13)
+#define LOSLEVEL_OVRD_IN_EN			(0x1 << 10)
+#define LOSLEVEL_OVRD_IN_LOS_LEVEL_DEFAULT	(0x9 << 0)
+
+#define PHYSS_TX_VBOOSTLEVEL_OVRD_IN		(0x12)
+#define TX_VBOOSTLEVEL_OVRD_IN_VBOOST_5420	(0x5 << 13)
+#define TX_VBOOSTLEVEL_OVRD_IN_VBOOST_DEFAULT	(0x4 << 13)
 
 /* XHCI PHY register structure */
 struct exynos_usb3_phy {

@@ -120,6 +120,87 @@ static int exynos_usb3_parse_dt(const void *blob,
 }
 #endif
 
+#ifdef CONFIG_EXYNOS5420
+static void crport_handshake(struct exynos_usb3_phy *phy, u32 val, u32 cmd)
+{
+	u32 usec = 100;
+	u32 result;
+
+	writel(val | cmd, &phy->phy_reg0);
+
+	do {
+		result = readl(&phy->phy_reg1);
+		if (result & PHYREG1_CR_ACK)
+			break;
+
+		udelay(1);
+	} while (usec-- > 0);
+
+	if (!usec)
+		printf("CRPORT handshake timeout1 (0x%08x)\n", val);
+
+	usec = 100;
+
+	writel(val, &phy->phy_reg0);
+
+	do {
+		result = readl(&phy->phy_reg1);
+		if (!(result & PHYREG1_CR_ACK))
+			break;
+
+		udelay(1);
+	} while (usec-- > 0);
+
+	if (!usec)
+		printf("CRPORT handshake timeout2 (0x%08x)\n", val);
+}
+
+static void crport_ctrl_write(struct exynos_usb3_phy *phy, u32 addr, u32 data)
+{
+	/* Write Address */
+	crport_handshake(phy, PHYREG0_CR_DATA_IN(addr),
+				PHYREG0_CR_CAP_ADDR);
+
+	/* Write Data */
+	crport_handshake(phy, PHYREG0_CR_DATA_IN(data),
+				PHYREG0_CR_CAP_DATA);
+	crport_handshake(phy, PHYREG0_CR_DATA_IN(data),
+				PHYREG0_CR_WRITE);
+}
+
+static void exynos5_usb3_phy_tune(struct exynos_usb3_phy *phy)
+{
+	u32 reg;
+
+	/*
+	 * Change los_bias to (0x5) for 28nm PHY from a
+	 * default value (0x0);
+	 * los_level is set as default (0x9) as also reflected in
+	 * los_level[30:26] bits of PHYPARAM0 register
+	 */
+	reg = LOSLEVEL_OVRD_IN_LOS_BIAS_5420 |
+			LOSLEVEL_OVRD_IN_EN |
+			LOSLEVEL_OVRD_IN_LOS_LEVEL_DEFAULT;
+	crport_ctrl_write(phy, PHYSS_LOSLEVEL_OVRD_IN, reg);
+
+	/*
+	 * Set tx_vboost_lvl to (0x5) for 28nm PHY Tuning,
+	 * to raise Tx signal level from its default value of (0x4)
+	 */
+	reg = TX_VBOOSTLEVEL_OVRD_IN_VBOOST_5420;
+	crport_ctrl_write(phy, PHYSS_TX_VBOOSTLEVEL_OVRD_IN, reg);
+}
+
+void xhci_hcd_tune(int index)
+{
+	struct exynos_xhci *ctx = &reg_bases[index];
+	struct exynos_usb3_phy *phy = ctx->usb3_phy;
+
+	/* Tune USB3.0 PHY here by controlling CR_PORT register here */
+	exynos5_usb3_phy_tune(phy);
+}
+#endif
+
 static void exynos5_usb3_phy_init(struct exynos_usb3_phy *phy)
 {
 	u32 reg;
