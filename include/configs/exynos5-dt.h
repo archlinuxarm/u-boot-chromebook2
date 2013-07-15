@@ -425,7 +425,6 @@
 #define RESET				(1 << 0)
 #define SECONDARY_RESET			(1 << 1)
 
-#define CONFIG_EXYNOS_FAST_SPI_BOOT
 #define CONFIG_SPL_SERIAL_SUPPORT
 
 #endif	/* __CONFIG_EXYNOS5_DT_H */
