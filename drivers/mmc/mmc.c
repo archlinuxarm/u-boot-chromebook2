@@ -1582,14 +1582,35 @@ int mmc_boot_part_access(struct mmc *mmc, u8 ack, u8 part_num, u8 access)
 	return 0;
 }
 
-int mmc_boot_power_on_write_protect(struct mmc *mmc)
+int mmc_boot_power_on_write_protect(struct mmc *mmc, u8 partition)
 {
 	int err;
+	u8 reg;
 	u8 boot_wp;
 	ALLOC_CACHE_ALIGN_BUFFER(u8, ext_csd, MMC_MAX_BLOCK_LEN);
 
-	err =  mmc_switch(mmc, EXT_CSD_CMD_SET_NORMAL, EXT_CSD_BOOT_WP,
-			  EXT_CSD_BOOT_WP_PWR_WP_EN);
+	reg = EXT_CSD_BOOT_WP_PWR_WP_EN;
+
+	/* Write protecting one partition is only supported in eMMC 4.5 */
+	if (mmc->version == MMC_VERSION_4_5) {
+		switch (partition) {
+		case 0:
+			/* Protect both partitions */
+			break;
+		case 1:
+			reg |= EXT_CSD_BOOT_WP_PART_SELECT |
+					EXT_CSD_BOOT_WP_PWR_SEL_PART1;
+			break;
+		case 2:
+			reg |= EXT_CSD_BOOT_WP_PART_SELECT |
+					EXT_CSD_BOOT_WP_PWR_SEL_PART2;
+			break;
+		default:
+			return -EINVAL;
+		}
+	}
+
+	err =  mmc_switch(mmc, EXT_CSD_CMD_SET_NORMAL, EXT_CSD_BOOT_WP, reg);
 	if (err)
 		return err;
 

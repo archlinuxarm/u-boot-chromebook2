@@ -357,9 +357,13 @@ static int do_mmcops(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[])
 	} else if (strcmp(argv[1], "bootwp") == 0) {
 		struct mmc *mmc;
 		int err;
+		int partition = 0;	/* Default to all partitions */
 
-		if (argc != 2)
+		if (argc > 3)
 			return CMD_RET_USAGE;
+
+		if (argc == 3)
+			partition = simple_strtoul(argv[2], NULL, 10);
 
 		mmc = find_mmc_device(curr_device);
 		if (!mmc) {
@@ -372,7 +376,7 @@ static int do_mmcops(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[])
 			return 1;
 		}
 
-		err = mmc_boot_power_on_write_protect(mmc);
+		err = mmc_boot_power_on_write_protect(mmc, partition);
 		if (err) {
 			printf("Error %d applying write protect\n", err);
 			return 1;
@@ -464,8 +468,8 @@ U_BOOT_CMD(
 	" - Enable boot_part for booting and disable access to boot_part\n"
 	"mmc bootpart <device num> <boot part size MB> <RPMB part size MB>\n"
 	" - change sizes of boot and RPMB partions of specified device\n"
-	"mmc bootwp\n"
-	" - apply write protection to eMMC boot partitions\n"
+	"mmc bootwp [boot_partition]\n"
+	" - apply write protection to both eMMC boot partitions or [boot_partition]\n"
 #endif
 	);
 #endif /* !CONFIG_GENERIC_MMC */

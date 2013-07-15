@@ -204,6 +204,12 @@
 #define EXT_CSD_BOOT_WP_PWR_WP_EN	(1 << 0)
 /* Disable use of boot power-on write protect */
 #define EXT_CSD_BOOT_WP_PWR_WP_DIS	(1 << 6)
+/* Bit 1 (Power-on) or Bit 3 (Permanent) selects the partition to protect */
+#define EXT_CSD_BOOT_WP_PART_SELECT	(1 << 7)
+
+/* Power-on write protect only one boot partition */
+#define EXT_CSD_BOOT_WP_PWR_SEL_PART1	(0 << 1)
+#define EXT_CSD_BOOT_WP_PWR_SEL_PART2	(1 << 1)
 
 #define R1_ILLEGAL_COMMAND		(1 << 22)
 #define R1_APP_CMD			(1 << 5)
@@ -329,10 +335,17 @@ int mmc_boot_part_access(struct mmc *mmc, u8 ack, u8 part_num, u8 access);
 /**
  * Apply power-on write protect to boot partitions of eMMC.
  *
+ * If eMMC is version 4.5, the partition parameter can be used to select
+ * write protection on boot partition 1, 2, or both (0).
+ *
+ * If a partition is selected, but eMMC version is not 4.5, all boot
+ * partitions will be protected.
+ *
  * @param mmc	Pointer to a MMC device struct
+ * @param partition	Boot partition to write protect.  Set to 0 for all.
  * @return 0 on success, -ve on error.
  */
-int mmc_boot_power_on_write_protect(struct mmc *mmc);
+int mmc_boot_power_on_write_protect(struct mmc *mmc, u8 partition);
 
 /**
  * Start device initialization and return immediately; it does not block on
