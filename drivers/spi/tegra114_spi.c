@@ -111,11 +111,13 @@ struct tegra_spi_ctrl {
 	int periph_id;
 	int valid;
 	int node;
+	uint deactivate_delay_us;	/* Delay to wait after deactivate */
 };
 
 struct tegra_spi_slave {
 	struct spi_slave slave;
 	struct tegra_spi_ctrl *ctrl;
+	ulong last_transaction_us;	/* Time of the last transaction end */
 };
 
 static struct tegra_spi_ctrl spi_ctrls[CONFIG_TEGRA114_SPI_CTRLS];
@@ -173,6 +175,7 @@ struct spi_slave *tegra114_spi_setup_slave(unsigned int bus, unsigned int cs,
 		spi->ctrl->freq = max_hz;
 	}
 	spi->ctrl->mode = mode;
+	spi->last_transaction_us = timer_get_us();
 
 	return &spi->slave;
 }
@@ -217,7 +220,8 @@ int tegra114_spi_init(int *node_list, int count)
 		found = 1;
 
 		ctrl->node = node;
-
+		ctrl->deactivate_delay_us = fdtdec_get_int(gd->fdt_blob, node,
+						"spi-deactivate-delay", 0);
 		debug("%s: found controller at %p, freq = %u, periph_id = %d\n",
 		      __func__, ctrl->regs, ctrl->freq, ctrl->periph_id);
 	}
@@ -259,7 +263,17 @@ void tegra114_spi_cs_activate(struct spi_slave *slave)
 {
 	struct tegra_spi_slave *spi = to_tegra_spi(slave);
 	struct spi_regs *regs = spi->ctrl->regs;
+	ulong delay_us;			/* The delay completed so far */
 
+	/* If it's too soon to do another transaction, wait */
+	if (spi->ctrl->deactivate_delay_us && spi->last_transaction_us) {
+		delay_us = timer_get_us() - spi->last_transaction_us;
+		if (delay_us < spi->ctrl->deactivate_delay_us) {
+			debug("%s: delaying %lu uSec\n", __func__,
+			      spi->ctrl->deactivate_delay_us - delay_us);
+			udelay(spi->ctrl->deactivate_delay_us - delay_us);
+		}
+	}
 	clrbits_le32(&regs->command1, SPI_CMD1_CS_SW_VAL);
 }
 
@@ -269,6 +283,24 @@ void tegra114_spi_cs_deactivate(struct spi_slave *slave)
 	struct spi_regs *regs = spi->ctrl->regs;
 
 	setbits_le32(&regs->command1, SPI_CMD1_CS_SW_VAL);
+
+	/* Remember time of this transaction so we can honor the bus delay */
+	if (spi->ctrl->deactivate_delay_us)
+		spi->last_transaction_us = timer_get_us();
+
+	debug("%s: deactivate_delay_us = %u, last_transaction_us = %lu\n",
+	      __func__, spi->ctrl->deactivate_delay_us,
+	      spi->last_transaction_us);
+}
+
+void spi_set_deactivate_delay_us(struct spi_slave *slave, int delay_us)
+{
+	struct tegra_spi_slave *spi = to_tegra_spi(slave);
+
+	spi->ctrl->deactivate_delay_us = delay_us;
+
+	debug("%s: deactivate_delay_us set to %d\n",
+	      __func__, spi->ctrl->deactivate_delay_us);
 }
 
 int tegra114_spi_xfer(struct spi_slave *slave, unsigned int bitlen,
