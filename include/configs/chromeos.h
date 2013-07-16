@@ -341,7 +341,7 @@
 	\
 	"mmc_setup=" \
 		"mmc dev ${devnum}; " \
-		"mmc rescan ${devnum}; " \
+		"mmc rescan; " \
 		"setenv devtype mmc\0" \
 	"mmc_boot=" \
 		"run mmc_setup; " \
