@@ -167,6 +167,7 @@
 #define EXT_CSD_BOOT_WP			173	/* R/W */
 #define EXT_CSD_ERASE_GROUP_DEF		175	/* R/W */
 #define EXT_CSD_BOOT_BUS_WIDTH		177
+#define EXT_CSD_BOOT_CONFIG_PROT	178	/* R/W */
 #define EXT_CSD_PART_CONF		179	/* R/W */
 #define EXT_CSD_BUS_WIDTH		183	/* R/W */
 #define EXT_CSD_HS_TIMING		185	/* R/W */
@@ -199,6 +200,9 @@
 #define EXT_CSD_BOOT_ACK(x)		(x << 6)
 #define EXT_CSD_BOOT_PART_NUM(x)	(x << 3)
 #define EXT_CSD_PARTITION_ACCESS(x)	(x << 0)
+
+#define EXT_CSD_BOOT_CONFIG_PROT_PWR	(1 << 0)	/* Power-on protect */
+#define EXT_CSD_BOOT_CONFIG_PROT_PERM	(1 << 4)	/* Permanent protect */
 
 /* Enable boot power-on write protect */
 #define EXT_CSD_BOOT_WP_PWR_WP_EN	(1 << 0)
@@ -334,6 +338,9 @@ int mmc_boot_part_access(struct mmc *mmc, u8 ack, u8 part_num, u8 access);
 
 /**
  * Apply power-on write protect to boot partitions of eMMC.
+ *
+ * Additionally, protect the boot configuration to prevent changes to which
+ * partition the eMMC reads in boot mode.
  *
  * If eMMC is version 4.5, the partition parameter can be used to select
  * write protection on boot partition 1, 2, or both (0).

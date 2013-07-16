@@ -1610,7 +1610,15 @@ int mmc_boot_power_on_write_protect(struct mmc *mmc, u8 partition)
 		}
 	}
 
+	/* Set boot partition write protection */
 	err =  mmc_switch(mmc, EXT_CSD_CMD_SET_NORMAL, EXT_CSD_BOOT_WP, reg);
+	if (err)
+		return err;
+
+	/* Protect boot configuration */
+	err =  mmc_switch(mmc, EXT_CSD_CMD_SET_NORMAL,
+			  EXT_CSD_BOOT_CONFIG_PROT,
+			  EXT_CSD_BOOT_CONFIG_PROT_PWR);
 	if (err)
 		return err;
 
