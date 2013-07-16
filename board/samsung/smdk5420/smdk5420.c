@@ -102,7 +102,8 @@ static void exynos_lcd_power_on_rev1(void)
 	/* TODO(sjg@chromium.org): Use device tree */
 	gpio_direction_output(EXYNOS5420_GPIO_Y77, 1);	/* EDP_RST# */
 	gpio_direction_output(EXYNOS5420_GPIO_X35, 1);	/* EDP_SLP# */
-	gpio_direction_output(EXYNOS5420_GPIO_X26, 0);	/* EDP_HPD */
+	gpio_direction_input(EXYNOS5420_GPIO_X26);	/* EDP_HPD */
+	gpio_set_pull(EXYNOS5420_GPIO_X26, S5P_GPIO_PULL_NONE);
 
 	/*
 	 * TODO(sjg@chromium.org): printf() for now until this function can
