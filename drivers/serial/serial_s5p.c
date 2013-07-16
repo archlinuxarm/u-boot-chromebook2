@@ -32,6 +32,13 @@
 
 DECLARE_GLOBAL_DATA_PTR;
 
+enum {
+	UFSTAT_RX_FIFO_FULL_MASK	= 1 << 8,
+	UFSTAT_RX_FIFO_COUNT_MASK	= 0xff,
+	UFSTAT_RX_FIFO_NOT_EMPTY	= UFSTAT_RX_FIFO_FULL_MASK |
+						UFSTAT_RX_FIFO_COUNT_MASK,
+};
+
 /* Information about a serial port */
 struct fdt_serial {
 	u32 base_addr;  /* address of registers in physical memory */
@@ -114,14 +121,12 @@ int serial_init_dev(const int dev_index)
 		return 0;
 
 	/* reset and enable FIFOs, set triggers to the maximum */
-	writel(0, &uart->ufcon);
+	writel(0x117, &uart->ufcon);
 	writel(0, &uart->umcon);
 	/* 8N1 */
 	writel(0x3, &uart->ulcon);
 	/* No interrupts, no DMA, pure polling */
 	writel(0x3045, &uart->ucon);
-	/* enable FIFOs */
-	writel(0x111, &uart->ufcon);
 
 	serial_setbrg_dev(dev_index);
 
@@ -161,7 +166,7 @@ int serial_getc_dev(const int dev_index)
 		return 0;
 
 	/* wait for character to arrive */
-	while (!(readl(&uart->utrstat) & 0x1)) {
+	while (!(readl(&uart->ufstat) & UFSTAT_RX_FIFO_NOT_EMPTY)) {
 		if (serial_err_check(dev_index, 0))
 			return 0;
 	}
@@ -202,7 +207,7 @@ int serial_tstc_dev(const int dev_index)
 	if (!config.enabled)
 		return 0;
 
-	return (int)(readl(&uart->utrstat) & 0x1);
+	return (int)(readl(&uart->ufstat) & UFSTAT_RX_FIFO_NOT_EMPTY);
 }
 
 void serial_puts_dev(const char *s, const int dev_index)
