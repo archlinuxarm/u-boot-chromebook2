@@ -1040,7 +1040,6 @@ struct xhci_segment {
 
 struct xhci_ring {
 	struct xhci_segment	*first_seg;
-	struct xhci_segment	*last_seg;
 	union  xhci_trb		*enqueue;
 	struct xhci_segment	*enq_seg;
 	union  xhci_trb		*dequeue;
@@ -1266,7 +1265,7 @@ void xhci_slot_copy(struct xhci_ctrl *ctrl,
 		    struct xhci_container_ctx *out_ctx);
 void xhci_setup_addressable_virt_dev(struct usb_device *udev);
 void xhci_queue_command(struct xhci_ctrl *ctrl, u8 *ptr,
-			u32 slot_id, trb_type cmd);
+			u32 slot_id, u32 ep_index, trb_type cmd);
 void xhci_acknowledge_event(struct xhci_ctrl *ctrl);
 union xhci_trb *xhci_wait_for_event(struct xhci_ctrl *ctrl, trb_type expected);
 int xhci_bulk_tx(struct usb_device *udev, unsigned long pipe,

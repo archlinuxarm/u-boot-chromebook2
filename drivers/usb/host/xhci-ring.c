@@ -144,13 +144,6 @@ static void inc_enq(struct xhci_ctrl *ctrl, struct xhci_ring *ring,
 		ring->enqueue = ring->enq_seg->trbs;
 		next = ring->enqueue;
 	}
-
-	/*
-	 * FIXME: If below BUG_ON() is made active, its giving BUG()
-	 * after some 2MB read:
-	 */
-	//BUG_ON(ring->enq_seg == ring->deq_seg &&
-	//				ring->enqueue == ring->dequeue);
 }
 
 /**
@@ -281,12 +274,14 @@ static int prepare_ring(struct xhci_ctrl *ctrl, struct xhci_ring *ep_ring,
  * Generic function for queueing a command TRB on the command ring.
  * Check to make sure there's room on the command ring for one command TRB.
  *
- * @param ctrl	Host controller data structure
- * @param ptr	Pointer address to write in the first two fields (if applicable)
- * @param cmd	Command type to enqueue
+ * @param ctrl		Host controller data structure
+ * @param ptr		Pointer address to write in the first two fields (opt.)
+ * @param slot_id	Slot ID to encode in the flags field (opt.)
+ * @param ep_index	Endpoint index to encode in the flags field (opt.)
+ * @param cmd		Command type to enqueue
  */
 void xhci_queue_command(struct xhci_ctrl *ctrl, u8 *ptr, u32 slot_id,
-			trb_type cmd)
+			u32 ep_index, trb_type cmd)
 {
 	u32 fields[4];
 	u64 val_64 = (uintptr_t)ptr;
@@ -296,8 +291,8 @@ void xhci_queue_command(struct xhci_ctrl *ctrl, u8 *ptr, u32 slot_id,
 	fields[0] = lower_32_bits(val_64);
 	fields[1] = upper_32_bits(val_64);
 	fields[2] = 0;
-	fields[3] = TRB_TYPE(cmd) | SLOT_ID_FOR_TRB(slot_id) |
-		    ctrl->cmd_ring->cycle_state;
+	fields[3] = TRB_TYPE(cmd) | EP_ID_FOR_TRB(ep_index) |
+		    SLOT_ID_FOR_TRB(slot_id) | ctrl->cmd_ring->cycle_state;
 
 	queue_trb(ctrl, ctrl->cmd_ring, false, fields);
 
@@ -469,12 +464,51 @@ union xhci_trb *xhci_wait_for_event(struct xhci_ctrl *ctrl, trb_type expected)
 		xhci_acknowledge_event(ctrl);
 	} while (get_timer(ts) < XHCI_TIMEOUT);
 
-	/*
-	 * TODO: Implement graceful timeout handling. This is hard, and doing
-	 * it wrong would be worse than not doing it at all, so BUG() for now.
-	 */
-	printf("USB transfer timeout on XHCI controller... cannot recover.\n");
+	if (expected == TRB_TRANSFER)
+		return NULL;
+
+	printf("XHCI timeout on event type %d... cannot recover.\n", expected);
 	BUG();
+}
+
+/*
+ * Stops transfer processing for an endpoint and throws away all unprocessed
+ * TRBs by setting the xHC's dequeue pointer to our enqueue pointer. The next
+ * xhci_bulk_tx/xhci_ctrl_tx on this enpoint will add new transfers there and
+ * ring the doorbell, causing this endpoint to start working again.
+ * (Careful: This will BUG() when there was no transfer in progress. Shouldn't
+ * happen in practice for current uses and is too complicated to fix right now.)
+ */
+static void abort_td(struct usb_device *udev, int ep_index)
+{
+	struct xhci_ctrl *ctrl = udev->controller;
+	struct xhci_ring *ring =  ctrl->devs[udev->slot_id]->eps[ep_index].ring;
+	union xhci_trb *event;
+	u32 field;
+
+	xhci_queue_command(ctrl, NULL, udev->slot_id, ep_index, TRB_STOP_RING);
+
+	event = xhci_wait_for_event(ctrl, TRB_TRANSFER);
+	field = le32_to_cpu(event->trans_event.flags);
+	BUG_ON(TRB_TO_SLOT_ID(field) != udev->slot_id);
+	BUG_ON(TRB_TO_EP_INDEX(field) != ep_index);
+	BUG_ON(GET_COMP_CODE(le32_to_cpu(event->trans_event.transfer_len
+		!= COMP_STOP)));
+	xhci_acknowledge_event(ctrl);
+
+	event = xhci_wait_for_event(ctrl, TRB_COMPLETION);
+	BUG_ON(TRB_TO_SLOT_ID(le32_to_cpu(event->event_cmd.flags))
+		!= udev->slot_id || GET_COMP_CODE(le32_to_cpu(
+		event->event_cmd.status)) != COMP_SUCCESS);
+	xhci_acknowledge_event(ctrl);
+
+	xhci_queue_command(ctrl, (void *)((uintptr_t)ring->enqueue |
+		ring->cycle_state), udev->slot_id, ep_index, TRB_SET_DEQ);
+	event = xhci_wait_for_event(ctrl, TRB_COMPLETION);
+	BUG_ON(TRB_TO_SLOT_ID(le32_to_cpu(event->event_cmd.flags))
+		!= udev->slot_id || GET_COMP_CODE(le32_to_cpu(
+		event->event_cmd.status)) != COMP_SUCCESS);
+	xhci_acknowledge_event(ctrl);
 }
 
 static void record_transfer_result(struct usb_device *udev,
@@ -677,6 +711,13 @@ int xhci_bulk_tx(struct usb_device *udev, unsigned long pipe,
 	giveback_first_trb(udev, ep_index, start_cycle, start_trb);
 
 	event = xhci_wait_for_event(ctrl, TRB_TRANSFER);
+	if (!event) {
+		debug("XHCI bulk transfer timed out, aborting...\n");
+		abort_td(udev, ep_index);
+		udev->status = USB_ST_NAK_REC;  /* closest thing to a timeout */
+		udev->act_len = 0;
+		return -1;
+	}
 	field = le32_to_cpu(event->trans_event.flags);
 
 	BUG_ON(TRB_TO_SLOT_ID(field) != slot_id);
@@ -867,6 +908,8 @@ int xhci_ctrl_tx(struct usb_device *udev, unsigned long pipe,
 	giveback_first_trb(udev, ep_index, start_cycle, start_trb);
 
 	event = xhci_wait_for_event(ctrl, TRB_TRANSFER);
+	if (!event)
+		goto abort;
 	field = le32_to_cpu(event->trans_event.flags);
 
 	BUG_ON(TRB_TO_SLOT_ID(field) != slot_id);
@@ -883,10 +926,19 @@ int xhci_ctrl_tx(struct usb_device *udev, unsigned long pipe,
 			== COMP_SHORT_TX) {
 		/* Short data stage, clear up additional status stage event */
 		event = xhci_wait_for_event(ctrl, TRB_TRANSFER);
+		if (!event)
+			goto abort;
 		BUG_ON(TRB_TO_SLOT_ID(field) != slot_id);
 		BUG_ON(TRB_TO_EP_INDEX(field) != ep_index);
 		xhci_acknowledge_event(ctrl);
 	}
 
 	return (udev->status != USB_ST_NOT_PROC) ? 0 : -1;
+
+abort:
+	debug("XHCI control transfer timed out, aborting...\n");
+	abort_td(udev, ep_index);
+	udev->status = USB_ST_NAK_REC;
+	udev->act_len = 0;
+	return -1;
 }
