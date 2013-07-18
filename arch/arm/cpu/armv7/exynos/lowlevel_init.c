@@ -110,7 +110,7 @@ static void low_power_start(void)
 	reg_val = readl(RST_FLAG_REG);
 	if (reg_val != RST_FLAG_VAL) {
 		writel(0x0, CONFIG_LOWPOWER_FLAG);
-		set_pc(0x0);
+		branch_bx(0x0);
 	}
 
 	/* Set the CPU to SVC32 mode */
