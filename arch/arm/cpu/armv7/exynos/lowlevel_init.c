@@ -111,7 +111,7 @@ static void secondary_cpu_start(void)
 {
 	enable_smp();
 	svc32_mode_en();
-	branch_bx(CONFIG_IROM_WORKAROUND_BASE);
+	branch_bx(CONFIG_EXYNOS_RELOCATE_CODE_BASE);
 }
 
 /*
@@ -202,7 +202,7 @@ static void secondary_cores_configure(void)
 	configure_l2_ctlr();
 
 	/* Clear secondary boot iRAM base */
-	writel(0x0, (CONFIG_IROM_WORKAROUND_BASE + 0x1C));
+	writel(0x0, (CONFIG_EXYNOS_RELOCATE_CODE_BASE + 0x1C));
 
 	/* set lowpower flag and address */
 	writel(RST_FLAG_VAL, CONFIG_LOWPOWER_FLAG);
