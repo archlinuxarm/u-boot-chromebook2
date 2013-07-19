@@ -37,6 +37,10 @@
 		arm-frequency = <1700000000>;
 	};
 
+	ramoops {
+		reg = <0x41f00000 0x00100000>;
+	};
+
 	tmu@10060000 {
 		samsung,min-temp	= <25>;
 		samsung,max-temp	= <125>;
