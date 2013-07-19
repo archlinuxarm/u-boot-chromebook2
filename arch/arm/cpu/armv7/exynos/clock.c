@@ -377,6 +377,12 @@ static unsigned long exynos5420_get_pll_clk(int pllreg)
 	case SPLL:
 		r = readl(&clk->spll_con0);
 		break;
+	case CPLL:
+		r = readl(&clk->cpll_con0);
+		break;
+	case DPLL:
+		r = readl(&clk->dpll_con0);
+		break;
 	default:
 		printf("Unsupported PLL (%d)\n", pllreg);
 		return 0;
