@@ -839,7 +839,8 @@ int cros_ec_flash_erase(struct cros_ec_dev *dev, uint32_t offset, uint32_t size)
  * Write a single block to the flash
  *
  * Write a block of data to the EC flash. The size must not exceed the flash
- * write block size which you can obtain from cros_ec_flash_write_burst_size().
+ * write block size which you can obtain from cros_ec_flash_write_burst_size()
+ * and which must be passed in as 'burst'.
  *
  * The offset starts at 0. You can obtain the region information from
  * cros_ec_flash_offset() to find out where to write for a particular region.
@@ -851,10 +852,12 @@ int cros_ec_flash_erase(struct cros_ec_dev *dev, uint32_t offset, uint32_t size)
  * @param data		Pointer to data buffer to write
  * @param offset	Offset within flash to write to.
  * @param size		Number of bytes to write
+ * @param burst		Required flash burst size
  * @return 0 if ok, -1 on error
  */
 static int cros_ec_flash_write_block(struct cros_ec_dev *dev,
-		const uint8_t *data, uint32_t offset, uint32_t size)
+		const uint8_t *data, uint32_t offset, uint32_t size,
+		uint32_t burst)
 {
 	uint8_t buf[EC_PROTO2_MAX_PARAM_SIZE];
 	struct ec_params_flash_write *p = (struct ec_params_flash_write *)buf;
@@ -863,7 +866,18 @@ static int cros_ec_flash_write_block(struct cros_ec_dev *dev,
 	p->offset = offset;
 	p->size = size;
 	assert(data && buf_used <= sizeof(buf));
+	assert(sizeof(*p) + burst <= sizeof(buf));
 	memcpy(p + 1, data, size);
+
+	/* Pad up to the burst size if necessary */
+	if (size < burst) {
+		uint32_t diff = burst - size;
+
+		memset((uint8_t *)(p + 1) + size, 0xff, diff);
+		size += diff;
+		p->size = size;
+		buf_used += diff;
+	}
 
 	return ec_command_inptr(dev, EC_CMD_FLASH_WRITE, 0,
 				buf, buf_used, NULL, 0) >= 0 ? 0 : -1;
@@ -930,8 +944,10 @@ int cros_ec_flash_write(struct cros_ec_dev *dev, const uint8_t *data,
 	 * Fail if we don't know how much data to write, or if we can't write
 	 * enough data at once.
 	 */
-	if (burst == 0)
+	if (burst == 0) {
+		debug("%s: Unknown burst size\n", __func__);
 		return -1;
+	}
 
 	/*
 	 * TODO: round up to the nearest multiple of write size.  Can get away
@@ -944,13 +960,21 @@ int cros_ec_flash_write(struct cros_ec_dev *dev, const uint8_t *data,
 		/* If the data is empty, there is no point in programming it */
 		todo = min(end - off, burst);
 		if (dev->optimise_flash_write &&
-				cros_ec_data_is_erased((uint32_t *)data, todo))
+				cros_ec_data_is_erased((uint32_t *)data,
+						       todo)) {
+			debug("   Skipping offset %x, todo %x\n", off, todo);
 			continue;
+		}
 
-		ret = cros_ec_flash_write_block(dev, data, off, todo);
-		if (ret)
+		debug("   Writing offset %x, todo %x: ", off, todo);
+		ret = cros_ec_flash_write_block(dev, data, off, todo, burst);
+		if (ret) {
+			debug("Failed\n");
 			return ret;
+		}
+		debug("OK\n");
 	}
+	debug("%s: complete\n", __func__);
 
 	return 0;
 }
