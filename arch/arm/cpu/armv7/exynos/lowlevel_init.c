@@ -128,6 +128,14 @@ static void low_power_start(void)
 		branch_bx(0x0);
 	}
 
+	reg_val = readl(CONFIG_PHY_IRAM_BASE + 0x4);
+	if (reg_val != (uint32_t)&low_power_start) {
+		/* Store jump address as low_power_start if not present */
+		writel((uint32_t)&low_power_start, CONFIG_PHY_IRAM_BASE + 0x4);
+		dsb();
+		sev();
+	}
+
 	/* Set the CPU to SVC32 mode */
 	svc32_mode_en();
 
