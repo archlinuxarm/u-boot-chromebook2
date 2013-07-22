@@ -89,6 +89,7 @@ static const char * const compat_names[COMPAT_COUNT] = {
 	COMPAT(MAXIM_MAX77802_PMIC, "maxim,max77802-pmic"),
 	COMPAT(PARADE_PS8625, "parade,ps8625"),
 	COMPAT(COMPAT_ANALOGIX_ANX1120, "analogix,anx1120"),
+	COMPAT(MAXIM_98090_CODEC, "maxim,max98090-codec"),
 };
 
 const char *fdtdec_get_compatible(enum fdt_compat_id id)
