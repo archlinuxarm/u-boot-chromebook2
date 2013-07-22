@@ -145,11 +145,11 @@ static int max98095_hw_params(struct max98095_priv *max98095,
 
 	switch (bits_per_sample) {
 	case 16:
-		error = max98095_update_bits(M98095_034_DAI2_FORMAT,
+		error = max98095_update_bits(M98095_02A_DAI1_FORMAT,
 			M98095_DAI_WS, 0);
 		break;
 	case 24:
-		error = max98095_update_bits(M98095_034_DAI2_FORMAT,
+		error = max98095_update_bits(M98095_02A_DAI1_FORMAT,
 			M98095_DAI_WS, M98095_DAI_WS);
 		break;
 	default:
@@ -165,15 +165,15 @@ static int max98095_hw_params(struct max98095_priv *max98095,
 	}
 	max98095->rate = rate;
 
-	error |= max98095_update_bits(M98095_031_DAI2_CLKMODE,
+	error |= max98095_update_bits(M98095_027_DAI1_CLKMODE,
 		M98095_CLKMODE_MASK, regval);
 
 	/* Update sample rate mode */
 	if (rate < 50000)
-		error |= max98095_update_bits(M98095_038_DAI2_FILTERS,
+		error |= max98095_update_bits(M98095_02E_DAI1_FILTERS,
 			M98095_DAI_DHF, 0);
 	else
-		error |= max98095_update_bits(M98095_038_DAI2_FILTERS,
+		error |= max98095_update_bits(M98095_02E_DAI1_FILTERS,
 			M98095_DAI_DHF, M98095_DAI_DHF);
 
 	if (error < 0) {
@@ -248,9 +248,9 @@ static int max98095_set_fmt(struct max98095_priv *max98095, int fmt)
 	switch (fmt & SND_SOC_DAIFMT_MASTER_MASK) {
 	case SND_SOC_DAIFMT_CBS_CFS:
 		/* Slave mode PLL */
-		error |= max98095_i2c_write(M98095_032_DAI2_CLKCFG_HI,
+		error |= max98095_i2c_write(M98095_028_DAI1_CLKCFG_HI,
 					0x80);
-		error |= max98095_i2c_write(M98095_033_DAI2_CLKCFG_LO,
+		error |= max98095_i2c_write(M98095_029_DAI1_CLKCFG_LO,
 					0x00);
 		break;
 	case SND_SOC_DAIFMT_CBM_CFM:
@@ -292,11 +292,11 @@ static int max98095_set_fmt(struct max98095_priv *max98095, int fmt)
 		return -1;
 	}
 
-	error |= max98095_update_bits(M98095_034_DAI2_FORMAT,
+	error |= max98095_update_bits(M98095_02A_DAI1_FORMAT,
 		M98095_DAI_MAS | M98095_DAI_DLY | M98095_DAI_BCI |
 		M98095_DAI_WCI, regval);
 
-	error |= max98095_i2c_write(M98095_035_DAI2_CLOCK,
+	error |= max98095_i2c_write(M98095_02B_DAI1_CLOCK,
 		M98095_DAI_BSEL64);
 
 	if (error < 0) {
@@ -386,21 +386,14 @@ static int max98095_device_init(struct max98095_priv *max98095)
 	 * interface2 to DAC
 	 */
 	error |= max98095_i2c_write(M98095_048_MIX_DAC_LR,
-		M98095_DAI2M_TO_DACL|M98095_DAI2M_TO_DACR);
+		M98095_DAI1L_TO_DACL|M98095_DAI1R_TO_DACR);
 
 	error |= max98095_i2c_write(M98095_092_PWR_EN_OUT,
 			M98095_SPK_SPREADSPECTRUM);
-	error |= max98095_i2c_write(M98095_045_CFG_DSP, M98095_DSPNORMAL);
 	error |= max98095_i2c_write(M98095_04E_CFG_HP, M98095_HPNORMAL);
 
 	error |= max98095_i2c_write(M98095_02C_DAI1_IOCFG,
 			M98095_S1NORMAL|M98095_SDATA);
-
-	error |= max98095_i2c_write(M98095_036_DAI2_IOCFG,
-			M98095_S2NORMAL|M98095_SDATA);
-
-	error |= max98095_i2c_write(M98095_040_DAI3_IOCFG,
-			M98095_S3NORMAL|M98095_SDATA);
 
 	/* take the codec out of the shut down */
 	error |= max98095_update_bits(M98095_097_PWR_SYS, M98095_SHDNRUN,
@@ -422,7 +415,7 @@ static int max98095_device_init(struct max98095_priv *max98095)
 
 	/* Enable DAIs */
 	error |= max98095_i2c_write(M98095_093_BIAS_CTRL, 0x30);
-	error |= max98095_i2c_write(M98095_096_PWR_DAC_CK, 0x07);
+	error |= max98095_i2c_write(M98095_096_PWR_DAC_CK, 0x01);
 
 err_access:
 	if (error < 0)
