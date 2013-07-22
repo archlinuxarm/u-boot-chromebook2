@@ -68,25 +68,40 @@ static void enable_smp(void)
 }
 
 /*
- * Set L2ACTLR[7] to reissue any memory transaction in the L2 that has been
- * stalled for 1024 cycles to verify that its hazard condition still exists.
+ * Enable ECC by setting L2CTLR[21].
+ * Set L2CTLR[7] to make tag ram latency 3 cycles and
+ * set L2CTLR[1] to make data ram latency 3 cycles.
+ * We need to make RAM latency of 3 cycles here because cores
+ * power ON and OFF while switching. And everytime a core powers
+ * ON, iROM provides it a default L2CTLR value 0x400 which stands
+ * for TAG RAM setup of 1 cycle. Hence, we face a need of
+ * restoring data and tag latency values.
  */
-static void configure_l2actlr(void)
+static void configure_l2_ctlr(void)
 {
 	uint32_t val;
 
-	/* Read MIDR for Primary Part Number*/
-	mrc_midr(val);
-	val = (val >> 4);
-	val &= 0xf;
+	mrc_l2_ctlr(val);
+	val |= (1 << 21);
+	val |= (1 << 7);
+	val |= (1 << 1);
+	mcr_l2_ctlr(val);
+}
 
-	/* L2ACTLR[7]: Enable hazard detect timeout for A15 */
-	if (val == 0xf) {
-		mrc_l2_aux_ctlr(val);
-		val |= (1 << 7);
-		val |= (1 << 27);
-		mcr_l2_aux_ctlr(val);
-	}
+/*
+ * Set L2ACTLR[7] to reissue any memory transaction in the L2 that has been
+ * stalled for 1024 cycles to verify that its hazard condition still exists.
+ * Disable clean/evict push to external by setting L2ACTLR[3].
+ */
+static void configure_l2_actlr(void)
+{
+	uint32_t val;
+
+	mrc_l2_aux_ctlr(val);
+	val |= (1 << 27);
+	val |= (1 << 7);
+	val |= (1 << 3);
+	mcr_l2_aux_ctlr(val);
 }
 
 /*
@@ -115,7 +130,16 @@ static void low_power_start(void)
 
 	/* Set the CPU to SVC32 mode */
 	svc32_mode_en();
-	configure_l2actlr();
+
+	/* Read MIDR for Primary Part Number*/
+	mrc_midr(val);
+	val = (val >> 4);
+	val &= 0xf;
+
+	if (val == 0xf) {
+		configure_l2_ctlr();
+		configure_l2_actlr();
+	}
 
 	/* Invalidate L1 & TLB */
 	val = 0x0;
@@ -195,8 +219,14 @@ static void evt0_cores_configure(void)
 	for (i = 0; i < 0x20; i += 0x4)
 		writel((uint32_t)&low_power_start, CONFIG_PHY_IRAM_BASE + i);
 
+	/* Read MIDR for Primary Part Number*/
+	mrc_midr(i);
+	i = (i >> 4);
+	i &= 0xf;
+
 	/* Setup L2 cache */
-	configure_l2actlr();
+	if (i == 0xf)
+		configure_l2_actlr();
 
 	/* Clear secondary boot iRAM base */
 	writel(0x0, (CONFIG_IROM_WORKAROUND_BASE + 0x1C));
@@ -210,6 +240,8 @@ static void evt0_cores_configure(void)
  */
 static void evt1_cores_configure(void)
 {
+	configure_l2_ctlr();
+
 	/* Clear secondary boot iRAM base */
 	writel(0x0, (CONFIG_IROM_WORKAROUND_BASE + 0x1C));
 

@@ -27,8 +27,10 @@
 #include <asm/arch/system.h>
 
 enum l2_cache_params {
+#ifndef CONFIG_EXYNOS5420
 	CACHE_TAG_RAM_SETUP = (1 << 9),
 	CACHE_DATA_RAM_SETUP = (1 << 5),
+#endif
 	CACHE_TAG_RAM_LATENCY = (2 << 6),
 	CACHE_DATA_RAM_LATENCY = (2 << 0)
 };
@@ -56,10 +58,15 @@ static void exynos5_set_l2cache_params(void)
 
 	asm volatile("mrc p15, 1, %0, c9, c0, 2\n" : "=r"(val));
 
+#ifndef CONFIG_EXYNOS5420
 	val |= CACHE_TAG_RAM_SETUP |
 		CACHE_DATA_RAM_SETUP |
 		CACHE_TAG_RAM_LATENCY |
 		CACHE_DATA_RAM_LATENCY;
+#else
+	val |= CACHE_TAG_RAM_LATENCY |
+		CACHE_DATA_RAM_LATENCY;
+#endif
 
 	asm volatile("mcr p15, 1, %0, c9, c0, 2\n" : : "r"(val));
 
