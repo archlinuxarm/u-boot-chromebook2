@@ -1381,11 +1381,13 @@ struct set_epll_con_val {
 #define EXYNOS5_EPLLCON0_LOCKED_SHIFT	29  /* EPLL Locked bit position*/
 #define TIMEOUT_EPLL_LOCK		1000
 
-#define AUDIO_0_RATIO_MASK		0x0f
-#define AUDIO_1_RATIO_MASK		0x0f
+#define AUDIO_RATIO_MASK		0x0f
 
-#define AUDIO1_SEL_MASK			0xf
+#define AUDIO_SEL_MASK			0xf
 #define CLK_SRC_SCLK_EPLL		0x7
+#define CLK_SRC_MOUT_EPLL		(1 << 12)
+#define CLKMUX_ASS			(1 << 0)
+
 
 /* CON0 bit-fields */
 #define EPLL_CON0_MDIV_MASK		0x1ff

@@ -268,6 +268,9 @@ static unsigned long exynos5_get_periph_rate(int peripheral)
 		src = readl(&clk->src_peric0);
 		div = readl(&clk->div_peric3);
 		break;
+	case PERIPH_ID_I2S0:
+		src = readl(&clk->src_mau);
+		div = readl(&clk->div_mau);
 	case PERIPH_ID_SPI0:
 	case PERIPH_ID_SPI1:
 		src = readl(&clk->src_peric1);
@@ -1382,8 +1385,10 @@ void exynos5_set_i2s_clk_source(void)
 	struct exynos5_clock *clk =
 		(struct exynos5_clock *)samsung_get_base_clock();
 
-	clrsetbits_le32(&clk->src_peric1, AUDIO1_SEL_MASK,
+	setbits_le32(&clk->src_top2, CLK_SRC_MOUT_EPLL);
+	clrsetbits_le32(&clk->src_mau, AUDIO_SEL_MASK,
 			(CLK_SRC_SCLK_EPLL));
+	setbits_le32(EXYNOS_AUDSS, CLKMUX_ASS);
 }
 
 int exynos5_set_i2s_clk_prescaler(unsigned int src_frq,
@@ -1400,13 +1405,13 @@ int exynos5_set_i2s_clk_prescaler(unsigned int src_frq,
 	}
 
 	div = (src_frq / dst_frq);
-	if (div > AUDIO_1_RATIO_MASK) {
+	if (div > AUDIO_RATIO_MASK) {
 		debug("%s: Frequency ratio is out of range\n", __func__);
 		debug("src frq = %d des frq = %d ", src_frq, dst_frq);
 		return -1;
 	}
-	clrsetbits_le32(&clk->div_peric4, AUDIO_1_RATIO_MASK,
-				(div & AUDIO_1_RATIO_MASK));
+	clrsetbits_le32(&clk->div_mau, AUDIO_RATIO_MASK,
+			(div & AUDIO_RATIO_MASK));
 	return 0;
 }
 
@@ -1743,7 +1748,6 @@ int set_spi_clk(int periph_id, unsigned int rate)
 
 int set_i2s_clk_prescaler(unsigned int src_frq, unsigned int dst_frq)
 {
-
 	if (cpu_is_exynos5())
 		return exynos5_set_i2s_clk_prescaler(src_frq, dst_frq);
 	else

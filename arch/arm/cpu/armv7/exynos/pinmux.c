@@ -365,8 +365,16 @@ static void exynos5_i2s_config(int peripheral)
 {
 	int i;
 
-	for (i = 0; i < 5; i++)
-		gpio_cfg_pin(EXYNOS5_GPIO_B00+i, S5P_GPIO_FUNC(0x02));
+	switch (peripheral) {
+	case PERIPH_ID_I2S0:
+		for (i = 0; i < 5; i++)
+			gpio_cfg_pin(EXYNOS5_GPIO_Z0+i, S5P_GPIO_FUNC(0x02));
+		break;
+	case PERIPH_ID_I2S1:
+		for (i = 0; i < 5; i++)
+			gpio_cfg_pin(EXYNOS5_GPIO_B00+i, S5P_GPIO_FUNC(0x02));
+		break;
+	}
 }
 
 void exynos5_spi_config(int peripheral)
@@ -484,6 +492,7 @@ static int exynos5_pinmux_config(int peripheral, int flags)
 	case PERIPH_ID_I2C7:
 		exynos5_i2c_config(peripheral, flags);
 		break;
+	case PERIPH_ID_I2S0:
 	case PERIPH_ID_I2S1:
 		exynos5_i2s_config(peripheral);
 		break;
