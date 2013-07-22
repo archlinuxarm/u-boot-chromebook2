@@ -319,21 +319,25 @@ int i2s_tx_init(struct i2stx_info *pi2s_tx)
 				(struct i2s_reg *)pi2s_tx->base_address;
 
 	/* Initialize GPIO for I2s */
-	exynos_pinmux_config(PERIPH_ID_I2S1, 0);
+	exynos_pinmux_config(PERIPH_ID_I2S0, 0);
 
 	/* Set EPLL Clock */
-	ret = set_epll_clk(pi2s_tx->audio_pll_clk);
+	ret = set_epll_clk(pi2s_tx->samplingrate * pi2s_tx->rfs * 4);
 	if (ret != 0) {
 		debug("%s: epll clock set rate falied\n", __func__);
 		return -1;
 	}
 
-	/* Select Clk Source for Audio1 */
+	/* Select Clk Source for Audio0 */
 	set_i2s_clk_source();
 
-	/* Set Prescaler to get MCLK */
-	set_i2s_clk_prescaler(pi2s_tx->audio_pll_clk,
-				(pi2s_tx->samplingrate * (pi2s_tx->rfs)));
+	/*Reset the i2s module */
+	writel(CON_RESET, &i2s_reg->con);
+
+	writel(MOD_OP_CLK | MOD_RCLKSRC, &i2s_reg->mod);
+
+	/* set i2s prescaler */
+	writel(PSREN | PSVAL, &i2s_reg->psr);
 
 	/* Configure I2s format */
 	ret = i2s_set_fmt(i2s_reg, (SND_SOC_DAIFMT_I2S | SND_SOC_DAIFMT_NB_NF |
