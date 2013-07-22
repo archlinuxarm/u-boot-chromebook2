@@ -103,7 +103,7 @@
 		port-enable-mask = <0x02>;
 	};
 
-	sound@12d60000 {
+	sound@3830000 {
 		samsung,codec-type = "max98095";
 	};
 

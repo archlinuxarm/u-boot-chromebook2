@@ -57,7 +57,7 @@
 		spi-deactivate-delay = <100>;
 	};
 
-	sound@12d60000 {
+	sound@3830000 {
 		samsung,codec-type = "max98095";
 	};
 
