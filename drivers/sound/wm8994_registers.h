@@ -17,6 +17,7 @@
 #define WM8994_SOFTWARE_RESET                   0x00
 #define WM8994_POWER_MANAGEMENT_1               0x01
 #define WM8994_POWER_MANAGEMENT_2               0x02
+#define WM8994_POWER_MANAGEMENT_4		0x04
 #define WM8994_POWER_MANAGEMENT_5               0x05
 #define WM8994_LEFT_OUTPUT_VOLUME               0x1C
 #define WM8994_RIGHT_OUTPUT_VOLUME              0x1D
@@ -42,6 +43,9 @@
 #define WM8994_AIF2_CONTROL_2                   0x311
 #define WM8994_AIF2_MASTER_SLAVE                0x312
 #define WM8994_AIF2_BCLK                        0x313
+#define WM8994_AIF1_DAC_LEFT_VOLUME             0x402
+#define WM8994_AIF1_DAC_RIGHT_VOLUME            0x403
+#define WM8994_AIF1_DAC_FILTERS_1               0x420
 #define WM8994_AIF2_DAC_LEFT_VOLUME             0x502
 #define WM8994_AIF2_DAC_RIGHT_VOLUME            0x503
 #define WM8994_AIF2_DAC_FILTERS_1               0x520
@@ -49,6 +53,8 @@
 #define WM8994_DAC1_RIGHT_MIXER_ROUTING         0x602
 #define WM8994_DAC1_LEFT_VOLUME                 0x610
 #define WM8994_DAC1_RIGHT_VOLUME                0x611
+#define WM8994_OVERSAMPLING	                0x620
+#define WM8994_GPIO_1                           0x700
 #define WM8994_GPIO_3                           0x702
 #define WM8994_GPIO_4                           0x703
 #define WM8994_GPIO_5                           0x704
@@ -79,6 +85,8 @@
 #define WM8994_BIAS_ENA                         0x0001
 /* BIAS_ENA */
 #define WM8994_BIAS_ENA_MASK                    0x0001
+#define WM8994_BIAS_ENA_SHIFT                        0
+#define WM8994_BIAS_ENA_WIDTH                        1
 
 /*
  * R2 (0x02) - Power Management (2)
@@ -86,21 +94,35 @@
 /* OPCLK_ENA */
 #define WM8994_OPCLK_ENA                        0x0800
 
+#define WM8994_TSHUT_ENA                        0x4000
+#define WM8994_MIXINL_ENA                       0x0200
+#define WM8994_MIXINR_ENA                       0x0100
+#define WM8994_IN2L_ENA                         0x0080
+#define WM8994_IN2R_ENA                         0x0020
+
+/*
+ * R5 (0x04) - Power Management (4)
+ */
+#define WM8994_ADCL_ENA				0x0001
+#define WM8994_ADCR_ENA				0x0002
+#define WM8994_AIF1ADC1R_ENA			0x0100
+#define WM8994_AIF1ADC1L_ENA			0x0200
+
 /*
  * R5 (0x05) - Power Management (5)
  */
-/* AIF2DACL_ENA */
-#define WM8994_AIF2DACL_ENA                     0x2000
-#define WM8994_AIF2DACL_ENA_MASK                0x2000
-/* AIF2DACR_ENA */
-#define WM8994_AIF2DACR_ENA                     0x1000
-#define WM8994_AIF2DACR_ENA_MASK                0x1000
 /* DAC1L_ENA */
 #define WM8994_DAC1L_ENA                        0x0002
 #define WM8994_DAC1L_ENA_MASK                   0x0002
 /* DAC1R_ENA */
 #define WM8994_DAC1R_ENA                        0x0001
 #define WM8994_DAC1R_ENA_MASK                   0x0001
+/* AIF1DACL_ENA */
+#define WM8994_AIF1DACL_ENA                     0x0200
+#define WM8994_AIF1DACL_ENA_MASK                0x0200
+/* AIF1DACR_ENA */
+#define WM8994_AIF1DACR_ENA                     0x0100
+#define WM8994_AIF1DACR_ENA_MASK                0x0100
 
 /*
  * R45 (0x2D) - Output Mixer (1)
@@ -174,14 +196,14 @@
 /*
  * R520 (0x208) - Clocking (1)
  */
-/* AIF2DSPCLK_ENA */
-#define WM8994_AIF2DSPCLK_ENA                   0x0004
-#define WM8994_AIF2DSPCLK_ENA_MASK              0x0004
+/* AIF1DSPCLK_ENA */
+#define WM8994_AIF1DSPCLK_ENA                   0x0008
+#define WM8994_AIF1DSPCLK_ENA_MASK              0x0008
 /* SYSDSPCLK_ENA */
 #define WM8994_SYSDSPCLK_ENA                    0x0002
 #define WM8994_SYSDSPCLK_ENA_MASK               0x0002
 /* SYSCLK_SRC */
-#define WM8994_SYSCLK_SRC                       0x0001
+#define WM8994_SYSCLK_SRC                       0x0000
 
 /*
  * R521 (0x209) - Clocking (2)
@@ -232,27 +254,6 @@
 #define WM8994_AIF1_BCLK_DIV_SHIFT                   4
 
 /*
- * R1282 (0x502) - AIF2 DAC Left Volume
- */
-/* AIF2DAC_VU */
-#define WM8994_AIF2DAC_VU                       0x0100
-#define WM8994_AIF2DAC_VU_MASK                  0x0100
-/* AIF2DACL_VOL - [7:0] */
-#define WM8994_AIF2DACL_VOL_MASK                0x00FF
-
-/*
- * R1283 (0x503) - AIF2 DAC Right Volume
- */
-/* AIF2DACR_VOL - [7:0] */
-#define WM8994_AIF2DACR_VOL_MASK                0x00FF
-
-/*
- * R1312 (0x520) - AIF2 DAC Filters (1)
- */
-/* AIF2DAC_MUTE */
-#define WM8994_AIF2DAC_MUTE_MASK                0x0200
-
-/*
  * R1537 (0x601) - DAC1 Left Mixer Routing
  */
 /* AIF2DACL_TO_DAC1L */
@@ -266,6 +267,11 @@
 #define WM8994_AIF2DACR_TO_DAC1R                0x0004
 #define WM8994_AIF2DACR_TO_DAC1R_MASK           0x0004
 
+/* AIF1DAC1L_TO_DAC1L */
+#define WM8994_AIF1DAC1L_TO_DAC1L               0x0001
+
+/* AIF1DAC1R_TO_DAC1R */
+#define WM8994_AIF1DAC1R_TO_DAC1R               0x0001
 /*
  * R1552 (0x610) - DAC1 Left Volume
  */
@@ -293,7 +299,8 @@
 /* GPIO PIN MASK */
 #define WM8994_GPIO_DIR_MASK                     0xFFE0
 /* I2S CLK */
-#define WM8994_GPIO_FUNCTION_I2S_CLK             0x0000
+#define WM8994_GPIO_FUNCTION_I2S_CLK		0x0001
+#define WM8994_GPIO_INPUT_DEBOUNCE		0x0100
 /* GPn FN */
 #define WM8994_GPIO_FUNCTION_MASK                0x001F
 #endif

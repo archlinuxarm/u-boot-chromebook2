@@ -146,7 +146,7 @@ static int codec_init(const void *blob, struct i2stx_info *pi2s_tx)
 #endif
 	if (!strcmp(codectype, "wm8994")) {
 		/* Check the codec type and initialise the same */
-		ret = wm8994_init(blob, WM8994_AIF2,
+		ret = wm8994_init(blob, WM8994_AIF1,
 			pi2s_tx->samplingrate,
 			(pi2s_tx->samplingrate * (pi2s_tx->rfs)),
 			pi2s_tx->bitspersample, pi2s_tx->channels);
