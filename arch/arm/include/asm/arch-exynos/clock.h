@@ -1377,15 +1377,18 @@ struct set_epll_con_val {
 };
 #endif
 
-#define MPLL_FOUT_SEL_SHIFT	4
+#define MPLL_FOUT_SEL_SHIFT		4
 #define EXYNOS5_EPLLCON0_LOCKED_SHIFT	29  /* EPLL Locked bit position*/
 #define TIMEOUT_EPLL_LOCK		1000
 
 #define AUDIO_RATIO_MASK		0x0f
 
 #define AUDIO_SEL_MASK			0xf
+#define EXYNOS5420_AUDIO0_SEL_MASK	(0x3 << 28)
 #define CLK_SRC_SCLK_EPLL		0x7
+#define EXYNOS5420_CLK_SRC_SCLK_EPLL	(0x6 << 28)
 #define CLK_SRC_MOUT_EPLL		(1 << 12)
+#define EXYNOS5420_CLK_SRC_MOUT_EPLL	(1 << 20)
 #define CLKMUX_ASS			(1 << 0)
 
 

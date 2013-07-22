@@ -44,6 +44,8 @@
 #define MOD_SLAVE		(1 << 11)
 #define MOD_RCLKSRC		(0 << 10)
 #define MOD_MASK		(3 << 8)
+
+#ifdef CONFIG_EXYNOS5250
 #define MOD_LR_LLOW		(0 << 7)
 #define MOD_LR_RLOW		(1 << 7)
 #define MOD_SDF_IIS		(0 << 5)
@@ -60,7 +62,24 @@
 #define MOD_BCLK_16FS		(2 << 1)
 #define MOD_BCLK_24FS		(3 << 1)
 #define MOD_BCLK_MASK		(3 << 1)
-
+#else
+#define MOD_LR_LLOW		(0 << 15)
+#define MOD_LR_RLOW		(1 << 15)
+#define MOD_SDF_IIS		(0 << 6)
+#define MOD_SDF_MSB		(1 << 6)
+#define MOD_SDF_LSB		(2 << 6)
+#define MOD_SDF_MASK		(3 << 6)
+#define MOD_RCLK_256FS		(0 << 4)
+#define MOD_RCLK_512FS		(1 << 4)
+#define MOD_RCLK_384FS		(2 << 4)
+#define MOD_RCLK_768FS		(3 << 4)
+#define MOD_RCLK_MASK		(3 << 4)
+#define MOD_BCLK_32FS		(0 << 0)
+#define MOD_BCLK_48FS		(1 << 0)
+#define MOD_BCLK_16FS		(2 << 0)
+#define MOD_BCLK_24FS		(3 << 0)
+#define MOD_BCLK_MASK		(0xf << 0)
+#endif
 #define MOD_CDCLKCON		(1 << 12)
 
 #define FIC_TXFLUSH		(1 << 15)
