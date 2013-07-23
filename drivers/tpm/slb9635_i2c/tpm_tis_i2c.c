@@ -40,6 +40,7 @@
 #include <fdtdec.h>
 #include <i2c.h>
 #include <linux/types.h>
+#include <asm/arch/gpio.h>
 
 #include "compatibility.h"
 #include "tpm.h"
@@ -88,6 +89,7 @@ struct tpm_inf_dev {
 	uint addr;
 	u8 buf[TPM_BUFSIZE + sizeof(u8)];	/* max. buffer size + addr */
 	enum i2c_chip_type chip_type;
+	int node_offset;
 };
 
 static struct tpm_inf_dev tpm_dev = {
@@ -539,13 +541,42 @@ static enum i2c_chip_type tpm_vendor_chip_type(void)
 #ifdef CONFIG_OF_CONTROL
 	const void *blob = gd->fdt_blob;
 
-	if (fdtdec_next_compatible(blob, 0, COMPAT_INFINEON_SLB9645_TPM) >= 0)
+	tpm_dev.node_offset = fdtdec_next_compatible
+		(blob, 0, COMPAT_INFINEON_SLB9645_TPM);
+	if (tpm_dev.node_offset >= 0)
 		return SLB9645;
 
-	if (fdtdec_next_compatible(blob, 0, COMPAT_INFINEON_SLB9635_TPM) >= 0)
+	tpm_dev.node_offset = fdtdec_next_compatible
+		(blob, 0, COMPAT_INFINEON_SLB9635_TPM);
+	if (tpm_dev.node_offset >= 0)
 		return SLB9635;
 #endif
 	return UNKNOWN;
+}
+
+/*
+ * Find the IRQ gpio in the device tree, and if present - configure it to be a
+ * pulled up input
+ */
+static void tpm_configure_irq_gpio(void)
+{
+	struct fdt_gpio_state tpm_irq_gpio;
+
+	if (tpm_dev.node_offset <= 0)
+		return;
+
+	if (fdtdec_decode_gpio(gd->fdt_blob,
+			       tpm_dev.node_offset,
+			       "tpm-irq",
+			       &tpm_irq_gpio)) {
+		dev_err(0, "TPM irq gpio not defined\n");
+		return;
+	}
+
+	fdtdec_gpio_direction_input(&tpm_irq_gpio);
+#ifdef CONFIG_EXYNOS5
+	gpio_set_pull(tpm_irq_gpio.gpio, S5P_GPIO_PULL_UP);
+#endif
 }
 
 /* initialisation of i2c tpm */
@@ -604,6 +635,8 @@ int tpm_vendor_init(uint32_t dev_addr)
 		rc = -ENODEV;
 		goto out_release;
 	}
+
+	tpm_configure_irq_gpio();
 
 	dev_info(dev, "1.2 TPM (chip type %s device-id 0x%X)\n",
 		 chip_name[tpm_dev.chip_type], vendor >> 16);
