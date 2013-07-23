@@ -141,12 +141,6 @@
 #define STDIN_KBD_USB ""
 #endif
 
-#ifdef CONFIG_CROS_EC
-#define STDIN_KBD_CROS ",cros-ec-keyb"
-#else
-#define STDIN_KBD_CROS ""
-#endif
-
 #ifdef CONFIG_VIDEO_TEGRA
 #define STDOUT_LCD ",lcd"
 #else
@@ -154,7 +148,7 @@
 #endif
 
 #define TEGRA_DEVICE_SETTINGS \
-	"stdin=serial" STDIN_KBD_KBC STDIN_KBD_USB STDIN_KBD_CROS "\0" \
+	"stdin=serial" STDIN_KBD_KBC STDIN_KBD_USB "\0" \
 	"stdout=serial" STDOUT_LCD "\0" \
 	"stderr=serial" STDOUT_LCD "\0" \
 	""

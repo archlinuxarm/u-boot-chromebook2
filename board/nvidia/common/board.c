@@ -56,7 +56,6 @@
 #endif
 #include <i2c.h>
 #include <spi.h>
-#include <cros_ec.h>
 #include "emc.h"
 
 DECLARE_GLOBAL_DATA_PTR;
@@ -226,20 +225,6 @@ int board_late_init(void)
 	/* Make sure we finish initing the LCD */
 	tegra_lcd_check_next_stage(gd->fdt_blob, 1);
 #endif
-	stdio_print_current_devices();
-
-#ifdef CONFIG_CROS_EC
-	if (cros_ec_get_error()) {
-		/* Force console on */
-		gd->flags &= ~GD_FLG_SILENT;
-
-		printf("cros-ec communications failure %d\n",
-		       cros_ec_get_error());
-		puts("\nPlease reset with Power+Refresh\n\n");
-		panic("Cannot init cros-ec device");
-		return -1;
-	}
-#endif
 	return 0;
 }
 
@@ -297,15 +282,4 @@ __weak int ft_board_setup(void *blob, bd_t *bd)
 {
 	/* TODO: add board specific supporting code */
 	return -1;
-}
-
-int arch_early_init_r(void)
-{
-#ifdef CONFIG_CROS_EC
-	if (cros_ec_board_init()) {
-		printf("%s: Failed to init EC\n", __func__);
-		return 0;
-	}
-#endif
-	return 0;
 }
