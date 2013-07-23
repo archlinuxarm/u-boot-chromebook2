@@ -95,7 +95,7 @@ void fthread_mctx_switch(struct fthread_mctx *octx,
 	ARM("ldmia	ip!, {r4 - sl, fp, sp, lr}\n")
 	THUMB("ldmia	ip!, {r4 - sl, fp}\n")
 	THUMB("ldr	sp, [ip], #4\n")
-	THUMB("ldr	pc, [ip]\n")
+	THUMB("ldr	lr, [ip]\n")
 	: /* no outputs */
 	: "i" (MCTX_UREG_OFFSET) /* offset to register array */
 	: "ip"); /* intra-procedure scratch register is clobbered */
