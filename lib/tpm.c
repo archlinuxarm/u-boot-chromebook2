@@ -254,7 +254,7 @@ uint32_t tpm_init(void)
 
 uint32_t tpm_startup(enum tpm_startup_type mode)
 {
-	const uint8_t command[12] = {
+	static const uint8_t command[12] = {
 		0x0, 0xc1, 0x0, 0x0, 0x0, 0xc, 0x0, 0x0, 0x0, 0x99, 0x0, 0x0,
 	};
 	const size_t mode_offset = 10;
@@ -270,7 +270,7 @@ uint32_t tpm_startup(enum tpm_startup_type mode)
 
 uint32_t tpm_self_test_full(void)
 {
-	const uint8_t command[10] = {
+	static const uint8_t command[10] = {
 		0x0, 0xc1, 0x0, 0x0, 0x0, 0xa, 0x0, 0x0, 0x0, 0x50,
 	};
 	return tpm_sendrecv_command(command, NULL, NULL);
@@ -278,7 +278,7 @@ uint32_t tpm_self_test_full(void)
 
 uint32_t tpm_continue_self_test(void)
 {
-	const uint8_t command[10] = {
+	static const uint8_t command[10] = {
 		0x0, 0xc1, 0x0, 0x0, 0x0, 0xa, 0x0, 0x0, 0x0, 0x53,
 	};
 	return tpm_sendrecv_command(command, NULL, NULL);
@@ -286,7 +286,7 @@ uint32_t tpm_continue_self_test(void)
 
 uint32_t tpm_nv_define_space(uint32_t index, uint32_t perm, uint32_t size)
 {
-	const uint8_t command[101] = {
+	static const uint8_t command[101] = {
 		0x0, 0xc1,		/* TPM_TAG */
 		0x0, 0x0, 0x0, 0x65,	/* parameter size */
 		0x0, 0x0, 0x0, 0xcc,	/* TPM_COMMAND_CODE */
@@ -329,7 +329,7 @@ uint32_t tpm_nv_define_space(uint32_t index, uint32_t perm, uint32_t size)
 
 uint32_t tpm_nv_read_value(uint32_t index, void *data, uint32_t count)
 {
-	const uint8_t command[22] = {
+	static const uint8_t command[22] = {
 		0x0, 0xc1, 0x0, 0x0, 0x0, 0x16, 0x0, 0x0, 0x0, 0xcf,
 	};
 	const size_t index_offset = 10;
@@ -363,7 +363,7 @@ uint32_t tpm_nv_read_value(uint32_t index, void *data, uint32_t count)
 
 uint32_t tpm_nv_write_value(uint32_t index, const void *data, uint32_t length)
 {
-	const uint8_t command[256] = {
+	static const uint8_t command[256] = {
 		0x0, 0xc1, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0xcd,
 	};
 	const size_t command_size_offset = 2;
@@ -393,7 +393,7 @@ uint32_t tpm_nv_write_value(uint32_t index, const void *data, uint32_t length)
 
 uint32_t tpm_extend(uint32_t index, const void *in_digest, void *out_digest)
 {
-	const uint8_t command[34] = {
+	static const uint8_t command[34] = {
 		0x0, 0xc1, 0x0, 0x0, 0x0, 0x22, 0x0, 0x0, 0x0, 0x14,
 	};
 	const size_t index_offset = 10;
@@ -424,7 +424,7 @@ uint32_t tpm_extend(uint32_t index, const void *in_digest, void *out_digest)
 
 uint32_t tpm_pcr_read(uint32_t index, void *data, size_t count)
 {
-	const uint8_t command[14] = {
+	static const uint8_t command[14] = {
 		0x0, 0xc1, 0x0, 0x0, 0x0, 0xe, 0x0, 0x0, 0x0, 0x15,
 	};
 	const size_t index_offset = 10;
@@ -452,7 +452,7 @@ uint32_t tpm_pcr_read(uint32_t index, void *data, size_t count)
 
 uint32_t tpm_tsc_physical_presence(uint16_t presence)
 {
-	const uint8_t command[12] = {
+	static const uint8_t command[12] = {
 		0x0, 0xc1, 0x0, 0x0, 0x0, 0xc, 0x40, 0x0, 0x0, 0xa, 0x0, 0x0,
 	};
 	const size_t presence_offset = 10;
@@ -468,7 +468,7 @@ uint32_t tpm_tsc_physical_presence(uint16_t presence)
 
 uint32_t tpm_read_pubek(void *data, size_t count)
 {
-	const uint8_t command[30] = {
+	static const uint8_t command[30] = {
 		0x0, 0xc1, 0x0, 0x0, 0x0, 0x1e, 0x0, 0x0, 0x0, 0x7c,
 	};
 	const size_t response_size_offset = 2;
@@ -499,7 +499,7 @@ uint32_t tpm_read_pubek(void *data, size_t count)
 
 uint32_t tpm_force_clear(void)
 {
-	const uint8_t command[10] = {
+	static const uint8_t command[10] = {
 		0x0, 0xc1, 0x0, 0x0, 0x0, 0xa, 0x0, 0x0, 0x0, 0x5d,
 	};
 
@@ -508,7 +508,7 @@ uint32_t tpm_force_clear(void)
 
 uint32_t tpm_physical_enable(void)
 {
-	const uint8_t command[10] = {
+	static const uint8_t command[10] = {
 		0x0, 0xc1, 0x0, 0x0, 0x0, 0xa, 0x0, 0x0, 0x0, 0x6f,
 	};
 
@@ -517,7 +517,7 @@ uint32_t tpm_physical_enable(void)
 
 uint32_t tpm_physical_disable(void)
 {
-	const uint8_t command[10] = {
+	static const uint8_t command[10] = {
 		0x0, 0xc1, 0x0, 0x0, 0x0, 0xa, 0x0, 0x0, 0x0, 0x70,
 	};
 
@@ -526,7 +526,7 @@ uint32_t tpm_physical_disable(void)
 
 uint32_t tpm_physical_set_deactivated(uint8_t state)
 {
-	const uint8_t command[11] = {
+	static const uint8_t command[11] = {
 		0x0, 0xc1, 0x0, 0x0, 0x0, 0xb, 0x0, 0x0, 0x0, 0x72,
 	};
 	const size_t state_offset = 10;
@@ -543,7 +543,7 @@ uint32_t tpm_physical_set_deactivated(uint8_t state)
 uint32_t tpm_get_capability(uint32_t cap_area, uint32_t sub_cap,
 		void *cap, size_t count)
 {
-	const uint8_t command[22] = {
+	static const uint8_t command[22] = {
 		0x0, 0xc1,		/* TPM_TAG */
 		0x0, 0x0, 0x0, 0x16,	/* parameter size */
 		0x0, 0x0, 0x0, 0x65,	/* TPM_COMMAND_CODE */
