@@ -56,17 +56,17 @@ int fthread_init(void)
 	fthread_scheduler_init();
 
 	/* spawn the scheduler thread */
-	err = fthread_spawn(fthread_scheduler, NULL, FTHREAD_PRIO_MAX,
-			    "**SCHEDULER**", FTHREAD_DEFAULT_STACKSIZE,
-			    &fthread_sched);
+	err = fthread_spawn(fthread_scheduler, NULL, NULL, NULL, NULL,
+			    FTHREAD_PRIO_MAX, "**SCHEDULER**",
+			    FTHREAD_DEFAULT_STACKSIZE, &fthread_sched);
 	if (err) {
 		fthread_scheduler_kill();
 		return err;
 	}
 
 	/* spawn the main thread, which should have a stack size of 0 */
-	err = fthread_spawn(FTHREAD_MAIN_FUNC, NULL, FTHREAD_PRIO_STD,
-			    "**main**", 0, &fthread_main);
+	err = fthread_spawn(FTHREAD_MAIN_FUNC, NULL, NULL, NULL, NULL,
+			    FTHREAD_PRIO_STD, "**main**", 0, &fthread_main);
 	if (err) {
 		fthread_scheduler_kill();
 		return err;
@@ -242,8 +242,9 @@ static void fthread_spawn_helper(void)
 	fthread_exit(data);
 }
 
-int fthread_spawn(void *(*func)(void *), void *arg, int prio, const char *name,
-		  size_t stacksize, struct fthread **threadp)
+int fthread_spawn(void *(*func)(void *), void *arg, void (*pre_start)(void *),
+		  void (*post_stop)(void *), void *context, int prio,
+		  const char *name, size_t stacksize, struct fthread **threadp)
 {
 	unsigned long time;
 	char *sk_addr_hi;
@@ -273,6 +274,11 @@ int fthread_spawn(void *(*func)(void *), void *arg, int prio, const char *name,
 	t->err_us = 0;
 	t->maxerr_us = 0;
 	t->num_sleeps = 0;
+
+	/* initialize global state preserving functions */
+	t->pre_start = pre_start;
+	t->post_stop = post_stop;
+	t->context = context;
 
 	/* initialize starting and ending values */
 	t->start_func = func;

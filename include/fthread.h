@@ -75,7 +75,18 @@ int fthread_report(void);
  * run and directly pass @a arg as a parameter to it.
  *
  * @func:	Function called by the newly spawned thread
- * @arg:	Parameter that is directly passed to func when it is called
+ * @arg:	Parameter that is directly passed to func() when it is called
+ * @pre_start:	Function that will be called every time before the thread is
+ *		scheduled to run.  This function should take care of properly
+ *		preserving and restoring any relevant global state variables
+ *		that may have changed while the thread was sleeping.
+ * @post_stop:	Function that will be called every time after this thread
+ *		returns control to the scheduler.  It should properly preserve
+ *		and restore any global state variables that may have been
+ *		changed by the thread.
+ * @context:	Argument that is passed to both pre_start() and post_stop().
+ *		This will typically be a struct that holds information on any
+ *		global state variables that might be modified by the thread.
  * @prio:	Base priority of the newly spawned thread.  Must be between
  *		@a FTHREAD_PRIO_MIN and @a FTHREAD_PRIO_MAX
  * @name:	Name of the newly spawned thread
@@ -83,8 +94,9 @@ int fthread_report(void);
  * @threadp:	Pointer to the location where the spawned thread will be stored
  * @return 0 if successful
  */
-int fthread_spawn(void *(*func)(void *), void *arg, int prio, const char *name,
-		  size_t stacksize, struct fthread **threadp);
+int fthread_spawn(void *(*func)(void *), void *arg, void (*pre_start)(void *),
+		  void (*post_stop)(void *), void *context, int prio,
+		  const char *name, size_t stacksize, struct fthread **threadp);
 
 /**
  * fthread_yield() - Explicitly yield control back to the scheduler.

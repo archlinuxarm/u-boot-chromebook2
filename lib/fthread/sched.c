@@ -172,6 +172,10 @@ void *fthread_scheduler(void *unused)
 		/* Update thread state */
 		fthread_current->state = FTHREAD_STATE_RUNNING;
 
+		/* Restore U-Boot global state */
+		if (fthread_current->pre_start)
+			fthread_current->pre_start(fthread_current->context);
+
 		/* Update scheduler times */
 		fthread_sched->lastran_us = fthread_get_current_time_us();
 		fthread_sched->running_us += (fthread_sched->lastran_us -
@@ -192,6 +196,10 @@ void *fthread_scheduler(void *unused)
 		debug("%s: thread \"%s\" running for %lu microseconds\n",
 		      __func__, fthread_current->name,
 		      fthread_current->running_us);
+
+		/* Preserve U-Boot global state */
+		if (fthread_current->post_stop)
+			fthread_current->post_stop(fthread_current->context);
 
 		/* If terminated, move to dead queue */
 		if (fthread_current->state == FTHREAD_STATE_DEAD) {

@@ -83,6 +83,17 @@ struct fthread_mctx;
  * @maxerr_s:	Biggest single difference in requested and actual sleep time (in
  *		microseconds)
  * @num_sleeps:	Number of times this thread called fthread_usleep()
+ * @pre_start:	Function that will be called every time before this thread is
+ *		scheduled to run.  This function should take care of properly
+ *		preserving and restoring any relevant global state variables
+ *		that may have changed while this thread was sleeping.
+ * @post_stop:	Function that will be called every time after this thread
+ *		returns control to the scheduler.  It should properly preserve
+ *		and restore any global state variables that may have been
+ *		changed by this thread
+ * @context:	Argument that is passed to both pre_start() and post_stop().  It
+ *		will typically be a struct that holds information on any global
+ *		state variables that might be modified by this thread
  * @waitevent:	The type of the event this thread is waiting for, if any
  * @ev_time_us:	Number of microseconds that this thread is sleeping for
  * @ev_tid:	Thread whose termination this thread is waiting for
@@ -116,6 +127,11 @@ struct fthread {
 	unsigned long		maxerr_us;
 	unsigned long		num_sleeps;
 
+	/* global U-Boot state preservation */
+	void			(*pre_start)(void *context);
+	void			(*post_stop)(void *context);
+	void			*context;
+
 	/* event handling */
 	enum fthread_event	waitevent;
 	unsigned long		ev_time;
@@ -126,7 +142,7 @@ struct fthread {
 	struct fthread_mctx	*mctx;
 	char			*stack;
 	size_t			stacksize;
-	void			*(*start_func)(void *);
+	void			*(*start_func)(void *start_arg);
 	void			*start_arg;
 	void			*join_arg;
 };
