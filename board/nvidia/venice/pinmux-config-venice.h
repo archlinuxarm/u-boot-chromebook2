@@ -226,8 +226,8 @@ static struct pingroup_config tegra114_pinmux_common[] = {
 	DEFAULT_PINMUX(KB_ROW7,       RSVD1,       UP,        NORMAL,   INPUT),
 
 	/* UARTA pinmux (BR_UART_TXD/RXD on Servo board) */
-	DEFAULT_PINMUX(KB_ROW9,       UARTA,       NORMAL,    NORMAL,   OUTPUT),
-	DEFAULT_PINMUX(KB_ROW10,      UARTA,       NORMAL,    TRISTATE, INPUT),
+	DEFAULT_PINMUX(KB_ROW9,       UARTA,       UP,        NORMAL,   OUTPUT),
+	DEFAULT_PINMUX(KB_ROW10,      UARTA,       UP,        TRISTATE, INPUT),
 
 	/* I2CPWR pinmux (I2C5) */
 	I2C_PINMUX(PWR_I2C_SCL, I2CPWR, NORMAL, NORMAL, INPUT, DEFAULT, DISABLE),
