@@ -218,7 +218,7 @@
 			wipe-value = [00];
 		};
 
-		/* ---- Section: Rewritable VPD 4 KB ---- */
+		/* ---- Section: Rewritable VPD 8 KB ---- */
 		rw-vpd {
 			label = "rw-vpd";
 			/* Alignment: 4k (for updating) */
