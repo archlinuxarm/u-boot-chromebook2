@@ -23,6 +23,7 @@
 #include <common.h>
 #include <malloc.h>
 #include <linux/err.h>
+#include <asm/arch/board.h>
 #include <asm/arch/clk.h>
 #include <asm/arch/cpu.h>
 #include <asm/arch/dp_info.h>
@@ -242,10 +243,18 @@ static unsigned int exynos_dp_handle_edid(struct edp_device_info *edp_info)
 		return -EINVAL;
 	}
 
-	ret = exynos_dp_read_edid();
-	if (ret != EXYNOS_DP_SUCCESS) {
-		printf("DP exynos_dp_read_edid() failed\n");
-		return -EINVAL;
+	/*
+	 * Do not read the EDID on rev4 peach-pit boards
+	 * See crosbug.com/p/21128 for more details
+	 */
+	if (board_get_revision() != 12) {
+		ret = exynos_dp_read_edid();
+		if (ret != EXYNOS_DP_SUCCESS) {
+			printf("DP exynos_dp_read_edid() failed\n");
+			return -EINVAL;
+		}
+	} else {
+		printf("exynos_dp_read_edid() not called for rev4\n");
 	}
 
 	return ret;
