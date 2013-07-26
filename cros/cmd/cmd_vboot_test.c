@@ -234,7 +234,6 @@ static void show_firmware_entry(const char *name,
 static int do_vboot_fmap(cmd_tbl_t *cmdtp, int flag,
 		int argc, char * const argv[])
 {
-	enum cros_firmware_type type;
 	struct twostop_fmap fmap;
 
 	/* TODO(sjg@chromium.org): Best to automate thist test with sandbox */
@@ -253,12 +252,6 @@ static int do_vboot_fmap(cmd_tbl_t *cmdtp, int flag,
 
 	show_firmware_entry("rw-a", &fmap.readwrite_a);
 	show_firmware_entry("rw-b", &fmap.readwrite_b);
-
-	if (cros_fdtdec_firmware_type(gd->fdt_blob, &type)) {
-		VbExDebug("Failed to get firmware-type from fdt\n");
-		return 1;
-	}
-	printf("\nFirmware type: %d\n", type);
 
 	return 0;
 }

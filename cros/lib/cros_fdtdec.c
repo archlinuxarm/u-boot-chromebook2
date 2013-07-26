@@ -392,32 +392,3 @@ int cros_fdtdec_chrome_ec(const void *blob, struct fdt_chrome_ec *config)
 
 	return 0;
 }
-
-int cros_fdtdec_firmware_type(const void *blob,
-			      enum cros_firmware_type *typep)
-{
-	const char *prop;
-	int node;
-
-	node = cros_fdtdec_config_node(blob);
-	if (node < 0)
-		return -1;
-	prop = fdt_getprop(blob, node, "firmware-type", NULL);
-	if (!prop) {
-		VBDEBUG("Failed to find firmware-type in fdt'\n");
-		return -1;
-	}
-
-	if (!strcmp(prop, "ro"))
-		*typep = CROS_FIRMWARE_RO;
-	else if (!strcmp(prop, "rw-a"))
-		*typep = CROS_FIRMWARE_RW_A;
-	else if (!strcmp(prop, "rw-b"))
-		*typep = CROS_FIRMWARE_RW_B;
-	else {
-		VBDEBUG("Invalid firmware-type '%s' in fdt'\n", prop);
-		return -1;
-	}
-
-	return 0;
-}

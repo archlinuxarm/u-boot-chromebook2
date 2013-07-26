@@ -78,7 +78,7 @@
 			 * each RW_SECTION.
 			 */
 			reg = <0x00200000 0x00010000>;
-			type = "keyblock boot,dtb-rwa";
+			type = "keyblock boot,dtb";
 			keyblock = "firmware.keyblock";
 			signprivate = "firmware_data_key.vbprivk";
 			version = <1>;
@@ -90,7 +90,7 @@
 			/* Alignment: no requirement (yet). */
 			label = "fw-main-a";
 			reg = <0x00210000 0x000c0000>;
-			type = "blob boot,dtb-rwa";
+			type = "blob boot,dtb";
 			compress = "lzo";
 		};
 		rw-a-ec {
@@ -120,7 +120,7 @@
 			 * each RW_SECTION.
 			 */
 			reg = <0x002f0000 0x00010000>;
-			type = "keyblock boot,dtb-rwb";
+			type = "keyblock boot,dtb";
 			keyblock = "firmware.keyblock";
 			signprivate = "firmware_data_key.vbprivk";
 			version = <1>;
@@ -132,7 +132,7 @@
 			label = "fw-main-b";
 			/* Alignment: no requirement (yet). */
 			reg = <0x00300000 0x000c0000>;
-			type = "blob boot,dtb-rwb";
+			type = "blob boot,dtb";
 			compress = "lzo";
 		};
 		rw-b-ec {
