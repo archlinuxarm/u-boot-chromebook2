@@ -498,5 +498,6 @@ int arch_early_init_r(void)
 
 void board_lcd_panel_on(vidinfo_t *vid)
 {
-	exynos_lcd_panel_on(vid);
+	if (board_is_processor_reset())
+		exynos_lcd_panel_on(vid);
 }
