@@ -25,12 +25,14 @@
 #include <errno.h>
 #include <fdtdec.h>
 #include <i2c.h>
+#include <lcd.h>
 #include <spi.h>
 #include <tmu.h>
 #include <asm/io.h>
 #include <asm/arch/board.h>
 #include <asm/arch/cpu.h>
 #include <asm/arch/dwmmc.h>
+#include <asm/arch/fb.h>
 #include <asm/arch/gpio.h>
 #include <asm/arch/pinmux.h>
 #include <asm/arch/power.h>
@@ -492,4 +494,9 @@ int arch_early_init_r(void)
 		puts("** Watchdog reset\n");
 
 	return 0;
+}
+
+void board_lcd_panel_on(vidinfo_t *vid)
+{
+	exynos_lcd_panel_on(vid);
 }

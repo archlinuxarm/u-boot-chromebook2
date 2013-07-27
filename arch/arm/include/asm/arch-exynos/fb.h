@@ -168,6 +168,9 @@ static inline unsigned int exynos_fimd_get_base_offset(void)
 		return EXYNOS4_LCD_IF_BASE_OFFSET;
 }
 
+/* LCD initialization */
+void exynos_lcd_panel_on(vidinfo_t *vid);
+
 /*
  *  Register offsets
 */

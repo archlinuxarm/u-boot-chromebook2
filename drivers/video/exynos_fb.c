@@ -151,7 +151,7 @@ void __exynos_backlight_reset(void)
 void exynos_backlight_reset(void)
 	__attribute__((weak, alias("__exynos_backlight_reset")));
 
-static void lcd_panel_on(vidinfo_t *vid)
+void exynos_lcd_panel_on(vidinfo_t *vid)
 {
 	udelay(vid->init_delay);
 
@@ -350,7 +350,7 @@ void lcd_enable(void)
 #endif
 	}
 
-	lcd_panel_on(&panel_info);
+	board_lcd_panel_on(&panel_info);
 }
 
 /* dummy function */
