@@ -1483,6 +1483,35 @@ int fdt_add_subnode_namelen(void *fdt, int parentoffset,
 int fdt_add_subnode(void *fdt, int parentoffset, const char *name);
 
 /**
+ * fdt_ensure_subnode - find or add a new node
+ * @fdt: pointer to the device tree blob
+ * @parentoffset: structure block offset of a node
+ * @name: name of the subnode to locate or add
+ *
+ * fdt_ensure_subnode() creates a new node as a subnode of the node at
+ * structure block offset parentoffset, with the given name (which
+ * should include the unit address, if any). If the node already exists
+ * then it is found.
+ *
+ * This function may insert data into the blob, and may therefore
+ * change the offsets of some existing nodes.
+
+ * returns:
+ *	structure block offset of the created/found subnode (>=0), on success
+ *	-FDT_ERR_BADOFFSET, if parentoffset did not point to an FDT_BEGIN_NODE
+ *		tag
+ *	-FDT_ERR_NOSPACE, if there is insufficient free space in the
+ *		blob to contain the new node
+ *	-FDT_ERR_BADLAYOUT
+ *      -FDT_ERR_BADMAGIC,
+ *	-FDT_ERR_BADVERSION,
+ *	-FDT_ERR_BADSTATE,
+ *	-FDT_ERR_BADSTRUCTURE,
+ *	-FDT_ERR_TRUNCATED, standard meanings.
+ */
+int fdt_ensure_subnode(void *fdt, int parentoffset, const char *name);
+
+/**
  * fdt_del_node - delete a node (subtree)
  * @fdt: pointer to the device tree blob
  * @nodeoffset: offset of the node to nop

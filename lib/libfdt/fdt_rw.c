@@ -381,6 +381,17 @@ int fdt_add_subnode(void *fdt, int parentoffset, const char *name)
 	return fdt_add_subnode_namelen(fdt, parentoffset, name, strlen(name));
 }
 
+int fdt_ensure_subnode(void *fdt, int parentoffset, const char *name)
+{
+	int err;
+
+	err = fdt_add_subnode(fdt, parentoffset, name);
+	if (err == -FDT_ERR_EXISTS)
+		return fdt_subnode_offset(fdt, parentoffset, name);
+
+	return err;
+}
+
 int fdt_del_node(void *fdt, int nodeoffset)
 {
 	int endoffset;

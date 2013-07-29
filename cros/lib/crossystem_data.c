@@ -135,17 +135,6 @@ int crossystem_data_set_main_firmware(crossystem_data_t *cdata,
 }
 
 #ifdef CONFIG_OF_LIBFDT
-static int fdt_ensure_subnode(void *fdt, int parentoffset, const char *name)
-{
-	int err;
-
-	err = fdt_add_subnode(fdt, parentoffset, name);
-	if (err == -FDT_ERR_EXISTS)
-		return fdt_subnode_offset(fdt, parentoffset, name);
-
-	return err;
-}
-
 static int process_cdata(crossystem_data_t *cdata, void *fdt)
 {
 	const char *ddr_type;
