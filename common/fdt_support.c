@@ -211,38 +211,31 @@ int fdt_initrd(void *fdt, ulong initrd_start, ulong initrd_end, int force)
 	return 0;
 }
 
+int fdt_ensure_chosen(void *fdt)
+{
+	int nodeoffset;
+
+	/* Find or create the /chosen node */
+	nodeoffset = fdt_ensure_subnode(fdt, 0, "/chosen");
+	if (nodeoffset < 0) {
+		printf("WARNING: could not create /chosen %s.\n",
+		       fdt_strerror(nodeoffset));
+		return nodeoffset;
+	}
+
+	return nodeoffset;
+}
+
 int fdt_chosen(void *fdt, int force)
 {
 	int   nodeoffset;
-	int   err;
+	int   err = 0;
 	char  *str;		/* used to set string properties */
 	const char *path;
 
-	err = fdt_check_header(fdt);
-	if (err < 0) {
-		printf("fdt_chosen: %s\n", fdt_strerror(err));
-		return err;
-	}
-
-	/*
-	 * Find the "chosen" node.
-	 */
-	nodeoffset = fdt_path_offset (fdt, "/chosen");
-
-	/*
-	 * If there is no "chosen" node in the blob, create it.
-	 */
-	if (nodeoffset < 0) {
-		/*
-		 * Create a new node "/chosen" (offset 0 is root level)
-		 */
-		nodeoffset = fdt_add_subnode(fdt, 0, "chosen");
-		if (nodeoffset < 0) {
-			printf("WARNING: could not create /chosen %s.\n",
-				fdt_strerror(nodeoffset));
-			return nodeoffset;
-		}
-	}
+	nodeoffset = fdt_ensure_chosen(fdt);
+	if (nodeoffset < 0)
+		return nodeoffset;
 
 	/*
 	 * Create /chosen properites that don't exist in the fdt.

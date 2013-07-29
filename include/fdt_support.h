@@ -30,6 +30,16 @@
 
 u32 fdt_getprop_u32_default(const void *fdt, const char *path,
 				const char *prop, const u32 dflt);
+
+/**
+ * fdt_ensure_chosen() - Find or create the /chosen node
+ *
+ * @fdt: Device tree blob to check/update
+ * @return offset of /chosen node if found or created, or -FDT_ERR_...
+ * on error
+ */
+int fdt_ensure_chosen(void *fdt);
+
 int fdt_chosen(void *fdt, int force);
 int fdt_initrd(void *fdt, ulong initrd_start, ulong initrd_end, int force);
 void do_fixup_by_path(void *fdt, const char *path, const char *prop,
