@@ -11,6 +11,8 @@
 #ifndef _MAX98095_H
 #define _MAX98095_H
 
+#include "maxim_codec.h"
+
 /*
  * MAX98095 Registers Definition
  */
@@ -305,7 +307,11 @@
  *
  * @returns -1 for error and 0 Success.
  */
-int max98095_init(const void *blob, int sampling_rate, int mclk_freq,
-			int bits_per_sample);
+int max98095_hw_params(struct maxim_codec_priv *max98095,
+		unsigned int rate, unsigned int bits_per_sample);
+int max98095_set_sysclk(struct maxim_codec_priv *max98095,
+				unsigned int freq);
+int max98095_set_fmt(struct maxim_codec_priv *max98095, int fmt);
+int max98095_device_init(struct maxim_codec_priv *max98095);
 
 #endif

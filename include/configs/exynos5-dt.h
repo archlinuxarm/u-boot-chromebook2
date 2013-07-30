@@ -359,8 +359,11 @@
 #ifdef CONFIG_CMD_SOUND
 #define CONFIG_SOUND
 #define CONFIG_I2S
-#define CONFIG_SOUND_MAX98095
 #define CONFIG_SOUND_WM8994
+#define CONFIG_SOUND_MAXIM_CODEC
+#ifdef CONFIG_SOUND_MAXIM_CODEC
+#define CONFIG_SOUND_MAX98095
+#endif
 #endif
 
 /* Enable devicetree support */
