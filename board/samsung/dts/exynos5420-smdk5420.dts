@@ -82,4 +82,15 @@
 	dmc {
 		mem-type = "lpddr3";
 	};
+
+	sound@3830000 {
+		samsung,codec-type = "wm8994";
+	};
+
+	i2c@12c70000 {
+		soundcodec@1a {
+			reg = <0x1a>;
+			compatible = "wolfson,wm8994-codec";
+		};
+	};
 };

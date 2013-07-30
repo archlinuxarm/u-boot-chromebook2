@@ -68,6 +68,10 @@
 			compatible = "parade,ps8625";
 			reg = <0x48>;
 		};
+	       soundcodec@20 {
+	              reg = <0x20>;
+	              compatible = "maxim,max98090-codec";
+	       };
 	};
 
 	i2c@12e10000 { /* i2c9 */
@@ -230,4 +234,8 @@
 	xhci@12400000 {
 		samsung,vbus-gpio = <&gpio 0x41 0>; /* H01 */
 	};
+
+        sound@3830000 {
+                samsung,codec-type = "max98090";
+        };
 };
