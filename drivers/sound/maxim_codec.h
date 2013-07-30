@@ -14,6 +14,7 @@
 
 enum maxim_codec_type {
 	MAX98095,
+	MAX98090,
 };
 
 struct maxim_codec_priv {

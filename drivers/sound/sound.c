@@ -32,6 +32,7 @@
 #include <asm/arch/sound.h>
 #include "wm8994.h"
 #include "max98095.h"
+#include "max98090.h"
 #include "maxim_codec.h"
 
 /* defines */
@@ -151,7 +152,8 @@ static int codec_init(const void *blob, struct i2stx_info *pi2s_tx)
 			pi2s_tx->samplingrate,
 			(pi2s_tx->samplingrate * (pi2s_tx->rfs)),
 			pi2s_tx->bitspersample, pi2s_tx->channels);
-	} else if (!strcmp(codectype, "max98095")) {
+	} else if ((!strcmp(codectype, "max98095")) ||
+		   (!strcmp(codectype, "max98090"))) {
 		ret = maxim_codec_init(blob, codectype, pi2s_tx->samplingrate,
 				(pi2s_tx->samplingrate * (pi2s_tx->rfs)),
 				pi2s_tx->bitspersample);
@@ -247,7 +249,7 @@ int sound_play(uint32_t msec, uint32_t frequency)
 	}
 
 	sound_prepare_buffer((unsigned short *)data,
-				data_size / sizeof(unsigned short), frequency);
+			     data_size / sizeof(unsigned short), frequency);
 
 	while (msec >= 1000) {
 		ret = i2s_transfer_tx_data(&g_i2stx_pri, data,

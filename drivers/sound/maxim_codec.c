@@ -20,6 +20,7 @@
 #include "i2s.h"
 #include "maxim_codec.h"
 #include "max98095.h"
+#include "max98090.h"
 
 struct sound_codec_info g_codec_info;
 struct maxim_codec_priv g_maxim_codec_info;
@@ -105,6 +106,9 @@ static int maxim_codec_do_init(struct sound_codec_info *pcodec_info,
 	if (pcodec_info->codec_type == CODEC_MAX_98095) {
 		g_maxim_codec_info.devtype = MAX98095;
 		ret = max98095_device_init(&g_maxim_codec_info);
+	} else if (pcodec_info->codec_type == CODEC_MAX_98090) {
+		g_maxim_codec_info.devtype = MAX98090;
+		ret = max98090_device_init(&g_maxim_codec_info);
 	} else {
 		printf("%s: Codec id [%d] not defined\n", __func__,
 		       pcodec_info->codec_type);
@@ -131,6 +135,21 @@ static int maxim_codec_do_init(struct sound_codec_info *pcodec_info,
 						SND_SOC_DAIFMT_NB_NF |
 						SND_SOC_DAIFMT_CBS_CFS);
 		}
+	} else if (pcodec_info->codec_type == CODEC_MAX_98090) {
+		ret = max98090_set_sysclk(&g_maxim_codec_info, mclk_freq);
+		if (ret < 0) {
+			debug("%s: max98090 codec set sys clock failed\n",
+			      __func__);
+			return ret;
+		}
+		ret = max98090_hw_params(&g_maxim_codec_info, sampling_rate,
+				bits_per_sample);
+		if (ret == 0) {
+			ret = max98090_set_fmt(&g_maxim_codec_info,
+						SND_SOC_DAIFMT_I2S |
+						SND_SOC_DAIFMT_NB_NF |
+						SND_SOC_DAIFMT_CBS_CFS);
+		}
 	}
 
 	return ret;
@@ -150,7 +169,14 @@ static int get_maxim_codec_values(struct sound_codec_info *pcodec_info,
 	if (node <= 0) {
 		debug("EXYNOS_SOUND: No node for codec COMPAT_MAXIM_98095_CODEC in device tree\n");
 		debug("node = %d\n", node);
-		return -1;
+
+		node = fdtdec_next_compatible(blob, 0,
+					      COMPAT_MAXIM_98090_CODEC);
+		if (node <= 0) {
+			debug("EXYNOS_SOUND: No node for codec COMPAT_MAXIM_98090_CODEC in device tree\n");
+			debug("node = %d\n", node);
+			return -1;
+		}
 	}
 
 	parent = fdt_parent_offset(blob, node);
@@ -183,6 +209,8 @@ static int get_maxim_codec_values(struct sound_codec_info *pcodec_info,
 #endif
 	if (!strcmp(codectype, "max98095"))
 		pcodec_info->codec_type = CODEC_MAX_98095;
+	else if (!strcmp(codectype, "max98090"))
+		pcodec_info->codec_type = CODEC_MAX_98090;
 
 	if (error == -1) {
 		debug("fail to get max98095 codec node properties\n");

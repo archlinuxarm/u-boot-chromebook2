@@ -29,6 +29,7 @@ enum en_sound_codec {
 	CODEC_WM_8994,
 	CODEC_WM_8995,
 	CODEC_MAX_98095,
+	CODEC_MAX_98090,
 	CODEC_MAX
 };
 
