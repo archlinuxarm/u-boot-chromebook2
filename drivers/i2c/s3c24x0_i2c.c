@@ -673,10 +673,13 @@ static int hsi2c_write(struct exynos5_hsi2c *i2c,
 
 	rv = hsi2c_wait_for_trx(i2c);
 
-	if ((rv == I2C_OK) && issue_stop)
-		rv = hsi2c_wait_while_busy(i2c);
-
  write_error:
+	if (issue_stop) {
+		int tmp_ret = hsi2c_wait_while_busy(i2c);
+		if (rv == I2C_OK)
+			rv = tmp_ret;
+	}
+
 	writel(HSI2C_FUNC_MODE_I2C, &i2c->usi_ctl); /* done */
 	return rv;
 }
@@ -688,7 +691,7 @@ static int hsi2c_read(struct exynos5_hsi2c *i2c,
 		      unsigned char data[],
 		      unsigned short len)
 {
-	int i, rv;
+	int i, rv, tmp_ret;
 	bool drop_data = false;
 
 	if (!len) {
@@ -720,10 +723,12 @@ static int hsi2c_read(struct exynos5_hsi2c *i2c,
 	}
 
 	rv = hsi2c_wait_for_trx(i2c);
-	if (rv == I2C_OK)
-		rv = hsi2c_wait_while_busy(i2c);
 
  read_err:
+	tmp_ret = hsi2c_wait_while_busy(i2c);
+	if (rv == I2C_OK)
+		rv = tmp_ret;
+
 	writel(HSI2C_FUNC_MODE_I2C, &i2c->usi_ctl); /* done */
 	return rv;
 }
