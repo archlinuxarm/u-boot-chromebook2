@@ -30,6 +30,7 @@
 
 #include <common.h>
 #include <fdtdec.h>
+#include <fdt_support.h>
 #include <libfdt.h>
 #include <malloc.h>
 #include <linux/compiler.h>
@@ -226,7 +227,7 @@ static int h_compare_record(const void *r1, const void *r2)
  */
 static int add_bootstages_devicetree(struct fdt_header *blob)
 {
-	int bootstage;
+	int node, bootstage;
 	char buf[20];
 	int id;
 	int i;
@@ -238,9 +239,17 @@ static int add_bootstages_devicetree(struct fdt_header *blob)
 	 * Create the node for bootstage.
 	 * The address of flat device tree is set up by the command bootm.
 	 */
-	bootstage = fdt_add_subnode(blob, 0, "bootstage");
-	if (bootstage < 0)
+	node = fdt_ensure_chosen(blob);
+	if (node < 0) {
+		debug("Could not get /chosen node: %s\n", fdt_strerror(node));
 		return -1;
+	}
+	bootstage = fdt_ensure_subnode(blob, node, "bootstage");
+	if (bootstage < 0) {
+		debug("Could not create bootstage node: %s\n",
+		      fdt_strerror(bootstage));
+		return -1;
+	}
 
 	/*
 	 * Insert the timings to the device tree in the reverse order so
