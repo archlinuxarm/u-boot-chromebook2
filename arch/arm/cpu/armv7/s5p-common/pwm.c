@@ -43,6 +43,15 @@ int pwm_enable(int pwm_id)
 	return 0;
 }
 
+int pwm_check_enabled(int pwm_id)
+{
+	const struct s5p_timer *pwm =
+			(struct s5p_timer *)samsung_get_base_timer();
+	const unsigned long tcon = readl(&pwm->tcon);
+
+	return tcon & TCON_START(pwm_id);
+}
+
 void pwm_disable(int pwm_id)
 {
 	const struct s5p_timer *pwm =

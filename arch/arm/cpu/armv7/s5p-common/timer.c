@@ -57,17 +57,20 @@ static unsigned long timer_get_us_down(void)
 
 int timer_init(void)
 {
-	/* PWM Timer 4 */
-	pwm_init(4, MUX_DIV_4, 0);
-	pwm_config(4, 100000, 100000);
-	pwm_enable(4);
+	/* Timer may have been enabled in SPL */
+	if (!pwm_check_enabled(4)) {
+		/* PWM Timer 4 */
+		pwm_init(4, MUX_DIV_4, 0);
+		pwm_config(4, 100000, 100000);
+		pwm_enable(4);
 
-	/* Use this as the current monotonic time in us */
-	gd->arch.timer_reset_value = 0;
+		/* Use this as the current monotonic time in us */
+		gd->arch.timer_reset_value = 0;
 
-	/* Use this as the last timer value we saw */
-	gd->arch.lastinc = timer_get_us_down();
-	reset_timer_masked();
+		/* Use this as the last timer value we saw */
+		gd->arch.lastinc = timer_get_us_down();
+		reset_timer_masked();
+	}
 
 	return 0;
 }
@@ -97,17 +100,10 @@ unsigned long get_timer(unsigned long base)
 
 unsigned long __attribute__((no_instrument_function)) timer_get_us(void)
 {
-	static unsigned long base_time_us;
-
-	struct s5p_timer *const timer =
-		(struct s5p_timer *)samsung_get_base_timer();
-	unsigned long now_downward_us = readl(&timer->tcnto4);
-
-	if (!base_time_us)
-		base_time_us = now_downward_us;
+	unsigned long base_time_us = 0;
 
 	/* Note that this timer counts downward. */
-	return base_time_us - now_downward_us;
+	return base_time_us - timer_get_us_down();
 }
 
 /* delay x useconds */

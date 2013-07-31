@@ -23,6 +23,13 @@
 #ifndef _pwm_h_
 #define _pwm_h_
 
+/**
+ * Checks if PWM is already enabled
+ *
+ * @param pwm_id	Id of the pwm device
+ * @return 0 if disabled, non-zero if enabled
+ */
+int	pwm_check_enabled(int pwm_id);
 int	pwm_init		(int pwm_id, int div, int invert);
 int	pwm_config		(int pwm_id, int duty_ns, int period_ns);
 int	pwm_enable		(int pwm_id);
