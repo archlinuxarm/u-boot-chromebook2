@@ -247,7 +247,7 @@ static unsigned int exynos_dp_handle_edid(struct edp_device_info *edp_info)
 	 * Do not read the EDID on rev4 peach-pit boards
 	 * See crosbug.com/p/21128 for more details
 	 */
-	if (board_get_revision() != 12) {
+	if (board_get_revision() != 4) {
 		ret = exynos_dp_read_edid();
 		if (ret != EXYNOS_DP_SUCCESS) {
 			printf("DP exynos_dp_read_edid() failed\n");

@@ -354,11 +354,12 @@ int board_is_processor_reset(void)
 
 #ifdef CONFIG_OF_CONTROL
 #define MAX_REV_GPIO_COUNT	5
-int board_get_revision(void)
+void board_get_full_revision(int *board_rev_out, int *subrev_out)
 {
 	struct fdt_gpio_state gpios[MAX_REV_GPIO_COUNT];
 	unsigned gpio_list[MAX_REV_GPIO_COUNT];
 	int board_rev = -1;
+	int subrev = 0;
 	int count = 0;
 	int node;
 
@@ -371,15 +372,36 @@ int board_get_revision(void)
 	}
 	if (count > 0) {
 		int i;
+		const u8 *map = NULL;
 
 		for (i = 0; i < count; i++)
 			gpio_list[i] = gpios[i].gpio;
 		board_rev = gpio_decode_number(gpio_list, count);
+
+		/* If there's a revision map, apply it */
+		map = fdtdec_locate_byte_array(gd->fdt_blob, node,
+					       "google,board-rev-map",
+					       2 * (board_rev + 1));
+		if (map) {
+			subrev = map[(board_rev * 2) + 1];
+			board_rev = map[board_rev * 2];
+		}
 	} else {
 		debug("%s: No board revision information in fdt\n", __func__);
 	}
 
-	return board_rev;
+	if (board_rev_out)
+		*board_rev_out = board_rev;
+	if (subrev_out)
+		*subrev_out = subrev;
+}
+
+int board_get_revision(void)
+{
+	int rev;
+
+	board_get_full_revision(&rev, NULL);
+	return rev;
 }
 
 /**

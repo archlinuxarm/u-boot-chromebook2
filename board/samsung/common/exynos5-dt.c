@@ -168,8 +168,10 @@ int checkboard(void)
 	if (board_name == NULL) {
 		printf("\nUnknown Board\n");
 	} else {
-		printf("\nBoard: %s, rev %d\n", board_name,
-		       board_get_revision());
+		int rev, subrev;
+
+		board_get_full_revision(&rev, &subrev);
+		printf("\nBoard: %s, rev %d.%d\n", board_name, rev, subrev);
 	}
 
 	return 0;

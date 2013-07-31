@@ -1,0 +1,65 @@
+Board Revision Bindings
+=======================
+
+The device tree node which describes the Board Revision strappings is:
+
+Required properties:
+- compatible : "google,board-revision"
+- google,board-rev-gpios : List of GPIOs used for reading board revision.
+  Should be listed most significant first.  These are tristate GPIOs where
+  strongly pulling low is a 0, strongly pulling high is a 1, and floating
+  is a 2.  Revision GPIOs will translate from ternary to binary for decoding
+  the revision.
+
+Optional properties:
+- google,board-rev-map : A byte array mapping physical revision numbers to
+  logical revision/subrevision numbers in the code.  Each entry in this array
+  is two bytes: a revision and a subrev.  It could contain up to 3 ** n_gpios
+  entries (each entry is 2 bytes).  If this is not present (or if it's too
+  short) we'll assume a subrev of 0 and use the raw GPIO values.
+
+
+Example
+=======
+
+	board-rev {
+		compatible = "google,board-revision";
+		google,board-rev-gpios = <&gpio 76 0>,
+					 <&gpio 75 0>,
+					 <&gpio 74 0>,
+					 <&gpio 73 0>;
+
+		/*
+		 * Pit has 4 ternary bits giving us 81 possible raw revisions.
+		 * We allocate the lowest two BINARY bits as a "subrevision", so
+		 * we have 20 main revisions with 4 subrevisions each.
+		 *
+		 * If we see revision 2 we'll call that board revision "3"
+		 * to match how boards have been labelled elsewhere.  Boards
+		 * will increment from there.  If we see revision 0/1 we'll
+		 * assume we've wrapped around.
+		 */
+		google,board-rev-map = [15 00  15 01  15 02  15 03
+					16 00  16 01  16 02  16 03
+
+					03 00  03 01  03 02  03 03
+					04 00  04 01  04 02  04 03
+					05 00  05 01  05 02  05 03
+					06 00  06 01  06 02  06 03
+					07 00  07 01  07 02  07 03
+					08 00  08 01  08 02  08 03
+					09 00  09 01  09 02  09 03
+					0a 00  0a 01  0a 02  0a 03
+					0b 00  0b 01  0b 02  0b 03
+					0c 00  0c 01  0c 02  0c 03
+					0d 00  0d 01  0d 02  0d 03
+					0e 00  0e 01  0e 02  0e 03
+					0f 00  0f 01  0f 02  0f 03
+					10 00  10 01  10 02  10 03
+					11 00  11 01  11 02  11 03
+					12 00  12 01  12 02  12 03
+					13 00  13 01  13 02  13 03
+					14 00  14 01  14 02  14 03
+
+					f0 00];
+	};

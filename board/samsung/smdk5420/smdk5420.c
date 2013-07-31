@@ -172,13 +172,14 @@ void init_panel_info(vidinfo_t *vid)
  */
 int board_get_num_dram_banks(void)
 {
-	switch (board_get_revision()) {
-	case 6: /* peach pit rev 1 */
-	case 10: /* peach pit rev 2 */
+	int subrev;
+
+	board_get_full_revision(NULL, &subrev);
+
+	/* Bit 1 of the subrev is the SDRAM size.  TODO: cleanup */
+	if (subrev & (1 << 1))
 		return 7;  /* 7 banks of .5 GB, 3.5GB total. */
-	default:
-		break;
-	}
+
 	/* Default is set to 2 GB. */
 	return 4;
 }
