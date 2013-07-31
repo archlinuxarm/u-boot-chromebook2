@@ -22,4 +22,4 @@
 
 typedef int (*init_fnc_t)(void);
 
-int initcall_run_list(init_fnc_t init_sequence[]);
+int initcall_run_list(const init_fnc_t init_sequence[]);

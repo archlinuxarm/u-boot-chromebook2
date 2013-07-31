@@ -819,7 +819,7 @@ static int mark_bootstage(void)
 	return 0;
 }
 
-static init_fnc_t init_sequence_f[] = {
+static const init_fnc_t init_sequence_f[] = {
 #if !defined(CONFIG_CPM2) && !defined(CONFIG_MPC512X) && \
 		!defined(CONFIG_MPC83xx) && !defined(CONFIG_MPC85xx) && \
 		!defined(CONFIG_MPC86xx) && !defined(CONFIG_X86)
@@ -1050,7 +1050,7 @@ void board_init_f(ulong boot_flags)
  * NOTE: At present only x86 uses this route, but it is intended that
  * all archs will move to this when generic relocation is implemented.
  */
-static init_fnc_t init_sequence_f_r[] = {
+static const init_fnc_t init_sequence_f_r[] = {
 	init_cache_f_r,
 	copy_uboot_to_ram,
 	clear_bss,
