@@ -927,7 +927,8 @@ int i2c_read(uchar chip, uint addr, int alen, uchar *buffer, int len)
 
 	board_i2c_release_bus(i2c_bus->node);
 	if (ret) {
-		exynos5_i2c_reset(i2c_bus);
+		if (i2c_bus->is_highspeed)
+			exynos5_i2c_reset(i2c_bus);
 		debug("I2c read failed %d\n", ret);
 		return 1;
 	}
@@ -985,7 +986,8 @@ int i2c_write(uchar chip, uint addr, int alen, uchar *buffer, int len)
 	board_i2c_release_bus(i2c_bus->node);
 
 	if (ret != 0) {
-		exynos5_i2c_reset(i2c_bus);
+		if (i2c_bus->is_highspeed)
+			exynos5_i2c_reset(i2c_bus);
 		return 1;
 	} else {
 		return 0;
