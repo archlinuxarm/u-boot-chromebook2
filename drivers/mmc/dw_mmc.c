@@ -252,7 +252,7 @@ static int dwmci_setup_bus(struct dwmci_host *host, u32 freq)
 	 * host->bus_hz should be set from user.
 	 */
 	if (host->mmc_clk)
-		sclk = host->mmc_clk(host->dev_index);
+		sclk = host->mmc_clk(host);
 	else if (host->bus_hz)
 		sclk = host->bus_hz;
 	else {

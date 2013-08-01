@@ -27,6 +27,10 @@
 #define DWMCI_SET_DRV_CLK(x)	((x) << 16)
 #define DWMCI_SET_DIV_RATIO(x)	((x) << 24)
 
+/* CLKSEL Register */
+#define DWMCI_DIVRATIO_BIT		24
+#define DWMCI_DIVRATIO_MASK		0x7
+
 #ifdef CONFIG_OF_CONTROL
 int exynos_dwmmc_init(const void *blob);
 #endif
