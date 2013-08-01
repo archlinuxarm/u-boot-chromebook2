@@ -25,6 +25,34 @@
 		hwid = "SNOW TEST A-A 5304";
 	};
 
+	board-rev {
+		compatible = "google,board-revision";
+		google,board-rev-gpios = <&gpio 88 0>, <&gpio 89 0>; /*D00/D01*/
+
+		/*
+		 * 9 possible revisions from 2 tristate GPIOs.  Original snow
+		 * U-Boot had a different mapping scheme.  Attempt to make some
+		 * sort of sense of it using the current code by treating the
+		 * memory type as a subrev and deprecating old revisions.
+		 *
+		 * We'll consider samsung memory as subrev 0 and elpida as
+		 * subrev 1.
+		 *
+		 * - id 0 - MP 1.2/samsung (4.0) / evt/samsung (0.0)
+		 * - id 1 - MP 1.2/elpida  (4.1) / evt/elpida  (0.1)
+		 * - id 2 - pvt/samsung (2.0)
+		 * - id 3 - dvt/samsung (1.0)
+		 * - id 4 - dvt/elpida (1.1)
+		 * - id 5 - pvt/elpida (2.1)
+		 * - id 6 - MP 1.0-MP 1.1/samsung (3.0)
+		 * - id 7 - reserved (64.0)
+		 * - id 8 - MP 1.0-MP 1.1/elpida (3.1)
+		 */
+		google,board-rev-map = [04 00  04 01  02 00  01 00
+					01 01  02 01  03 00  40 00
+					03 01];
+	};
+
 	i2c4: i2c@12ca0000 {
 		/* Do not use hsi2c for this interface, override it here. */
 		compatible = "samsung,s3c2440-i2c";
