@@ -1072,7 +1072,7 @@ int gpio_set_value(unsigned gpio, int value);
 #define S5P_GPIO_DRV_SLOW	0x1
 
 /**
- * Decode a list of GPIOs into an integer.
+ * Read board strappings from GPIOs
  *
  * TODO(sjg@chromium.org): This could perhaps become a generic function?
  *
@@ -1086,13 +1086,16 @@ int gpio_set_value(unsigned gpio, int value);
  * a digit in the highest order (most significant) of the ternary result, the
  * next GPIO goes to the lower ternary order, etc.
  *
+ * GPIOs are left in a state that will leave them in the lowest power mode
+ * (we don't want internal and external pulls to fight).
+ *
  * @param gpio_list	List of GPIO numbers to decode
  * @param count		Number of GPIOs in list
  * @return -1 if the value cannot be determined, or any GPIO number is
  *		invalid. Otherwise returns the calculated value
  */
 
-int gpio_decode_number(unsigned gpio_list[], int count);
+int gpio_read_strappings(unsigned gpio_list[], int count);
 
 /**
  * Set GPIO pull mode.

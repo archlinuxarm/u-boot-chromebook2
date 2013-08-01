@@ -376,7 +376,7 @@ void board_get_full_revision(int *board_rev_out, int *subrev_out)
 
 		for (i = 0; i < count; i++)
 			gpio_list[i] = gpios[i].gpio;
-		board_rev = gpio_decode_number(gpio_list, count);
+		board_rev = gpio_read_strappings(gpio_list, count);
 
 		/* If there's a revision map, apply it */
 		map = fdtdec_locate_byte_array(gd->fdt_blob, node,
