@@ -395,6 +395,7 @@
 /* Enable booting of fitImage format */
 #define CONFIG_FIT
 #define CONFIG_FIT_BEST_MATCH
+#define CONFIG_FIT_MATCH_ADD_REV
 
 /* We might use LZO compression */
 #define CONFIG_LZO
