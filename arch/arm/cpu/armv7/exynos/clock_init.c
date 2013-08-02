@@ -341,6 +341,59 @@ struct mem_timings mem_timings[] = {
 	}
 };
 
+/* Exynos5420 PLL {P, M, S} values */
+const struct exynos5420_pll_pms pms = {
+	/* APLL @900MHz */
+	.apll_mdiv = 0x96,
+	.apll_pdiv = 0x2,
+	.apll_sdiv = 0x1,
+
+	/* KPLL @600MHz */
+	.kpll_mdiv = 0xc8,
+	.kpll_pdiv = 0x2,
+	.kpll_sdiv = 0x2,
+
+	/* MPLL @800MHz*/
+	.mpll_mdiv = 0xc8,
+	.mpll_pdiv = 0x3,
+	.mpll_sdiv = 0x1,
+
+	/* DPLL @600MHz */
+	.dpll_mdiv = 0xc8,
+	.dpll_pdiv = 0x2,
+	.dpll_sdiv = 0x2,
+
+	/* EPLL @600MHz */
+	.epll_mdiv = 0x64,
+	.epll_pdiv = 0x2,
+	.epll_sdiv = 0x1,
+
+	/* CPLL @666MHz */
+	.cpll_mdiv = 0xde,
+	.cpll_pdiv = 0x4,
+	.cpll_sdiv = 0x1,
+
+	/* IPLL @370MHz */
+	.ipll_mdiv = 0xb9,
+	.ipll_pdiv = 0x3,
+	.ipll_sdiv = 0x2,
+
+	/* VPLL @430MHz */
+	.vpll_mdiv = 0xd7,
+	.vpll_pdiv = 0x3,
+	.vpll_sdiv = 0x2,
+
+	/* BPLL @800MHz */
+	.bpll_mdiv = 0xc8,
+	.bpll_pdiv = 0x3,
+	.bpll_sdiv = 0x1,
+
+	/* SPLL @400MHz */
+	.spll_mdiv = 0xc8,
+	.spll_pdiv = 0x3,
+	.spll_sdiv = 0x2,
+};
+
 /**
  * Get the required memory type and speed (SPL version).
  *
@@ -454,19 +507,19 @@ static void exynos5250_system_clock_init(void)
 	} while ((val | MUX_BPLL_SEL_MASK) != val);
 
 	/* PLL locktime */
-	writel(APLL_LOCK_VAL, &clk->apll_lock);
+	writel(mem->apll_pdiv * PLL_LOCK_FACTOR, &clk->apll_lock);
 
-	writel(MPLL_LOCK_VAL, &clk->mpll_lock);
+	writel(mem->mpll_pdiv * PLL_LOCK_FACTOR, &clk->mpll_lock);
 
-	writel(BPLL_LOCK_VAL, &clk->bpll_lock);
+	writel(mem->bpll_pdiv * PLL_LOCK_FACTOR, &clk->bpll_lock);
 
-	writel(CPLL_LOCK_VAL, &clk->cpll_lock);
+	writel(mem->cpll_pdiv * PLL_LOCK_FACTOR, &clk->cpll_lock);
 
-	writel(GPLL_LOCK_VAL, &clk->gpll_lock);
+	writel(mem->gpll_pdiv * PLL_X_LOCK_FACTOR, &clk->gpll_lock);
 
-	writel(EPLL_LOCK_VAL, &clk->epll_lock);
+	writel(mem->epll_pdiv * PLL_X_LOCK_FACTOR, &clk->epll_lock);
 
-	writel(VPLL_LOCK_VAL, &clk->vpll_lock);
+	writel(mem->vpll_pdiv * PLL_X_LOCK_FACTOR, &clk->vpll_lock);
 
 	writel(CLK_REG_DISABLE, &clk->pll_div2_sel);
 
@@ -671,16 +724,16 @@ static void exynos5420_system_clock_init(void)
 	u32 val;
 
 	/* PLL locktime */
-	writel(APLL_LOCK_VAL, &clk->apll_lock);
-	writel(MPLL_LOCK_VAL, &clk->mpll_lock);
-	writel(BPLL_LOCK_VAL, &clk->bpll_lock);
-	writel(CPLL_LOCK_VAL, &clk->cpll_lock);
-	writel(DPLL_LOCK_VAL, &clk->dpll_lock);
-	writel(EPLL_LOCK_VAL, &clk->epll_lock);
-	writel(VPLL_LOCK_VAL, &clk->vpll_lock);
-	writel(IPLL_LOCK_VAL, &clk->ipll_lock);
-	writel(SPLL_LOCK_VAL, &clk->spll_lock);
-	writel(KPLL_LOCK_VAL, &clk->kpll_lock);
+	writel(pms.apll_pdiv * PLL_LOCK_FACTOR, &clk->apll_lock);
+	writel(pms.mpll_pdiv * PLL_LOCK_FACTOR, &clk->mpll_lock);
+	writel(pms.bpll_pdiv * PLL_LOCK_FACTOR, &clk->bpll_lock);
+	writel(pms.cpll_pdiv * PLL_LOCK_FACTOR, &clk->cpll_lock);
+	writel(pms.dpll_pdiv * PLL_LOCK_FACTOR, &clk->dpll_lock);
+	writel(pms.epll_pdiv * PLL_X_LOCK_FACTOR, &clk->epll_lock);
+	writel(pms.vpll_pdiv * PLL_LOCK_FACTOR, &clk->vpll_lock);
+	writel(pms.ipll_pdiv * PLL_LOCK_FACTOR, &clk->ipll_lock);
+	writel(pms.spll_pdiv * PLL_LOCK_FACTOR, &clk->spll_lock);
+	writel(pms.kpll_pdiv * PLL_LOCK_FACTOR, &clk->kpll_lock);
 
 	setbits_le32(&clk->clk_src_cpu, MUX_HPM_SEL_MASK);
 
@@ -696,7 +749,7 @@ static void exynos5420_system_clock_init(void)
 
 	/* Set APLL */
 	writel(APLL_CON1_VAL, &clk->apll_con1);
-	val = set_pll(0x96, 0x2, 0x1);
+	val = set_pll(pms.apll_mdiv, pms.apll_pdiv, pms.apll_sdiv);
 	writel(val, &clk->apll_con0);
 	while ((readl(&clk->apll_con0) & PLL_LOCKED) == 0)
 		;
@@ -711,7 +764,7 @@ static void exynos5420_system_clock_init(void)
 
 	/* Set KPLL*/
 	writel(KPLL_CON1_VAL, &clk->kpll_con1);
-	val = set_pll(0xc8, 0x2, 0x2);
+	val = set_pll(pms.kpll_mdiv, pms.kpll_pdiv, pms.kpll_sdiv);
 	writel(val, &clk->kpll_con0);
 	while ((readl(&clk->kpll_con0) & PLL_LOCKED) == 0)
 		;
@@ -721,14 +774,14 @@ static void exynos5420_system_clock_init(void)
 
 	/* Set MPLL */
 	writel(MPLL_CON1_VAL, &clk->mpll_con1);
-	val = set_pll(0xc8, 0x3, 0x1);
+	val = set_pll(pms.mpll_mdiv, pms.mpll_pdiv, pms.mpll_sdiv);
 	writel(val, &clk->mpll_con0);
 	while ((readl(&clk->mpll_con0) & PLL_LOCKED) == 0)
 		;
 
 	/* Set DPLL */
 	writel(DPLL_CON1_VAL, &clk->dpll_con1);
-	val = set_pll(0xc8, 0x2, 0x2);
+	val = set_pll(pms.dpll_mdiv, pms.dpll_pdiv, pms.dpll_sdiv);
 	writel(val, &clk->dpll_con0);
 	while ((readl(&clk->dpll_con0) & PLL_LOCKED) == 0)
 		;
@@ -736,42 +789,42 @@ static void exynos5420_system_clock_init(void)
 	/* Set EPLL */
 	writel(EPLL_CON2_VAL, &clk->epll_con2);
 	writel(EPLL_CON1_VAL, &clk->epll_con1);
-	val = set_pll(0x64, 0x2, 0x1);
+	val = set_pll(pms.epll_mdiv, pms.epll_pdiv, pms.epll_sdiv);
 	writel(val, &clk->epll_con0);
 	while ((readl(&clk->epll_con0) & PLL_LOCKED) == 0)
 		;
 
 	/* Set CPLL */
 	writel(CPLL_CON1_VAL, &clk->cpll_con1);
-	val = set_pll(0xde, 0x4, 0x1);
+	val = set_pll(pms.cpll_mdiv, pms.cpll_pdiv, pms.cpll_sdiv);
 	writel(val, &clk->cpll_con0);
 	while ((readl(&clk->cpll_con0) & PLL_LOCKED) == 0)
 		;
 
 	/* Set IPLL */
 	writel(IPLL_CON1_VAL, &clk->ipll_con1);
-	val = set_pll(0xB9, 0x3, 0x2);
+	val = set_pll(pms.ipll_mdiv, pms.ipll_pdiv, pms.ipll_sdiv);
 	writel(val, &clk->ipll_con0);
 	while ((readl(&clk->ipll_con0) & PLL_LOCKED) == 0)
 		;
 
 	/* Set VPLL */
 	writel(VPLL_CON1_VAL, &clk->vpll_con1);
-	val = set_pll(0xd7, 0x3, 0x2);
+	val = set_pll(pms.vpll_mdiv, pms.vpll_pdiv, pms.vpll_sdiv);
 	writel(val, &clk->vpll_con0);
 	while ((readl(&clk->vpll_con0) & PLL_LOCKED) == 0)
 		;
 
 	/* Set BPLL */
 	writel(BPLL_CON1_VAL, &clk->bpll_con1);
-	val = set_pll(0xc8, 0x3, 0x1);
+	val = set_pll(pms.bpll_mdiv, pms.bpll_pdiv, pms.bpll_sdiv);
 	writel(val, &clk->bpll_con0);
 	while ((readl(&clk->bpll_con0) & PLL_LOCKED) == 0)
 		;
 
 	/* Set SPLL */
 	writel(SPLL_CON1_VAL, &clk->spll_con1);
-	val = set_pll(0xc8, 0x3, 0x2);
+	val = set_pll(pms.spll_mdiv, pms.spll_pdiv, pms.spll_sdiv);
 	writel(val, &clk->spll_con0);
 	while ((readl(&clk->spll_con0) & PLL_LOCKED) == 0)
 		;

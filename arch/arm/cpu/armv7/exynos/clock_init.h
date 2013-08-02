@@ -133,6 +133,50 @@ struct mem_timings {
 	uint8_t gate_leveling_enable;	/* check gate leveling is enabled */
 };
 
+/* These are the PLL {P, M, S} values for different PLLs */
+struct exynos5420_pll_pms {
+	/* APLL PMS */
+	unsigned apll_mdiv;
+	unsigned apll_pdiv;
+	unsigned apll_sdiv;
+	/* KPLL PMS */
+	unsigned kpll_mdiv;
+	unsigned kpll_pdiv;
+	unsigned kpll_sdiv;
+	/* MPLL PMS */
+	unsigned mpll_mdiv;
+	unsigned mpll_pdiv;
+	unsigned mpll_sdiv;
+	/* DPLL PMS */
+	unsigned dpll_mdiv;
+	unsigned dpll_pdiv;
+	unsigned dpll_sdiv;
+	/* EPLL PMS */
+	unsigned epll_mdiv;
+	unsigned epll_pdiv;
+	unsigned epll_sdiv;
+	/* CPLL PMS */
+	unsigned cpll_mdiv;
+	unsigned cpll_pdiv;
+	unsigned cpll_sdiv;
+	/* IPLL PMS */
+	unsigned ipll_mdiv;
+	unsigned ipll_pdiv;
+	unsigned ipll_sdiv;
+	/* VPLL PMS */
+	unsigned vpll_mdiv;
+	unsigned vpll_pdiv;
+	unsigned vpll_sdiv;
+	/* BPLL PMS */
+	unsigned bpll_mdiv;
+	unsigned bpll_pdiv;
+	unsigned bpll_sdiv;
+	/* SPLL PMS */
+	unsigned spll_mdiv;
+	unsigned spll_pdiv;
+	unsigned spll_sdiv;
+};
+
 /**
  * Get the correct memory timings for our selected memory type and speed.
  *
