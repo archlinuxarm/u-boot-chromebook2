@@ -15,8 +15,8 @@
 /include/ "chromeos-exynos.dtsi"
 #endif
 / {
-	model = "Google Peach Pit Rev 3";
+	model = "Google Peach Pit";
 
-	compatible = "google,pit-rev3", "google,pit",
+	compatible = "google,pit-rev#", "google,pit",
 		"google,peach", "samsung,exynos5420", "samsung,exynos5";
 };
