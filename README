@@ -2804,6 +2804,13 @@ FIT uImage format:
 		most specific compatibility entry of U-Boot's fdt's root node.
 		The order of entries in the configuration's fdt is ignored.
 
+		CONFIG_FIT_MATCH_ADD_REV
+		When we're using CONFIG_FIT_BEST_MATCH, this will enable
+		treating the first '#' character in the compatible property
+		of U-Boot's fdt root node as the board revision.  This allows
+		us to more automatically select the proper device tree from the
+		fit image.  Requires a board defintion of board_get_revision().
+
 		CONFIG_FIT_SIGNATURE
 		This option enables signature verification of FIT uImages,
 		using a hash signed and verified using RSA. See

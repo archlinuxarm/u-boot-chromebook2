@@ -32,6 +32,7 @@
 #else
 #include <common.h>
 #include <errno.h>
+#include <malloc.h>
 #include <asm/io.h>
 DECLARE_GLOBAL_DATA_PTR;
 #endif /* !USE_HOSTCC*/
@@ -1198,6 +1199,68 @@ int fit_check_format(const void *fit)
 	return 1;
 }
 
+#ifdef CONFIG_FIT_MATCH_ADD_REV
+
+#include <asm/arch/board.h>
+
+/**
+ * add_revision - replace '#' in a string with board revision info
+ *
+ * Call the board_get_revision() function to obtain revision info and replace
+ * the first instance of '#' in the given string with the revision.
+ *
+ * @param str		The input string, may include embedded '\0' chars.
+ * @param str_size	The number of bytes in str.
+ * @param out_size	If we did a replacement, we'll return the number of
+ *			bytes in the output string here.
+ * @returns		A new string (allocated with malloc) or NULL if no
+ *			replacement was done.
+ */
+static char *add_revision(const char *str, int str_size, int *out_size)
+{
+	int max_rev_chars = 10;
+	char *new_str;
+	int rev;
+	int rev_len;
+	int i;
+
+	/*
+	 * Find the # sign, which we'll replace with our revision; can't
+	 * use strchr() since string may have embedded '\0'.
+	 */
+	for (i = 0; i < str_size; i++) {
+		if (str[i] == '#')
+			break;
+	}
+
+	/* Not found */
+	if (i == str_size)
+		return NULL;
+
+	rev = board_get_revision();
+
+	/*
+	 * Allocate enough space in the string to add a big number; allocate
+	 * 1 extra byte than we need JUST IN CASE the input string wasn't
+	 * '\0' terminated for some weird reason.
+	 */
+	new_str = malloc(str_size + max_rev_chars);
+
+	memcpy(new_str, str, i);
+	rev_len = snprintf(new_str + i, max_rev_chars + 1, "%d", rev);
+	*out_size = str_size + rev_len - 1;
+	memcpy(new_str + i + rev_len, str + i + 1, str_size - i - 1);
+
+	return new_str;
+}
+#else
+inline char *add_revision(const char *str, int str_size, int *out_size)
+{
+	return NULL;
+}
+#endif
+
+
 
 /**
  * fit_conf_find_compat
@@ -1243,6 +1306,7 @@ int fit_conf_find_compat(const void *fit, const void *fdt)
 	int ndepth = 0;
 	int noffset, confs_noffset, images_noffset;
 	const void *fdt_compat;
+	void *fdt_compat_alloc;
 	int fdt_compat_len;
 	int best_match_offset = 0;
 	int best_match_pos = 0;
@@ -1259,6 +1323,11 @@ int fit_conf_find_compat(const void *fit, const void *fdt)
 		debug("Fdt for comparison has no \"compatible\" property.\n");
 		return -1;
 	}
+
+	fdt_compat_alloc = add_revision(fdt_compat, fdt_compat_len,
+					&fdt_compat_len);
+	if (fdt_compat_alloc)
+		fdt_compat = fdt_compat_alloc;
 
 	/*
 	 * Loop over the configurations in the FIT image.
@@ -1317,6 +1386,9 @@ int fit_conf_find_compat(const void *fit, const void *fdt)
 			cur_fdt_compat += cur_len;
 		}
 	}
+
+	free(fdt_compat_alloc);
+
 	if (!best_match_offset) {
 		debug("No match found.\n");
 		return -1;
