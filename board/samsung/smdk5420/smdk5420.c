@@ -30,12 +30,14 @@
 #include <spi.h>
 #include <asm/arch/board.h>
 #include <asm/arch/cpu.h>
+#include <asm/arch/clock.h>
 #include <asm/arch/gpio.h>
 #include <asm/arch/mmc.h>
 #include <asm/arch/pinmux.h>
 #include <asm/arch/sromc.h>
 #include <asm/arch/dp_info.h>
 #include <asm/arch/power.h>
+#include <asm/arch/setup.h>
 #include <asm/arch/system.h>
 #include <power/pmic.h>
 #include <power/max77802_pmic.h>
@@ -43,6 +45,13 @@
 #include <power/tps65090_pmic.h>
 
 DECLARE_GLOBAL_DATA_PTR;
+
+const struct exynos_apll_pms exynos_pms = {
+	/* APLL @1.8GHz */
+	.apll_pdiv = 0x3,
+	.apll_mdiv = 0xe1,
+	.apll_sdiv = 0x0,
+};
 
 #ifdef CONFIG_LCD
 #ifdef CONFIG_CHROMEOS_PEACH
@@ -162,6 +171,29 @@ void init_panel_info(vidinfo_t *vid)
 {
 }
 #endif
+
+void  set_max_cpu_freq(void)
+{
+	struct exynos5420_clock *clk =
+		(struct exynos5420_clock *)EXYNOS5420_CLOCK_BASE;
+	u32 val;
+
+	/* switch A15 clock source to OSC clock before changing APLL */
+	clrbits_le32(&clk->clk_src_cpu, APLL_FOUT);
+
+	/* PLL locktime */
+	writel(exynos_pms.apll_pdiv * PLL_LOCK_FACTOR, &clk->apll_lock);
+
+	/* Set APLL */
+	writel(APLL_CON1_VAL, &clk->apll_con1);
+	val = set_pll(exynos_pms.apll_mdiv, exynos_pms.apll_pdiv,
+		      exynos_pms.apll_sdiv);
+	writel(val, &clk->apll_con0);
+	while ((readl(&clk->apll_con0) & PLL_LOCKED) == 0)
+		;
+	/* now it is safe to switch to APLL */
+	setbits_le32(&clk->clk_src_cpu, APLL_FOUT);
+}
 
 #ifdef CONFIG_RUN_TIME_BANK_NUMBER
 /*

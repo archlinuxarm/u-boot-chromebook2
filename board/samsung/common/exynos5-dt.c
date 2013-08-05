@@ -32,6 +32,7 @@
 #include <asm/arch/cpu.h>
 #include <asm/arch/dwmmc.h>
 #include <asm/arch/board.h>
+#include <asm/arch/clock.h>
 #include <asm/arch/gpio.h>
 #include <asm/arch/mmc.h>
 #include <asm/arch/pinmux.h>
@@ -75,6 +76,10 @@ int power_init_board(void)
 	if (ret)
 		return ret;
 
+#ifndef CONFIG_EXYNOS5250
+	set_max_cpu_freq();
+	print_cpuinfo();
+#endif
 	return board_init_tps65090();
 }
 #endif

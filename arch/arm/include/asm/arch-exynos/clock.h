@@ -1366,6 +1366,16 @@ struct exynos5420_clock {
 	unsigned int cmu_kfc_version;		/* 0x1003bff0 */
 };
 
+/**
+ * Common structure for APLL-{P,M,S} value
+ * This can be used by 5250 and 5420 to bump up CPU clocks in U-Boot
+ */
+struct exynos_apll_pms {
+	unsigned int apll_pdiv;
+	unsigned int apll_mdiv;
+	unsigned int apll_sdiv;
+};
+
 /* structure for epll configuration used in audio clock configuration */
 struct set_epll_con_val {
 	unsigned int freq_out;		/* frequency out */

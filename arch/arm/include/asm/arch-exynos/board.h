@@ -56,6 +56,9 @@ int board_init_max77802(void);
 int board_init_s2mps11(void);
 int board_init_tps65090(void);
 
+/* Set up max frequency support for CPU*/
+void set_max_cpu_freq(void);
+
 /*
  * Exynos baord specific changes for
  * board_init
