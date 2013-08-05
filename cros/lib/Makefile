@@ -28,10 +28,6 @@ COBJS-$(CONFIG_CHROMEOS_GPIO_FLAG) += vboot_flag_gpio.o
 COBJS-$(CONFIG_CHROMEOS_CROS_EC_FLAG) += vboot_flag_cros_ec.o
 COBJS-$(CONFIG_CHROMEOS) += vboot_flag_debug.o
 
-# TODO(sjg): This MMC code is not needed as yet, and needs slight changes
-# to build now
-#COBJS-$(CONFIG_CHROMEOS) += firmware_storage_twostop.o
-
 COBJS	:= $(COBJS-y)
 OBJS	:= $(addprefix $(obj),$(COBJS))
 
