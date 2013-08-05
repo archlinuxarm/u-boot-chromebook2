@@ -41,7 +41,6 @@
 #include <power/max77802_pmic.h>
 #include <power/s2mps11_pmic.h>
 #include <power/tps65090_pmic.h>
-#include <asm/arch/board.h>
 
 DECLARE_GLOBAL_DATA_PTR;
 
