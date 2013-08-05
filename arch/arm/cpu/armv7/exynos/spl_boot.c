@@ -35,10 +35,10 @@
 #include <asm/arch/pinmux.h>
 #include <asm/arch/periph.h>
 #include <asm/arch/power.h>
+#include <asm/arch/setup.h>
 #include <asm/arch/spi.h>
 #include <asm/arch/spl.h>
 #include "clock_init.h"
-#include "setup.h"
 
 DECLARE_GLOBAL_DATA_PTR;
 

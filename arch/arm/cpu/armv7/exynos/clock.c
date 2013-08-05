@@ -26,7 +26,7 @@
 #include <asm/arch/clock.h>
 #include <asm/arch/clk.h>
 #include <asm/arch/periph.h>
-#include "setup.h"
+#include <asm/arch/setup.h>
 
 /* *
  * This structure is to store the src bit, div bit and prediv bit

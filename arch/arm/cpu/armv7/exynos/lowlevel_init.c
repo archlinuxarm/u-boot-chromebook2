@@ -31,8 +31,8 @@
 #include <asm/arch/periph.h>
 #include <asm/arch/pinmux.h>
 #include <asm/arch/power.h>
+#include <asm/arch/setup.h>
 #include <asm/arch/system.h>
-#include "setup.h"
 
 /* These are the things we can do during low-level init */
 enum {

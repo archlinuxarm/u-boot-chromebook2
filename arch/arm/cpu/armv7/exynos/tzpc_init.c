@@ -24,8 +24,8 @@
 
 #include <config.h>
 #include <asm/arch/dmc.h>
+#include <asm/arch/setup.h>
 #include <asm/arch/tzpc.h>
-#include"setup.h"
 
 /* Setting TZPC[TrustZone Protection Controller] */
 void exynos5250_tzpc_init(void)

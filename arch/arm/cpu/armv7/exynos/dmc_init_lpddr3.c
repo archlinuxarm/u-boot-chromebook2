@@ -26,8 +26,7 @@
 #include <config.h>
 #include <asm/arch/clock.h>
 #include <asm/arch/dmc.h>
-
-#include "setup.h"
+#include <asm/arch/setup.h>
 
 #define NUM_CHIP	1
 #define ZQ_MODE_DDS	7

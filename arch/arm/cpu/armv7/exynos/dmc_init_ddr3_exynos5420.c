@@ -28,7 +28,7 @@
 #include <asm/arch/clock.h>
 #include <asm/arch/cpu.h>
 #include <asm/arch/dmc.h>
-#include "setup.h"
+#include <asm/arch/setup.h>
 #include "clock_init.h"
 
 #define TIMEOUT	10000

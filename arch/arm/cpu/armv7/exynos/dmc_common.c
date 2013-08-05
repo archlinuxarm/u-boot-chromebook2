@@ -25,9 +25,9 @@
 #include <common.h>
 #include <asm/arch/spl.h>
 #include <asm/arch/cpu.h>
+#include <asm/arch/setup.h>
 
 #include "clock_init.h"
-#include "setup.h"
 
 #define ZQ_INIT_TIMEOUT	10000
 
