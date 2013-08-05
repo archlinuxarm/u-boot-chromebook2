@@ -51,7 +51,7 @@ int cleanup_before_linux(void)
 	if (flag == BOOTM_STATE_OS_FAKE_GO)
 		bootstage_fdt_add_report();
 #endif
-#ifdef CONFIG_BOOTSTAGE_REPORT
+#if !defined(CONFIG_SPL_BUILD) && defined(CONFIG_BOOTSTAGE_REPORT)
 	bootstage_report();
 #endif
 #ifdef CONFIG_BOOTSTAGE_STASH
