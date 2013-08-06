@@ -870,8 +870,10 @@ int	vprintf(const char *fmt, va_list args);
  * Typical use case is as follows: during normal boot the console is silent,
  * its output is recorded but not printed. In case of boot error this function
  * should be called to enable console and display recorded information.
+ *
+ * @param serial_only     if nonzero - direct output to the serial console only.
  */
-void console_dump_record(void);
+void console_dump_record(int serial_only);
 
 /*
  * Structure describing the console recording buffer state: where it is

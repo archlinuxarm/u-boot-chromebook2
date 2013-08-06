@@ -48,7 +48,7 @@ static int buffer_index;
 /* By default starting in recording mode. */
 static bool console_recording_on = 1;
 
-void console_dump_record(void)
+void console_dump_record(int serial_only)
 {
 	int index = 0;
 
@@ -56,6 +56,9 @@ void console_dump_record(void)
 
 	if (!(gd->flags & (GD_FLG_SILENT | GD_FLG_DISABLE_CONSOLE)))
 		return; /* It was not suppressed. */
+
+	if (serial_only)
+		setenv("stdout", "serial");
 
 	/* Make sure it will show up. */
 	gd->flags &= ~(GD_FLG_SILENT | GD_FLG_DISABLE_CONSOLE);

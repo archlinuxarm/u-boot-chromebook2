@@ -25,7 +25,7 @@ int is_processor_reset(void)
 void cold_reboot(void)
 {
 #ifdef CONFIG_CONSOLE_RECORDING
-	console_dump_record();
+	console_dump_record(true);
 #endif
 	VBDEBUG("Reboot\n");
 
@@ -38,7 +38,7 @@ void cold_reboot(void)
 void power_off(void)
 {
 #ifdef CONFIG_CONSOLE_RECORDING
-	console_dump_record();
+	console_dump_record(true);
 #endif
 	VBDEBUG("Power off\n");
 
