@@ -57,6 +57,8 @@
 #define CONFIG_EXTRA_BOOTARGS ""
 
 #define ANX1120_I2C_BUS		7
+#define CONFIG_RTC_MAX77802
+#define CONFIG_CMD_DATE
 
 #define CONFIG_LCD
 #define RPLL_MDIV		0x5E
