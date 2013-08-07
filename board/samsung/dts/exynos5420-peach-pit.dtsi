@@ -120,6 +120,9 @@
 		spi-max-frequency = <50000000>;
 		firmware_storage_spi: flash@0 {
 			reg = <0>;
+
+			elog-shrink-size = <0x400>;
+			elog-full-threshold = <0xc00>;
 		};
 	};
 
