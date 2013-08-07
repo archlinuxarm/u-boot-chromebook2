@@ -12,8 +12,9 @@ Optional properties :
 - spi-cpol : Boolean property - if present, changes the clock polarity.
 - spi-cpha : Boolean property - if present, changes the clock phase.
 - spi-cs-high : Boolean property - if present, CS is active high.
-- elog-panic-event : The location and size in memory of the event log
-   panic event buffer.
+- elog-panic-event-offset: The offset into DRAM and size of the event log
+   panic event buffer. Is communicated to the kernle through "elog-panic-event"
+   property converted to absolute address DRAM.
 - elog-shrink-size : The amount of buffer to clear when the event log is too
    full.
 - elog-full-threshold : How much data can be in the event log before it's
@@ -34,7 +35,7 @@ Example
 			 * A region for the kernel to store a panic event
 			 * which the firmware will add to the log.
 			 */
-			elog-panic-event = <0x41fff000 0x1000>;
+			elog-panic-event-offset = <0x01fff000 0x1000>;
 
 			elog-shrink-size = <0x400>;
 			elog-full-threshold = <0xc00>;

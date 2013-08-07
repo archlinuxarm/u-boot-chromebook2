@@ -121,6 +121,12 @@
 		firmware_storage_spi: flash@0 {
 			reg = <0>;
 
+			/*
+			 * A region for the kernel to store a panic event
+			 * which the firmware will add to the log.
+			*/
+			elog-panic-event-offset = <0x01e00000 0x100000>;
+
 			elog-shrink-size = <0x400>;
 			elog-full-threshold = <0xc00>;
 		};
