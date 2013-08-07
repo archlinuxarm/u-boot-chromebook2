@@ -440,4 +440,6 @@
 
 #define CONFIG_MAX_I2C_NUM		11
 
+#define CONFIG_ELOG
+
 #endif	/* __CONFIG_EXYNOS5_DT_H */
