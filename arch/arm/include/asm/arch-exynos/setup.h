@@ -740,6 +740,8 @@
 #define APLL_FOUT		(1 << 0)
 #define KPLL_FOUT		NOT_AVAILABLE
 
+#define CLK_DIV_CPERI1_VAL	NOT_AVAILABLE
+
 #else
 
 /* APLL_CON1 */
@@ -917,6 +919,8 @@
 
 #define APLL_FOUT		(1 << 0)
 #define KPLL_FOUT		(1 << 0)
+
+#define CLK_DIV_CPERI1_VAL	0x3f3f0000
 #endif
 
 struct mem_timings;
