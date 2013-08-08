@@ -324,7 +324,9 @@ static void exynos5420_i2c_config(int peripheral)
 		break;
 	case PERIPH_ID_I2C2:
 		gpio_cfg_pin(EXYNOS5420_GPIO_A06, S5P_GPIO_FUNC(0x3));
+		gpio_set_pull(EXYNOS5420_GPIO_A06, S5P_GPIO_PULL_NONE);
 		gpio_cfg_pin(EXYNOS5420_GPIO_A07, S5P_GPIO_FUNC(0x3));
+		gpio_set_pull(EXYNOS5420_GPIO_A07, S5P_GPIO_PULL_NONE);
 		break;
 	case PERIPH_ID_I2C3:
 		gpio_cfg_pin(EXYNOS5420_GPIO_A12, S5P_GPIO_FUNC(0x3));
@@ -332,7 +334,9 @@ static void exynos5420_i2c_config(int peripheral)
 		break;
 	case PERIPH_ID_I2C4:
 		gpio_cfg_pin(EXYNOS5420_GPIO_A20, S5P_GPIO_FUNC(0x3));
+		gpio_set_pull(EXYNOS5420_GPIO_A20, S5P_GPIO_PULL_NONE);
 		gpio_cfg_pin(EXYNOS5420_GPIO_A21, S5P_GPIO_FUNC(0x3));
+		gpio_set_pull(EXYNOS5420_GPIO_A21, S5P_GPIO_PULL_NONE);
 		break;
 	case PERIPH_ID_I2C5:
 		gpio_cfg_pin(EXYNOS5420_GPIO_A22, S5P_GPIO_FUNC(0x3));
@@ -344,19 +348,27 @@ static void exynos5420_i2c_config(int peripheral)
 		break;
 	case PERIPH_ID_I2C7:
 		gpio_cfg_pin(EXYNOS5420_GPIO_B22, S5P_GPIO_FUNC(0x3));
+		gpio_set_pull(EXYNOS5420_GPIO_B22, S5P_GPIO_PULL_NONE);
 		gpio_cfg_pin(EXYNOS5420_GPIO_B23, S5P_GPIO_FUNC(0x3));
+		gpio_set_pull(EXYNOS5420_GPIO_B23, S5P_GPIO_PULL_NONE);
 		break;
 	case PERIPH_ID_I2C8:
 		gpio_cfg_pin(EXYNOS5420_GPIO_B34, S5P_GPIO_FUNC(0x2));
+		gpio_set_pull(EXYNOS5420_GPIO_B34, S5P_GPIO_PULL_NONE);
 		gpio_cfg_pin(EXYNOS5420_GPIO_B35, S5P_GPIO_FUNC(0x2));
+		gpio_set_pull(EXYNOS5420_GPIO_B35, S5P_GPIO_PULL_NONE);
 		break;
 	case PERIPH_ID_I2C9:
 		gpio_cfg_pin(EXYNOS5420_GPIO_B36, S5P_GPIO_FUNC(0x2));
+		gpio_set_pull(EXYNOS5420_GPIO_B36, S5P_GPIO_PULL_NONE);
 		gpio_cfg_pin(EXYNOS5420_GPIO_B37, S5P_GPIO_FUNC(0x2));
+		gpio_set_pull(EXYNOS5420_GPIO_B37, S5P_GPIO_PULL_NONE);
 		break;
 	case PERIPH_ID_I2C10:
 		gpio_cfg_pin(EXYNOS5420_GPIO_B40, S5P_GPIO_FUNC(0x2));
+		gpio_set_pull(EXYNOS5420_GPIO_B40, S5P_GPIO_PULL_NONE);
 		gpio_cfg_pin(EXYNOS5420_GPIO_B41, S5P_GPIO_FUNC(0x2));
+		gpio_set_pull(EXYNOS5420_GPIO_B41, S5P_GPIO_PULL_NONE);
 		break;
 	}
 }
