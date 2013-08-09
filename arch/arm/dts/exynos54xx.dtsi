@@ -112,6 +112,10 @@
 		samsung,removable = <1>;
 	};
 
+	mmc@12230000 {
+		status = "disabled";
+	};
+
 	fimd@14400000 {
 		/* sysmmu is not used in U-Boot */
 		samsung,disable-sysmmu;
