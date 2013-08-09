@@ -115,15 +115,16 @@ VbError_t VbExBeep(uint32_t msec, uint32_t frequency)
 	}
 
 	VBDEBUG("About to beep for %d ms at %d Hz.\n", msec, frequency);
-	if (msec) {
-		if (frequency) {
-			if (sound_play(msec, frequency)) {
-				VBDEBUG("Failed to play beep.\n");
-				return VBERROR_NO_SOUND;
-			}
-		} else {
-			VbExSleepMs(msec);
+	if (!msec)
+		return VBERROR_NO_BACKGROUND_SOUND;
+
+	if (frequency) {
+		if (sound_play(msec, frequency)) {
+			VBDEBUG("Failed to play beep.\n");
+			return VBERROR_NO_SOUND;
 		}
+	} else {
+		VbExSleepMs(msec);
 	}
 
 	return VBERROR_SUCCESS;
