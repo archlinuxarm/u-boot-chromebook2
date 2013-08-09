@@ -241,7 +241,6 @@ twostop_init_cparams(struct twostop_fmap *fmap, void *gbb,
 	P("%08x", shared_data_size);
 
 #undef P
-
 	return 0;
 }
 
@@ -757,7 +756,7 @@ twostop_jump(crossystem_data_t *cdata, void *fw_blob, uint32_t fw_size,
 {
 	void *dest = (void *)CONFIG_SYS_TEXT_BASE;
 
-	VBDEBUG("jump to readwrite main firmware at %#x, pos %p, size %#x\n",
+	VBDEBUG("jump to readwrite main firmware at %p, pos %p, size %#x\n",
 			dest, fw_blob, fw_size);
 
 	/*

@@ -51,9 +51,9 @@ static int do_vbexport_test_debug(cmd_tbl_t *cmdtp, int flag,
 	VbExDebug("Expect: 44444 0xad9c\n");
 	VbExDebug("Actual: %hu 0x%hx\n", hu, hu);
 	VbExDebug("Expect: -1111111111 0xbdc5ca39\n");
-	VbExDebug("Actual: %ld 0x%lx\n", ld, ld);
+	VbExDebug("Actual: %d 0x%x\n", ld, ld);
 	VbExDebug("Expect: 2222222222 0x84746b8e\n");
-	VbExDebug("Actual: %lu 0x%lx\n", lu, lu);
+	VbExDebug("Actual: %u 0x%x\n", lu, lu);
 	VbExDebug("Expect: -8888888888888888888 0x84a452a6a1dc71c8\n");
 	VbExDebug("Actual: %lld 0x%llx\n", lld, lld);
 	VbExDebug("Expect: 11111111111111111111 0x9a3298afb5ac71c7\n");
@@ -74,7 +74,7 @@ static int do_vbexport_test_malloc_size(uint32_t size)
 	line_size = __BIGGEST_ALIGNMENT__;
 #endif
 
-	VbExDebug("Trying to malloc a memory block for %lu bytes...", size);
+	VbExDebug("Trying to malloc a memory block for %u bytes...", size);
 	if ((uintptr_t)mem % line_size != 0) {
 		VbExDebug("\nMemory not algined with a cache line!\n");
 		VbExFree(mem);
@@ -129,22 +129,22 @@ static void beep_handler(uint32_t msec)
 static int do_vbexport_test_sleep_time(sleep_handler_t handler, uint32_t msec)
 {
 	uint32_t start, end, delta, expected;
-	VbExDebug("System is going to sleep for %lu ms...\n", msec);
+	VbExDebug("System is going to sleep for %u ms...\n", msec);
 	start = VbExGetTimer();
 	(*handler)(msec);
 	end = VbExGetTimer();
 	delta = end - start;
-	VbExDebug("From tick %lu to %lu (delta: %lu)", start, end, delta);
+	VbExDebug("From tick %u to %u (delta: %u)", start, end, delta);
 
 	expected = msec * CONFIG_SYS_HZ;
 	/* The sleeping time should be accurate to within 10%. */
 	if (delta > expected + expected / 10) {
-		VbExDebug("\nSleep too long: expected %lu but actaully %lu!\n",
-				expected, delta);
+		VbExDebug("\nSleep too long: expected %u but actaully %u!\n",
+			  expected, delta);
 		return 1;
 	} else if (delta < expected - expected / 10) {
-		VbExDebug("\nSleep too short: expected %lu but actaully %lu!\n",
-				expected, delta);
+		VbExDebug("\nSleep too short: expected %u but actaully %u!\n",
+			  expected, delta);
 		return 1;
 	}
 	VbExDebug(" - SUCCESS\n");
@@ -199,12 +199,12 @@ static int do_vbexport_test_diskinfo_flags(uint32_t flags)
 	} else {
 		VbExDebug("handle    byte/lba  lba_count  f  name\n");
 		for (i = 0; i < count; i++) {
-			VbExDebug("%08lx  %-9llu %-10llu %-2lu %s",
-					info[i].handle,
-					info[i].bytes_per_lba,
-					info[i].lba_count,
-					info[i].flags,
-					info[i].name);
+			VbExDebug("%p  %-9llu %-10llu %-2u %s",
+				  info[i].handle,
+				  info[i].bytes_per_lba,
+				  info[i].lba_count,
+				  info[i].flags,
+				  info[i].name);
 
 			if ((flags & info[i].flags) != flags) {
 				VbExDebug("    INCORRECT: flag mismatched\n");
@@ -505,7 +505,7 @@ static int show_images_and_delay(BmpBlockHeader *bmph, int local, int index)
 	return 0;
 
 bad:
-	VbExDebug("Failed to display image, screen=%lu, image=%d!\n", index, i);
+	VbExDebug("Failed to display image, screen=%u, image=%d!\n", index, i);
 	return 1;
 }
 
@@ -530,7 +530,7 @@ static int do_vbexport_test_display(cmd_tbl_t *cmdtp, int flag,
 		return 1;
 	}
 
-	VbExDebug("The screen dimensions is %ldx%ld.\n", width, height);
+	VbExDebug("The screen dimensions is %dx%d.\n", width, height);
 
 	VbExDebug("Showing screens for localisation %d...\n", local);
 	mdelay(500);
