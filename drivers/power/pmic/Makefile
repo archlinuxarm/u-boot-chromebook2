@@ -34,7 +34,7 @@ COBJS-$(CONFIG_POWER_S2MPS11) += pmic_s2mps11.o
 else
 COBJS-$(CONFIG_POWER) += pmic_common.o
 endif
-COBJS-$(CONFIG_POWER_TPS65090) += pmic_tps65090.o
+COBJS-$(CONFIG_POWER_TPS65090_I2C) += pmic_tps65090.o
 
 COBJS	:= $(COBJS-y)
 SRCS	:= $(COBJS:.o=.c)
