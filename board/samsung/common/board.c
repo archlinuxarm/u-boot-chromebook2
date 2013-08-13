@@ -289,6 +289,10 @@ int board_init_tps65090(void)
 	if (ret == -ENODEV)
 		return 0;
 
+	/* Enable access to SD card on FET4 even if someone turned it off */
+	if (!ret)
+		ret = tps65090_fet_enable(4);
+
 	/* Disable backlight and LCD FET, initially */
 	if (!ret)
 		ret = tps65090_fet_disable(1);
