@@ -33,6 +33,7 @@
 
 #define TIMEOUT	10000
 
+/* TODO: add a setting for 4G that uses both chip selects */
 static struct mem_timings ares_ddr3_timings = {
 		.mem_manuf = MEM_MANUF_SAMSUNG,
 		.mem_type = DDR_MODE_DDR3,
@@ -91,7 +92,7 @@ static struct mem_timings ares_ddr3_timings = {
 			DMC_MEMCONTROL_ADD_LAT_PALL_CYCLE(0) |
 			DMC_MEMCONTROL_MEM_TYPE_DDR3 |
 			DMC_MEMCONTROL_MEM_WIDTH_32BIT |
-			DMC_MEMCONTROL_NUM_CHIP_2 |
+			DMC_MEMCONTROL_NUM_CHIP_1 |
 			DMC_MEMCONTROL_BL_8 |
 			DMC_MEMCONTROL_PZQ_DISABLE |
 			DMC_MEMCONTROL_MRR_BYTE_7_0,
@@ -109,8 +110,8 @@ static struct mem_timings ares_ddr3_timings = {
 			DMC_CONCONTROL_AREF_EN_DISABLE |
 			DMC_CONCONTROL_IO_PD_CON_DISABLE,
 		.dmc_channels = 1,
-		.chips_per_channel = 2,
-		.chips_to_configure = 2,
+		.chips_per_channel = 1,
+		.chips_to_configure = 1,
 		.send_zq_init = 1,
 		.gate_leveling_enable = 1,
 };
@@ -124,6 +125,7 @@ int ddr3_mem_ctrl_init(int reset)
 	struct exynos5_tzasc *tzasc0, *tzasc1;
 	struct mem_timings *mem = &ares_ddr3_timings;
 	u32 val, nLockR, nLockW_phy0, nLockW_phy1;
+	int chip;
 	int i;
 
 	phy0_ctrl = (struct exynos5_phy_control *)EXYNOS5_DMC_PHY0_BASE;
@@ -292,12 +294,14 @@ int ddr3_mem_ctrl_init(int reset)
 		 * Send auto refresh command for DRAM refresh.
 		 */
 		for (i = 0; i < 128; i++) {
-			writel(DIRECT_CMD_REFA, &drex0->directcmd);
-			writel(DIRECT_CMD_REFA | (0x1 << DIRECT_CMD_CHIP_SHIFT),
-			       &drex0->directcmd);
-			writel(DIRECT_CMD_REFA, &drex1->directcmd);
-			writel(DIRECT_CMD_REFA | (0x1 << DIRECT_CMD_CHIP_SHIFT),
-			       &drex1->directcmd);
+			for (chip = 0; chip < mem->chips_to_configure; chip++) {
+				writel(DIRECT_CMD_REFA |
+				       (chip << DIRECT_CMD_CHIP_SHIFT),
+				       &drex0->directcmd);
+				writel(DIRECT_CMD_REFA |
+				       (chip << DIRECT_CMD_CHIP_SHIFT),
+				       &drex1->directcmd);
+			}
 		}
 	}
 
@@ -343,12 +347,12 @@ int ddr3_mem_ctrl_init(int reset)
 		writel(nLockR, &phy1_ctrl->phy_con12);
 
 		val = (0x3 << DIRECT_CMD_BANK_SHIFT) | 0x4;
-		writel(val, &drex0->directcmd);
-		writel(val | (0x1 << DIRECT_CMD_CHIP_SHIFT),
-		       &drex0->directcmd);
-		writel(val, &drex1->directcmd);
-		writel(val | (0x1 << DIRECT_CMD_CHIP_SHIFT),
-		       &drex1->directcmd);
+		for (chip = 0; chip < mem->chips_to_configure; chip++) {
+			writel(val | (chip << DIRECT_CMD_CHIP_SHIFT),
+			       &drex0->directcmd);
+			writel(val | (chip << DIRECT_CMD_CHIP_SHIFT),
+			       &drex1->directcmd);
+		}
 
 		setbits_le32(&phy0_ctrl->phy_con2, RDLVL_GATE_EN);
 		setbits_le32(&phy1_ctrl->phy_con2, RDLVL_GATE_EN);
@@ -398,21 +402,21 @@ int ddr3_mem_ctrl_init(int reset)
 		writel(0, &phy1_ctrl->phy_con14);
 
 		val = (0x3 << DIRECT_CMD_BANK_SHIFT);
-		writel(val, &drex0->directcmd);
-		writel(val | (0x1 << DIRECT_CMD_CHIP_SHIFT),
-		       &drex0->directcmd);
-		writel(val, &drex1->directcmd);
-		writel(val | (0x1 << DIRECT_CMD_CHIP_SHIFT),
-		       &drex1->directcmd);
+		for (chip = 0; chip < mem->chips_to_configure; chip++) {
+			writel(val | (chip << DIRECT_CMD_CHIP_SHIFT),
+			       &drex0->directcmd);
+			writel(val | (chip << DIRECT_CMD_CHIP_SHIFT),
+			       &drex1->directcmd);
+		}
 
 		/* Set Read DQ Calibration */
 		val = (0x3 << DIRECT_CMD_BANK_SHIFT) | 0x4;
-		writel(val, &drex0->directcmd);
-		writel(val | (0x1 << DIRECT_CMD_CHIP_SHIFT),
-		       &drex0->directcmd);
-		writel(val, &drex1->directcmd);
-		writel(val | (0x1 << DIRECT_CMD_CHIP_SHIFT),
-		       &drex1->directcmd);
+		for (chip = 0; chip < mem->chips_to_configure; chip++) {
+			writel(val | (chip << DIRECT_CMD_CHIP_SHIFT),
+			       &drex0->directcmd);
+			writel(val | (chip << DIRECT_CMD_CHIP_SHIFT),
+			       &drex1->directcmd);
+		}
 
 		val = readl(&phy0_ctrl->phy_con1);
 		val |= READ_LEVELLING_DDR3;
@@ -459,12 +463,12 @@ int ddr3_mem_ctrl_init(int reset)
 		clrbits_le32(&drex1->rdlvl_config, CTRL_RDLVL_DATA_ENABLE);
 
 		val = (0x3 << DIRECT_CMD_BANK_SHIFT);
-		writel(val, &drex0->directcmd);
-		writel(val | (0x1 << DIRECT_CMD_CHIP_SHIFT),
-		       &drex0->directcmd);
-		writel(val, &drex1->directcmd);
-		writel(val | (0x1 << DIRECT_CMD_CHIP_SHIFT),
-		       &drex1->directcmd);
+		for (chip = 0; chip < mem->chips_to_configure; chip++) {
+			writel(val | (chip << DIRECT_CMD_CHIP_SHIFT),
+			       &drex0->directcmd);
+			writel(val | (chip << DIRECT_CMD_CHIP_SHIFT),
+			       &drex1->directcmd);
+		}
 
 		update_reset_dll(drex0, DDR_MODE_DDR3);
 		update_reset_dll(drex1, DDR_MODE_DDR3);
