@@ -55,46 +55,14 @@ const struct exynos_apll_pms exynos_pms = {
 
 #ifdef CONFIG_LCD
 #ifdef CONFIG_CHROMEOS_PEACH
-static void exynos_lcd_power_on_adv(void)
-{
-	struct pmic *p;
-	int ret;
-
-	p = pmic_get_by_id(COMPAT_SAMSUNG_S2MPS11_PMIC);
-	if (!p) {
-		debug("%s: Failed to get PMIC data\n", __func__);
-		return;
-	}
-
-	/* PVDD_LDO12 set to 1V */
-	if (pmic_reg_write(p, S2MPS11_LDO22_CTRL, S2MPS11_BUCK_CTRL2_1_2V)) {
-		printf("%s: PMIC %d register write failed\n", __func__,
-							S2MPS11_LDO22_CTRL);
-		printf("P1.2V_LDO_OUT22 not initialized\n");
-		return;
-	}
-	mdelay(15);	/* TODO: Use state machine to remove delay */
-
-	/* eDP-LVDS ANX chip RESET_L */
-	gpio_cfg_pin(EXYNOS5420_GPIO_X15, S5P_GPIO_OUTPUT);
-	gpio_set_value(EXYNOS5420_GPIO_X15, 1);
-
-	/* Initialize the eDP-LVDS ANX chip */
-	ret = analogix_init(gd->fdt_blob);
-	if (ret && (ret != -ENOENT)) {
-		printf("ANX1120 failed to init\n");
-		return;
-	}
-}
-
 static void exynos_lcd_power_on_rev1(void)
 {
 	struct pmic *p;
 	p = pmic_get_by_id(COMPAT_MAXIM_MAX77802_PMIC);
- 	if (!p) {
+	if (!p) {
 		debug("%s: Failed to get PMIC data\n", __func__);
- 		return;
- 	}
+		return;
+	}
 
 	/* LDO35 set 1.2V */
 	if (pmic_reg_update(p, MAX77802_REG_PMIC_LDO35CTRL1,
@@ -105,7 +73,29 @@ static void exynos_lcd_power_on_rev1(void)
 	}
 
 	/* TODO: Take care of the bridge initialization here */
- 	mdelay(15);	/* TODO: Use state machine to remove delay */
+	mdelay(15);	/* TODO: Use state machine to remove delay */
+
+	/* TODO(sjg@chromium.org): Use device tree */
+	gpio_direction_output(EXYNOS5420_GPIO_Y77, 1);	/* EDP_RST# */
+	gpio_direction_output(EXYNOS5420_GPIO_X35, 1);	/* EDP_SLP# */
+	gpio_direction_input(EXYNOS5420_GPIO_X26);	/* EDP_HPD */
+	gpio_set_pull(EXYNOS5420_GPIO_X26, S5P_GPIO_PULL_NONE);
+
+	/*
+	 * TODO(sjg@chromium.org): printf() for now until this function can
+	 * actually return a value.
+	 */
+	if (parade_init(gd->fdt_blob))
+		printf("%s: ps8625_init() failed\n", __func__);
+
+	tps65090_fet_enable(6);
+}
+
+static void exynos_lcd_power_on_rev5(void)
+{
+	tps65090_fet_enable(6);
+
+	mdelay(10);
 
 	/* TODO(sjg@chromium.org): Use device tree */
 	gpio_direction_output(EXYNOS5420_GPIO_Y77, 1);	/* EDP_RST# */
@@ -123,10 +113,10 @@ static void exynos_lcd_power_on_rev1(void)
 
 void exynos_lcd_power_on(void)
 {
-	/* one of the two will find its PMIC and set up the display */
-	exynos_lcd_power_on_adv();
-	exynos_lcd_power_on_rev1();
-	tps65090_fet_enable(6);
+	if (board_get_revision() < 5)
+		exynos_lcd_power_on_rev1();
+	else
+		exynos_lcd_power_on_rev5();
 }
 
 void exynos_backlight_on(unsigned int onoff)
