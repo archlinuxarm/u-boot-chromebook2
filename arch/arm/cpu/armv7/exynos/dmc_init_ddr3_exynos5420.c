@@ -39,7 +39,8 @@ static struct mem_timings ares_ddr3_timings = {
 		.mem_type = DDR_MODE_DDR3,
 		.frequency_mhz = 800,
 		.direct_cmd_msr = {
-			0x00020018, 0x00030000, 0x00010002, 0x00000d70
+			0x00020018, 0x00030000, 0x00010046, 0x00000d70,
+			0x00000c70
 		},
 		.timing_ref = 0x000000bb,
 		.timing_row = 0x6836650f,
@@ -72,7 +73,7 @@ static struct mem_timings ares_ddr3_timings = {
 
 		.rd_fetch = 0x3,
 
-		.zq_mode_dds = 0x6,
+		.zq_mode_dds = 0x7,
 		.zq_mode_term = 0x1,
 		.zq_mode_noterm = 1,
 
@@ -177,12 +178,12 @@ int ddr3_mem_ctrl_init(int reset)
 	writel(val, &phy1_ctrl->phy_con26);
 
 	/* Set Driver strength for CK, CKE, CS & CA to 0x7
-	 * Set Driver strength for Data Slice 0~3 to 0x6
+	 * Set Driver strength for Data Slice 0~3 to 0x7
 	 */
 	val = (0x7 << CA_CK_DRVR_DS_OFFSET) | (0x7 << CA_CKE_DRVR_DS_OFFSET) |
 		(0x7 << CA_CS_DRVR_DS_OFFSET) | (0x7 << CA_ADR_DRVR_DS_OFFSET);
-	val |= (0x6 << DA_3_DS_OFFSET) | (0x6 << DA_2_DS_OFFSET) |
-		(0x6 << DA_1_DS_OFFSET) | (0x6 << DA_0_DS_OFFSET);
+	val |= (0x7 << DA_3_DS_OFFSET) | (0x7 << DA_2_DS_OFFSET) |
+		(0x7 << DA_1_DS_OFFSET) | (0x7 << DA_0_DS_OFFSET);
 	writel(val, &phy0_ctrl->phy_con39);
 	writel(val, &phy1_ctrl->phy_con39);
 
@@ -194,8 +195,12 @@ int ddr3_mem_ctrl_init(int reset)
 	clrbits_le32(&phy1_ctrl->phy_con16, ZQ_CLK_DIV_EN);
 
 	/* DQ Signal */
-	writel(mem->phy0_pulld_dqs, &phy0_ctrl->phy_con14);
-	writel(mem->phy1_pulld_dqs, &phy1_ctrl->phy_con14);
+	val = readl(&phy0_ctrl->phy_con14);
+	val |= mem->phy0_pulld_dqs;
+	writel(val, &phy0_ctrl->phy_con14);
+	val = readl(&phy1_ctrl->phy_con14);
+	val |= mem->phy1_pulld_dqs;
+	writel(val, &phy1_ctrl->phy_con14);
 
 	val = MEM_TERM_EN | PHY_TERM_EN;
 	writel(val, &drex0->phycontrol0);
@@ -307,8 +312,8 @@ int ddr3_mem_ctrl_init(int reset)
 
 	if (mem->gate_leveling_enable) {
 
-		setbits_le32(&phy0_ctrl->phy_con0, CTRL_ATGATE);
-		setbits_le32(&phy1_ctrl->phy_con0, CTRL_ATGATE);
+		writel(PHY_CON0_RESET_VAL, &phy0_ctrl->phy_con0);
+		writel(PHY_CON0_RESET_VAL, &phy1_ctrl->phy_con0);
 
 		setbits_le32(&phy0_ctrl->phy_con0, P0_CMD_EN);
 		setbits_le32(&phy1_ctrl->phy_con0, P0_CMD_EN);
@@ -317,12 +322,6 @@ int ddr3_mem_ctrl_init(int reset)
 		val |= INIT_DESKEW_EN;
 		writel(val, &phy0_ctrl->phy_con2);
 		writel(val, &phy1_ctrl->phy_con2);
-
-		val = PHY_CON0_RESET_VAL;
-		val |= P0_CMD_EN;
-		val |= BYTE_RDLVL_EN;
-		writel(val, &phy0_ctrl->phy_con0);
-		writel(val, &phy1_ctrl->phy_con0);
 
 		val =  readl(&phy0_ctrl->phy_con1);
 		val |= (RDLVL_PASS_ADJ_VAL << RDLVL_PASS_ADJ_OFFSET);
@@ -425,12 +424,18 @@ int ddr3_mem_ctrl_init(int reset)
 	writel(mem->memcontrol, &drex0->memcontrol);
 	writel(mem->memcontrol, &drex1->memcontrol);
 
-	/* Set DMC Concontrol and enable auto-refresh counter */
+	/*
+	 * Set DMC Concontrol: Enable auto-refresh counter, provide
+	 * read data fetch cycles and enable DREX auto set powerdown
+	 * for input buffer of I/O in none read memory state.
+	 */
 	writel(mem->concontrol | (mem->aref_en << CONCONTROL_AREF_EN_SHIFT) |
-		(mem->rd_fetch << CONCONTROL_RD_FETCH_SHIFT),
+		(mem->rd_fetch << CONCONTROL_RD_FETCH_SHIFT)|
+		DMC_CONCONTROL_IO_PD_CON(0x2),
 		&drex0->concontrol);
 	writel(mem->concontrol | (mem->aref_en << CONCONTROL_AREF_EN_SHIFT) |
-		(mem->rd_fetch << CONCONTROL_RD_FETCH_SHIFT),
+		(mem->rd_fetch << CONCONTROL_RD_FETCH_SHIFT)|
+		DMC_CONCONTROL_IO_PD_CON(0x2),
 		&drex1->concontrol);
 
 	/* Enable Clock Gating Control for DMC

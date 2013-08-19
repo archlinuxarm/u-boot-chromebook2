@@ -26,7 +26,11 @@
 #define __EXYNOS_CLOCK_INIT_H
 
 enum {
+#ifdef CONFIG_EXYNOS5420
+	MEM_TIMINGS_MSR_COUNT	= 5,
+#else
 	MEM_TIMINGS_MSR_COUNT	= 4,
+#endif
 };
 
 /* These are the ratio's for configuring ARM clock */

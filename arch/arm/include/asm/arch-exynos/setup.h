@@ -144,6 +144,8 @@
 				| DMC_CONCONTROL_AREF_EN_ENABLE		\
 				| DMC_CONCONTROL_IO_PD_CON_ENABLE
 
+#define DMC_CONCONTROL_IO_PD_CON(x)		(x << 6)
+
 /* CLK_DIV_CPU1 */
 #define HPM_RATIO               0x2
 #define COPY_RATIO              0x0
