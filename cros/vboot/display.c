@@ -18,6 +18,7 @@
 #include <cros/cros_fdtdec.h>
 #include <cros/common.h>
 #include <cros/crossystem_data.h>
+#include <cros/cros_init.h>
 #include <lzma/LzmaTypes.h>
 #include <lzma/LzmaDec.h>
 #include <lzma/LzmaTools.h>
@@ -75,6 +76,14 @@ static struct display_callbacks display_callbacks_ = {
 
 VbError_t VbExDisplayInit(uint32_t *width, uint32_t *height)
 {
+#ifdef CONFIG_EXYNOS_FB
+	/*
+	 * late LCD initialization presently suupported on Exynos systems
+	 * only.
+	 */
+	if (defer_display_init(gd->fdt_blob))
+		lcd_late_init();
+#endif
 	/*
 	 * crosbug.com/p/13492
 	 * This may be an unexpected display init request - probably due to a

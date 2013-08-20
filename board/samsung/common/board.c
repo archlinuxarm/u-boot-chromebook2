@@ -466,8 +466,19 @@ int arch_early_init_r(void)
 	return 0;
 }
 
+__weak int defer_display_init(const void *blob) { return 0; }
+
 void board_lcd_panel_on(vidinfo_t *vid)
 {
-	if (board_is_processor_reset())
-		exynos_lcd_panel_on(vid);
+	if (defer_display_init(gd->fdt_blob)) {
+		debug("%s: display init deferred\n", __func__);
+		return;
+	}
+
+	if (!board_is_processor_reset())
+		return;
+
+	bootstage_start(BOOTSTAGE_ID_ACCUM_LCD, "LCD init");
+	exynos_lcd_panel_on(vid);
+	bootstage_accum(BOOTSTAGE_ID_ACCUM_LCD);
 }

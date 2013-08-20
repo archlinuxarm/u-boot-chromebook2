@@ -287,6 +287,7 @@ int	display_options (void);
 void	print_size(unsigned long long, const char *);
 int print_buffer(ulong addr, const void *data, uint width, uint count,
 		 uint linelen);
+void lcd_late_init(void);
 
 /* common/main.c */
 void	main_loop	(void);

@@ -213,6 +213,10 @@ hda-codec-beep-nid
 	This can save having to search for it and perhaps finding the wrong
 	one.
 
+lazy-init
+	An integer, if present and positive, U-Boot will defer initialization
+	of some peripherals until absolutely necessary.
+
 load-environment
 	If 0, the environment is not loaded on boot. If 1 it is loaded.
 

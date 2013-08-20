@@ -358,3 +358,8 @@ void lcd_setcolreg(ushort regno, ushort red, ushort green, ushort blue)
 {
 	return;
 }
+
+void lcd_late_init(void)
+{
+	exynos_lcd_panel_on(&panel_info);
+}

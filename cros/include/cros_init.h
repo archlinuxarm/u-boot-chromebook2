@@ -19,4 +19,17 @@
  */
 int cros_init(void);
 
+/**
+ * Check if display initialization should be deferred.
+ *
+ * Based on value of 'lazy-init' property - if it is present and non-zero -
+ * defer display initialization.
+ *
+ * @ param blob   pointer to the device tree too search lazy-init in.
+ *
+ * Return True if display initialization should be deferred (lazy-init value
+ *             set to a positive number).
+ */
+int defer_display_init(const void *blob);
+
 #endif /* CHROMEOS_CROS_INIT_ */
