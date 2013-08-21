@@ -216,7 +216,7 @@ int fdt_ensure_chosen(void *fdt)
 	int nodeoffset;
 
 	/* Find or create the /chosen node */
-	nodeoffset = fdt_ensure_subnode(fdt, 0, "/chosen");
+	nodeoffset = fdt_ensure_subnode(fdt, 0, "chosen");
 	if (nodeoffset < 0) {
 		printf("WARNING: could not create /chosen %s.\n",
 		       fdt_strerror(nodeoffset));
