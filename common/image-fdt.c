@@ -106,7 +106,7 @@ void boot_fdt_add_mem_rsv_regions(struct lmb *lmb, void *fdt_blob)
 }
 
 #ifdef CONFIG_CONSOLE_RECORDING
-int boot_fdt_add_console_buffer(void *fdt_blob)
+int boot_fdt_add_console_buffer(void)
 {
 	int node_offset;
 	struct record_descriptor rd;
@@ -116,11 +116,11 @@ int boot_fdt_add_console_buffer(void *fdt_blob)
 	if (!rd.char_count)
 		return -FDT_ERR_INTERNAL;
 
-	node_offset = fdt_path_offset(fdt_blob, "/chosen");
+	node_offset = fdt_path_offset(working_fdt, "/chosen");
 	if (node_offset < 0)
 		return FDT_ERR_NOTFOUND;
 
-	return fdt_setprop(fdt_blob, node_offset, "ap-console-buffer",
+	return fdt_setprop(working_fdt, node_offset, "ap-console-buffer",
 			   rd.buffer_addr, rd.char_count);
 }
 #endif

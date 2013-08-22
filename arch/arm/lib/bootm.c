@@ -83,16 +83,6 @@ static void announce_and_cleanup(int fake, void *dt)
 #ifdef CONFIG_USB_DEVICE
 	udc_disconnect();
 #endif
-#ifdef CONFIG_CONSOLE_RECORDING
-	{
-		int rv;
-
-		rv = boot_fdt_add_console_buffer(dt);
-		if (rv)
-			printf("%s: Console recording failed (%d)\n",
-			       __func__, rv);
-	}
-#endif
 	cleanup_before_linux();
 }
 

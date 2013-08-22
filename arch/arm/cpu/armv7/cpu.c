@@ -54,6 +54,16 @@ int cleanup_before_linux(void)
 #if !defined(CONFIG_SPL_BUILD) && defined(CONFIG_BOOTSTAGE_REPORT)
 	bootstage_report();
 #endif
+#ifdef CONFIG_CONSOLE_RECORDING
+	{
+		int rv;
+
+		rv = boot_fdt_add_console_buffer();
+		if (rv)
+			printf("%s: Console recording failed (%d)\n",
+			       __func__, rv);
+	}
+#endif
 #ifdef CONFIG_BOOTSTAGE_STASH
 	bootstage_stash((void *)CONFIG_BOOTSTAGE_STASH,
 			CONFIG_BOOTSTAGE_STASH_SIZE);
