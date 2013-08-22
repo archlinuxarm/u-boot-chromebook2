@@ -26,13 +26,13 @@
 #include <config.h>
 #include <asm/arch/cpu.h>
 #include <asm/arch/dmc.h>
-#include <asm/arch/power.h>
-#include <asm/arch/tzpc.h>
+#include <asm/arch/mct.h>
 #include <asm/arch/periph.h>
 #include <asm/arch/pinmux.h>
 #include <asm/arch/power.h>
 #include <asm/arch/setup.h>
 #include <asm/arch/system.h>
+#include <asm/arch/tzpc.h>
 
 /* These are the things we can do during low-level init */
 enum {
@@ -217,6 +217,16 @@ static void secondary_cores_configure(void)
 }
 #endif
 
+static void mct_init(void)
+{
+	struct exynos5_mct *mct = (struct exynos5_mct *)samsung_get_base_mct();
+
+	writel(0, &mct->mct_cfg);
+	writel(0, &mct->g_cnt_l);
+	writel(0, &mct->g_cnt_u);
+	writel(MCT_G_TCON_TIMER_ENABLE, &mct->g_tcon);
+}
+
 int do_lowlevel_init(void)
 {
 	uint32_t reset_status;
@@ -249,9 +259,10 @@ int do_lowlevel_init(void)
 		power_init();
 		/* TODO: Also call board_power_init()? */
 
-	if (actions & DO_CLOCKS)
+	if (actions & DO_CLOCKS) {
 		system_clock_init();
-
+		mct_init();
+	}
 #ifdef CONFIG_SPL_SERIAL_SUPPORT
 	if (actions & DO_UART) {
 		/* Set up serial UART so we can print. */
