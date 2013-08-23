@@ -152,8 +152,6 @@
 
 #define CONFIG_BOOTDELAY		0
 
-#define CONFIG_ZERO_BOOTDELAY_CHECK
-
 /* Thermal Management Unit */
 #define CONFIG_EXYNOS_TMU
 #define CONFIG_CMD_DTT
