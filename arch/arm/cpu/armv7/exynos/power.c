@@ -154,6 +154,8 @@ void exynos5_power_shutdown(void)
 		(struct exynos5_power *)samsung_get_base_power();
 
 	clrbits_le32(&power->ps_hold_control, EXYNOS_PS_HOLD_CONTROL_DATA_HIGH);
+	while (1)
+		; /* Don't return from here, let EC/PMIC do their thing. */
 }
 
 void exynos5_power_reset(void)
