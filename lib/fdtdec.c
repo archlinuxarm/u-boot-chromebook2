@@ -287,8 +287,19 @@ int fdtdec_add_aliases_for_id(const void *blob, const char *name,
 		node = 0;
 		prop = fdt_get_property_by_offset(blob, offset, NULL);
 		path = fdt_string(blob, fdt32_to_cpu(prop->nameoff));
-		if (prop->len && 0 == strncmp(path, name, name_len))
-			node = fdt_path_offset(blob, prop->data);
+		if (prop->len && !strncmp(path, name, name_len)) {
+			/* See if this alias name is in our list */
+			for (j = 0; j < count; j++) {
+				if (nodes[j] > 0 &&
+				    !strcmp(prop->data + 1, /* skip '/' */
+					    fdt_get_name(blob, nodes[j],
+							 NULL))) {
+					node = nodes[j];
+					found = j;
+					break;
+				}
+			}
+		}
 		if (node <= 0)
 			continue;
 
@@ -297,23 +308,6 @@ int fdtdec_add_aliases_for_id(const void *blob, const char *name,
 		if (number < 0 || number >= maxcount) {
 			debug("%s: warning: alias '%s' is out of range\n",
 			       __func__, path);
-			continue;
-		}
-
-		/* Make sure the node we found is actually in our list! */
-		found = -1;
-		for (j = 0; j < count; j++)
-			if (nodes[j] == node) {
-				found = j;
-				break;
-			}
-
-		if (found == -1) {
-			debug("%s: warning: alias '%s' points to a node "
-				"'%s' that is missing or is not compatible "
-				" with '%s'\n", __func__, path,
-				fdt_get_name(blob, node, NULL),
-			       compat_names[id]);
 			continue;
 		}
 

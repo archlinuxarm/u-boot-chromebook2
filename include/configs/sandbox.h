@@ -45,6 +45,7 @@
 #define CONFIG_FIT
 #define CONFIG_CMD_FDT
 #define CONFIG_DEFAULT_DEVICE_TREE	sandbox
+#define CONFIG_TEST_FDTDEC
 
 #define CONFIG_FS_FAT
 #define CONFIG_FS_EXT4

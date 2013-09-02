@@ -95,7 +95,6 @@ static int make_fdt(void *fdt, int size, const char *aliases,
 {
 	char name[20], value[20];
 	const char *s;
-	int fd;
 
 	CHECK(fdt_create(fdt, size));
 	CHECK(fdt_finish_reservemap(fdt));
@@ -124,6 +123,8 @@ static int make_fdt(void *fdt, int size, const char *aliases,
 	CHECK(fdt_finish(fdt));
 	CHECK(fdt_pack(fdt));
 #if defined(DEBUG) && defined(CONFIG_SANDBOX)
+	int fd;
+
 	fd = os_open("/tmp/fdtdec-text.dtb", OS_O_CREAT | OS_O_WRONLY);
 	if (fd == -1) {
 		printf("Could not open .dtb file to write\n");
