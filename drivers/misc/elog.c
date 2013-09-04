@@ -220,6 +220,11 @@ static int elog_is_header_valid(struct elog_header *header)
 
 /*
  * Validate the event header and data.
+ *
+ * @param event: pointer to the event header structure
+ * @param max_size: maximum size the event must fit in
+ *
+ * Returns zero on failure, 1 on success.
  */
 static int elog_is_event_valid(struct event_header *event, int max_size)
 {
@@ -228,35 +233,27 @@ static int elog_is_event_valid(struct event_header *event, int max_size)
 		return 0;
 	}
 
-	/* Validate event length */
-	if (offsetof(struct event_header, type) +
-	    sizeof(event->type) - 1 >= max_size)
-		return 0;
-
-	/* End of event marker has been found */
-	if (event->type == ELOG_TYPE_EOL)
-		return 0;
-
 	/* Check if event fits in area */
-	if (offsetof(struct event_header, length) +
-	    sizeof(event->length) - 1 >= max_size)
+	if ((offsetof(struct event_header, length) +
+	     sizeof(event->length) - 1 >= max_size) ||
+	    (event->length >= max_size)) {
+		printf("%s: event does not fit into %d bytes\n",
+		       __func__, max_size);
 		return 0;
-
-	/*
-	 * If the current event length + the current offset exceeds
-	 * the area size then the event area is corrupt.
-	 */
-	if (event->length >= max_size)
-		return 0;
+	}
 
 	/* Event length must be at least header size + checksum */
-	if (event->length < (sizeof(*event) + 1))
+	if (event->length < (sizeof(*event) + 1)) {
+		debug("%s event too small (%d bytes)\n",
+		      __func__, event->length);
 		return 0;
+	}
 
 	/* If event checksum is invalid the area is corrupt */
-	if (elog_checksum_event(event) != 0)
+	if (elog_checksum_event(event) != 0) {
+		printf("%s: bad checksum\n", __func__);
 		return 0;
-
+	}
 	/* Event is valid */
 	return 1;
 }
@@ -280,12 +277,16 @@ static void elog_update_event_buffer_state(void)
 		if ((offsetof(struct event_header, type) +
 		    sizeof(event->type) - 1 + offset) >= log_size) {
 			event_buffer_state = ELOG_EVENT_BUFFER_CORRUPTED;
+			printf("%s event type does not fit\n",  __func__);
 			break;
 		}
 
 		/* The end of the event marker has been found */
 		if (event->type == ELOG_TYPE_EOL)
 			break;
+
+		debug("checking event 0x%x at 0x%x\n", event->type,
+		      (unsigned)event - (unsigned)elog_area);
 
 		/* Validate the event */
 		if (!elog_is_event_valid(event, log_size - offset)) {
@@ -514,6 +515,10 @@ int elog_init(void)
 		/* If the header is invalid or the events are corrupted,
 		 * no events can be salvaged so erase the entire area. */
 		printf("ELOG: flash area invalid\n");
+#ifdef DEBUG
+		return 0;
+#endif
+
 		elog_spi->erase(elog_spi, flash_base, total_size);
 		elog_prepare_empty();
 	}
@@ -528,11 +533,11 @@ int elog_init(void)
 
 	elog_initialized = 1;
 
-	printf("ELOG: FLASH @0x%p [SPI 0x%08x]\n",
-	       elog_area, flash_base);
+	debug("ELOG: FLASH @0x%p [SPI 0x%08x]\n",
+	      elog_area, flash_base);
 
-	printf("ELOG: area is %d bytes, full threshold %d, shrink size %d\n",
-	       total_size, full_threshold, shrink_size);
+	debug("ELOG: area is %d bytes, full threshold %d, shrink size %d\n",
+	      total_size, full_threshold, shrink_size);
 
 	/* Log panic events left for us by the kernel. */
 	if (panic_start) {
