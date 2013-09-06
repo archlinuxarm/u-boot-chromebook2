@@ -88,6 +88,18 @@ static int config_branch_prediction(int set_cr_z)
 	return cr & CR_Z;
 }
 
+/*
+ * Figure out current boot mode.
+ */
+static enum boot_mode spl_boot_mode(void)
+{
+	/* See if bl1 requests booting from USB. */
+	if (readl(EXYNOS_IRAM_SECONDARY_BASE) == EXYNOS_USB_SECONDARY_BOOT)
+		return BOOT_MODE_USB;
+
+	return readl(EXYNOS5_POWER_BASE) & OM_STAT;
+}
+
 #if defined(CONFIG_ELOG) || defined(CONFIG_EXYNOS_FAST_SPI_BOOT)
 /**
  * Dedicated function for receiving data over SPI in 4 byte chunnks.
@@ -462,11 +474,9 @@ static void exynos_log_wake_event(void)
 * COPY_BL2_FNPTR_ADDR: Address in iRAM, which Contains
 * Pointer to API (Data transfer from mmc to ram)
 */
-enum boot_mode copy_uboot_to_ram(void)
+static void copy_uboot_to_ram(enum boot_mode bootmode)
 {
 	int is_cr_z_set;
-	unsigned int sec_boot_check;
-	enum boot_mode bootmode = BOOT_MODE_OM;
 #ifndef CONFIG_EXYNOS_FAST_SPI_BOOT
 	u32 (*spi_copy)(u32 offset, u32 nblock, u32 dst);
 #endif
@@ -478,14 +488,6 @@ enum boot_mode copy_uboot_to_ram(void)
 	u32 (*usb_copy)(void);
 
 	uboot_size = param->uboot_size;
-
-	/* Read iRAM location to check for secondary USB boot mode */
-	sec_boot_check = readl(EXYNOS_IRAM_SECONDARY_BASE);
-	if (sec_boot_check == EXYNOS_USB_SECONDARY_BOOT)
-		bootmode = BOOT_MODE_USB;
-
-	if (bootmode == BOOT_MODE_OM)
-		bootmode = readl(EXYNOS5_POWER_BASE) & OM_STAT;
 
 	switch (bootmode) {
 	case BOOT_MODE_SERIAL:
@@ -528,8 +530,6 @@ enum boot_mode copy_uboot_to_ram(void)
 	default:
 		break;
 	}
-
-	return bootmode;
 }
 
 /* Tell the loaded U-Boot that it was loaded from SPL */
@@ -691,9 +691,7 @@ void board_init_f(unsigned long bootflag)
 {
 	__attribute__((aligned(8))) gd_t local_gd;
 	__attribute__((noreturn)) void (*uboot)(void);
-#ifdef CONFIG_SPL_MMC_BOOT_WP
 	enum boot_mode bootmode;
-#endif
 
 	exynos5_set_spl_marker();
 	setup_global_data(&local_gd);
@@ -706,6 +704,7 @@ void board_init_f(unsigned long bootflag)
 		power_exit_wakeup();
 	}
 
+	bootmode = spl_boot_mode();
 #ifdef CONFIG_SPL_MMC_BOOT_WP
 	/*
 	 * GPIOs on the Exynos 5250 default to pulled down.  It will take a
@@ -713,8 +712,6 @@ void board_init_f(unsigned long bootflag)
 	 * before copying U-Boot, giving it that time to settle.
 	 */
 	spl_boot_wp_init();
-
-	bootmode = copy_uboot_to_ram();
 
 	/* Only set eMMC write protection if booting from eMMC */
 	if (bootmode == BOOT_MODE_EMMC && check_and_set_wp()) {
@@ -724,9 +721,8 @@ void board_init_f(unsigned long bootflag)
 		 */
 		hang();
 	}
-#else
-	copy_uboot_to_ram();
 #endif
+	copy_uboot_to_ram(bootmode);
 
 	/* Jump to U-Boot image */
 	uboot = (void *)CONFIG_SYS_TEXT_BASE;
