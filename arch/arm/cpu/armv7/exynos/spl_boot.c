@@ -90,11 +90,59 @@ static int config_branch_prediction(int set_cr_z)
 
 #if defined(CONFIG_ELOG) || defined(CONFIG_EXYNOS_FAST_SPI_BOOT)
 /**
+ * Dedicated function for receiving data over SPI in 4 byte chunnks.
+ *
+ * @param regs	pointer to SPI controller register block
+ * @parma todo	how many bytes to receive
+ * @param dinp	pointer to the buffer for received data, 4 bytes aligned
+ */
+static void spi_fast_rx(struct exynos_spi *regs, int todo, uint32_t *dinp)
+{
+	unsigned rx_lvl, tx_lvl;
+	unsigned tx_bytes;
+
+	/*
+	 * Just in case, round up the counter. Let's not worry about
+	 * occasional overwrites of the tail of the buffer.
+	 */
+	todo = (todo + 3) & ~3;
+	tx_bytes = todo;
+
+	while (todo) {
+		uint32_t spi_sts;
+
+		spi_sts = readl(&regs->spi_sts);
+		rx_lvl = (spi_sts >> 15) & 0x7f;
+		tx_lvl = (spi_sts >> 6) & 0x7f;
+
+		/*
+		 * Even though the FIFO is at least 64 bytes in size (256
+		 * bytes on port 0 on 5420), let's not feed more that 32 bytes
+		 * at a time - with larger batches occasional RX erors creep
+		 * in.
+		 */
+		while ((tx_lvl < 32) && tx_bytes) {
+			writel(~0, &regs->tx_data);
+			tx_lvl += 4;
+			tx_bytes -= 4;
+		}
+
+		while ((rx_lvl >= 4) && todo) {
+			*dinp++ = readl(&regs->rx_data);
+			todo -= 4;
+			rx_lvl -= 4;
+		}
+	}
+}
+
+
+
+/**
  * Send and receive data over SPI. This doesn't handle bus initialization or
  * cleanup.
  *
  * @param regs		pointer to SPI controller register block
- * @parma todo		how many bytes to send
+ * @parma todo		how many bytes to send or receive
  * @param dinp		pointer to the buffer for received data, or NULL
  * @param doutp		pointer to the buffer of data to transmit, or NULL
  * @param word_chunks	whether to send the data in byte or word chunks
@@ -120,6 +168,12 @@ static void spi_rx_tx(struct exynos_spi *regs, int todo, void *dinp,
 	clrbits_le32(&regs->ch_cfg, SPI_CH_RST);
 	writel(((todo + chunk_size - 1) / chunk_size) | SPI_PACKET_CNT_EN,
 	       &regs->pkt_cnt);
+
+	if (word_chunks && !doutp && !((unsigned)dinp & 3)) {
+		/* This is the case for fast receive implementation. */
+		spi_fast_rx(regs, todo, dinp);
+		return;
+	}
 
 	while (in_bytes || out_bytes) {
 		uint32_t spi_sts;
