@@ -94,4 +94,8 @@
 
 #define CONFIG_CROS_EC_SPI		/* Support CROS_EC over SPI */
 
+#ifndef CONFIG_SPL_BUILD
+#define CONFIG_SKIP_LOWLEVEL_INIT
+#endif
+
 #endif	/* __CONFIG_CHROMEOS_PEACH_H */
