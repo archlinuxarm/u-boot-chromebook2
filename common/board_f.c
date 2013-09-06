@@ -469,14 +469,20 @@ static int reserve_round_4k(void)
 		defined(CONFIG_ARM)
 static int reserve_mmu(void)
 {
-	/* reserve TLB table */
 	gd->arch.tlb_size = 4096 * 4;
-	gd->dest_addr -= gd->arch.tlb_size;
 
-	/* round down to next 64 kB limit */
-	gd->dest_addr &= ~(0x10000 - 1);
+	if (dcache_status()) {
+		/* If the cache is already on, use the existing MMU address */
+		gd->arch.tlb_addr = get_ttbr();
+	} else {
+		/* reserve TLB table */
+		gd->dest_addr -= gd->arch.tlb_size;
 
-	gd->arch.tlb_addr = gd->dest_addr;
+		/* round down to next 64 kB limit */
+		gd->dest_addr &= ~(0x10000 - 1);
+
+		gd->arch.tlb_addr = gd->dest_addr;
+	}
 	debug("TLB table from %08lx to %08lx\n", gd->arch.tlb_addr,
 	      gd->arch.tlb_addr + gd->arch.tlb_size);
 	return 0;

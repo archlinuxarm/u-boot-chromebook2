@@ -100,6 +100,30 @@ static enum boot_mode spl_boot_mode(void)
 	return readl(EXYNOS5_POWER_BASE) & OM_STAT;
 }
 
+/*
+ * Prepare a `fake' dram description so that the mmu can be set up, then
+ * enable dcache.
+ */
+static void spl_enable_dcache(void)
+{
+	bd_t bd;
+
+	memset(&bd, '\0', sizeof(bd));
+
+	/* First bank is IRAM */
+	bd.bi_dram[0].start = CONFIG_PHY_IRAM_BASE;
+	bd.bi_dram[0].size = CONFIG_IRAM_TOP - CONFIG_PHY_IRAM_BASE;
+
+	/* Second is all of DRAM - 2GB for now */
+	bd.bi_dram[1].start = CONFIG_SYS_SDRAM_BASE;
+	bd.bi_dram[1].size = 2UL << 30;
+
+	gd->bd = &bd;
+	gd->arch.tlb_addr = CONFIG_PHY_IRAM_TLB_BASE;
+	dcache_enable();
+	gd->bd = NULL;
+}
+
 #if defined(CONFIG_ELOG) || defined(CONFIG_EXYNOS_FAST_SPI_BOOT)
 /**
  * Dedicated function for receiving data over SPI in 4 byte chunnks.
@@ -468,6 +492,13 @@ static void exynos_log_wake_event(void)
 }
 #endif
 
+/*
+ * Based on boot mode determine if dcache should be enabled.
+ */
+static int spl_use_dcache(enum boot_mode bootmode)
+{
+	return (bootmode != BOOT_MODE_USB);
+}
 
 /*
 * Copy U-boot from mmc to RAM:
@@ -530,6 +561,10 @@ static void copy_uboot_to_ram(enum boot_mode bootmode)
 	default:
 		break;
 	}
+
+	if (spl_use_dcache(bootmode))
+		flush_dcache_range(CONFIG_SYS_TEXT_BASE,
+				   CONFIG_SYS_TEXT_BASE + uboot_size);
 }
 
 /* Tell the loaded U-Boot that it was loaded from SPL */
@@ -705,6 +740,10 @@ void board_init_f(unsigned long bootflag)
 	}
 
 	bootmode = spl_boot_mode();
+
+	if (spl_use_dcache(bootmode))
+		spl_enable_dcache();
+
 #ifdef CONFIG_SPL_MMC_BOOT_WP
 	/*
 	 * GPIOs on the Exynos 5250 default to pulled down.  It will take a

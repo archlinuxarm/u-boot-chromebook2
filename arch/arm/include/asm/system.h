@@ -95,6 +95,14 @@ static inline void set_dacr(unsigned int val)
 	isb();
 }
 
+static inline unsigned int get_ttbr(void)
+{
+	unsigned int val;
+
+	asm("mrc p15, 0, %0, c2, c0, 0  @ get TTBR" : "=r" (val) : : "cc");
+	return val;
+}
+
 /* options available for data cache on each page */
 enum dcache_option {
 	DCACHE_OFF = 0x12,
