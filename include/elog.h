@@ -151,6 +151,11 @@ struct elog_header {
 	u8 reserved[2];
 } __packed;
 
+/* Header size must be divisible by 4. Force compiler error if it isn't. */
+struct size_check {
+	char a1[(sizeof(struct elog_header) & 0x3) ? -1 : 1];
+};
+
 /* ARM/generic versions of sleep/wake */
 #define ELOG_TYPE_SLEEP                   0xa7
 #define ELOG_TYPE_WAKE                    0xa8
