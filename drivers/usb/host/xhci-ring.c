@@ -512,16 +512,36 @@ static void abort_td(struct usb_device *udev, int ep_index)
 }
 
 static void record_transfer_result(struct usb_device *udev,
-				   union xhci_trb *event, int length)
+				   union xhci_trb *event, int length,
+				   union xhci_trb *last_trb)
 {
-	udev->act_len = min(length, length -
-		EVENT_TRB_LEN(le32_to_cpu(event->trans_event.transfer_len)));
+	union xhci_trb *trb =
+		(union xhci_trb *)(uintptr_t)event->trans_event.buffer;
+	udev->act_len = length -
+		EVENT_TRB_LEN(le32_to_cpu(event->trans_event.transfer_len));
 
 	switch (GET_COMP_CODE(le32_to_cpu(event->trans_event.transfer_len))) {
 	case COMP_SUCCESS:
 		BUG_ON(udev->act_len != length);
-		/* fallthrough */
+		BUG_ON(trb != last_trb);
+		udev->status = 0;
+		break;
 	case COMP_SHORT_TX:
+		if (trb != last_trb) {
+			/* Catch spurious success event, if we have one */
+			if (xhci_wait_for_event(udev->controller, TRB_TRANSFER))
+				xhci_acknowledge_event(udev->controller);
+
+			do {
+				trb++;
+				while (TRB_TYPE_LINK_LE32(trb->link.control)) {
+					trb = (union xhci_trb *)(uintptr_t)
+						trb->link.segment_ptr;
+				}
+				udev->act_len -= TRB_LEN(le32_to_cpu(
+					trb->trans_event.transfer_len));
+			} while (trb != last_trb);
+		}
 		udev->status = 0;
 		break;
 	case COMP_STALL:
@@ -554,7 +574,7 @@ int xhci_bulk_tx(struct usb_device *udev, unsigned long pipe,
 			int length, void *buffer)
 {
 	int num_trbs = 0;
-	struct xhci_generic_trb *start_trb;
+	struct xhci_generic_trb *start_trb, *last_trb;
 	bool first_trb = 0;
 	int start_cycle;
 	u32 field = 0;
@@ -697,7 +717,7 @@ int xhci_bulk_tx(struct usb_device *udev, unsigned long pipe,
 		trb_fields[2] = length_field;
 		trb_fields[3] = field | (TRB_NORMAL << TRB_TYPE_SHIFT);
 
-		queue_trb(ctrl, ring, (num_trbs > 1), trb_fields);
+		last_trb = queue_trb(ctrl, ring, (num_trbs > 1), trb_fields);
 
 		--num_trbs;
 
@@ -725,8 +745,8 @@ int xhci_bulk_tx(struct usb_device *udev, unsigned long pipe,
 	BUG_ON(*(void **)(uintptr_t)le64_to_cpu(event->trans_event.buffer) -
 		buffer > (size_t)length);
 
-	record_transfer_result(udev, event, length);
 	xhci_acknowledge_event(ctrl);
+	record_transfer_result(udev, event, length, (union xhci_trb *)last_trb);
 	xhci_inval_cache((uint32_t)buffer, length);
 
 	return (udev->status != USB_ST_NOT_PROC) ? 0 : -1;
@@ -752,7 +772,7 @@ int xhci_ctrl_tx(struct usb_device *udev, unsigned long pipe,
 	u32 field;
 	u32 length_field;
 	u64 buf_64 = 0;
-	struct xhci_generic_trb *start_trb;
+	struct xhci_generic_trb *start_trb, *last_trb;
 	struct xhci_ctrl *ctrl = udev->controller;
 	int slot_id = udev->slot_id;
 	int ep_index;
@@ -903,42 +923,29 @@ int xhci_ctrl_tx(struct usb_device *udev, unsigned long pipe,
 			(TRB_STATUS << TRB_TYPE_SHIFT) |
 			ep_ring->cycle_state;
 
-	queue_trb(ctrl, ep_ring, false, trb_fields);
+	last_trb = queue_trb(ctrl, ep_ring, false, trb_fields);
 
 	giveback_first_trb(udev, ep_index, start_cycle, start_trb);
 
 	event = xhci_wait_for_event(ctrl, TRB_TRANSFER);
-	if (!event)
-		goto abort;
+	if (!event) {
+		debug("XHCI control transfer timed out, aborting...\n");
+		abort_td(udev, ep_index);
+		udev->status = USB_ST_NAK_REC;
+		udev->act_len = 0;
+		return -1;
+	}
 	field = le32_to_cpu(event->trans_event.flags);
 
 	BUG_ON(TRB_TO_SLOT_ID(field) != slot_id);
 	BUG_ON(TRB_TO_EP_INDEX(field) != ep_index);
 
-	record_transfer_result(udev, event, length);
 	xhci_acknowledge_event(ctrl);
+	record_transfer_result(udev, event, length, (union xhci_trb *)last_trb);
 
 	/* Invalidate buffer to make it available to usb-core */
 	if (length > 0)
 		xhci_inval_cache((uint32_t)buffer, length);
 
-	if (GET_COMP_CODE(le32_to_cpu(event->trans_event.transfer_len))
-			== COMP_SHORT_TX) {
-		/* Short data stage, clear up additional status stage event */
-		event = xhci_wait_for_event(ctrl, TRB_TRANSFER);
-		if (!event)
-			goto abort;
-		BUG_ON(TRB_TO_SLOT_ID(field) != slot_id);
-		BUG_ON(TRB_TO_EP_INDEX(field) != ep_index);
-		xhci_acknowledge_event(ctrl);
-	}
-
 	return (udev->status != USB_ST_NOT_PROC) ? 0 : -1;
-
-abort:
-	debug("XHCI control transfer timed out, aborting...\n");
-	abort_td(udev, ep_index);
-	udev->status = USB_ST_NAK_REC;
-	udev->act_len = 0;
-	return -1;
 }
