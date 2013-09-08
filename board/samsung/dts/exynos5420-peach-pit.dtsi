@@ -62,6 +62,7 @@
 
 	chromeos-config {
 		textbase = <0x23e00000>;/* Address where U-Boot loads */
+		lazy-init = <1>;
 	};
 
 	dmc {
