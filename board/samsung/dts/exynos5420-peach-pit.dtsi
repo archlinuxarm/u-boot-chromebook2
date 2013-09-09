@@ -58,11 +58,11 @@
 	config {
 		google,bad-wake-gpios = <&gpio 0x56 0>; /* gpx0-6 */
 		hwid = "PIT TEST A-A 7848";
+		lazy-init = <1>;
 	};
 
 	chromeos-config {
 		textbase = <0x23e00000>;/* Address where U-Boot loads */
-		lazy-init = <1>;
 	};
 
 	dmc {
