@@ -793,7 +793,7 @@ twostop_jump(crossystem_data_t *cdata, void *fw_blob, uint32_t fw_size,
 	 * sure whether the following function call flushes L2 cache or not. If
 	 * it does, we should avoid that.
 	 */
-	cleanup_before_linux();
+	cleanup_before_linux_select(0);
 
 	((void(*)(void))CONFIG_SYS_TEXT_BASE)();
 
