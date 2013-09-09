@@ -466,8 +466,6 @@ int arch_early_init_r(void)
 	return 0;
 }
 
-__weak int defer_display_init(const void *blob) { return 0; }
-
 void board_lcd_panel_on(vidinfo_t *vid)
 {
 	if (defer_display_init(gd->fdt_blob)) {

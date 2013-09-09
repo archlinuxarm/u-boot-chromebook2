@@ -76,14 +76,8 @@ static struct display_callbacks display_callbacks_ = {
 
 VbError_t VbExDisplayInit(uint32_t *width, uint32_t *height)
 {
-#ifdef CONFIG_EXYNOS_FB
-	/*
-	 * late LCD initialization presently suupported on Exynos systems
-	 * only.
-	 */
-	if (defer_display_init(gd->fdt_blob))
-		lcd_late_init();
-#endif
+	lcd_init_if_needed(); /* just in case it was deferred */
+
 	/*
 	 * crosbug.com/p/13492
 	 * This may be an unexpected display init request - probably due to a

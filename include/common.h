@@ -288,6 +288,23 @@ void	print_size(unsigned long long, const char *);
 int print_buffer(ulong addr, const void *data, uint width, uint count,
 		 uint linelen);
 void lcd_late_init(void);
+/**
+ * Check if display initialization should be deferred.
+ *
+ * Based on value of 'lazy-init' property - if it is present and non-zero -
+ * defer display initialization.
+ *
+ * @ param blob   pointer to the device tree too search lazy-init in.
+ *
+ * Return True if display initialization should be deferred (lazy-init value
+ *             set to a positive number).
+ */
+int defer_display_init(const void *blob);
+
+/**
+ * Initialize the LCD if its initialization was deferred earlier.
+ */
+void lcd_init_if_needed(void);
 
 /* common/main.c */
 void	main_loop	(void);
