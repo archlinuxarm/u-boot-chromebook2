@@ -75,6 +75,13 @@ void *get_irom_func(int index)
 }
 
 /*
+ * shortcuts to retrieve current RX and TX fifo levels from the controller
+ * status register
+ */
+#define SPI_RX_FIFO_LVL(reg) (((reg) >> 15) & 0x7f)
+#define SPI_TX_FIFO_LVL(reg) (((reg) >> 6) & 0x7f)
+
+/*
  * Set/clear program flow prediction and return the previous state.
  */
 static int config_branch_prediction(int set_cr_z)
@@ -148,8 +155,8 @@ static void spi_fast_rx(struct exynos_spi *regs, int todo, uint32_t *dinp)
 		uint32_t spi_sts;
 
 		spi_sts = readl(&regs->spi_sts);
-		rx_lvl = (spi_sts >> 15) & 0x7f;
-		tx_lvl = (spi_sts >> 6) & 0x7f;
+		rx_lvl = SPI_RX_FIFO_LVL(spi_sts);
+		tx_lvl = SPI_TX_FIFO_LVL(spi_sts);
 
 		/*
 		 * Even though the FIFO is at least 64 bytes in size (256
@@ -200,11 +207,6 @@ static void spi_rx_tx(struct exynos_spi *regs, int todo, void *dinp,
 	else
 		chunk_size = 1;
 
-	setbits_le32(&regs->ch_cfg, SPI_CH_RST);
-	clrbits_le32(&regs->ch_cfg, SPI_CH_RST);
-	writel(((todo + chunk_size - 1) / chunk_size) | SPI_PACKET_CNT_EN,
-	       &regs->pkt_cnt);
-
 	if (word_chunks && !doutp && !((unsigned)dinp & 3)) {
 		/* This is the case for fast receive implementation. */
 		spi_fast_rx(regs, todo, dinp);
@@ -250,33 +252,36 @@ static void exynos_spi_init(struct exynos_spi *regs, int word_chunks)
 	/* set the spi1 GPIO */
 	exynos_pinmux_config(PERIPH_ID_SPI1, PINMUX_FLAG_NONE);
 
-	/* set pktcnt and enable it */
-	writel(4 | SPI_PACKET_CNT_EN, &regs->pkt_cnt);
+	/* No need to use pkt cnt */
+	writel(0, &regs->pkt_cnt);
+
 	/* set FB_CLK_SEL */
 	writel(SPI_FB_DELAY_180, &regs->fb_clk);
-	/* set CH_WIDTH and BUS_WIDTH */
-	clrbits_le32(&regs->mode_cfg, SPI_MODE_CH_WIDTH_MASK |
-				      SPI_MODE_BUS_WIDTH_MASK);
-	if (word_chunks)
-		setbits_le32(&regs->mode_cfg, SPI_MODE_CH_WIDTH_WORD |
-					      SPI_MODE_BUS_WIDTH_WORD);
-	else
-		setbits_le32(&regs->mode_cfg, SPI_MODE_CH_WIDTH_BYTE |
-					      SPI_MODE_BUS_WIDTH_BYTE);
-	clrbits_le32(&regs->ch_cfg, SPI_CH_CPOL_L); /* CPOL: active high */
 
-	/* clear rx and tx channel if set priveously */
-	clrbits_le32(&regs->ch_cfg, SPI_RX_CH_ON | SPI_TX_CH_ON);
+	/* start from scratch */
+	writel(0, &regs->ch_cfg);
 
-	setbits_le32(&regs->swap_cfg, SPI_RX_SWAP_EN |
-		SPI_RX_BYTE_SWAP | SPI_RX_HWORD_SWAP);
+	if (word_chunks) {
+		writel(SPI_MODE_CH_WIDTH_WORD | SPI_MODE_BUS_WIDTH_WORD,
+		       &regs->mode_cfg);
+		/*
+		 * SPI Write operation is always one byte at a time, no
+		 * need for swapping.
+		 */
+		writel(SPI_RX_SWAP_EN | SPI_RX_BYTE_SWAP | SPI_RX_HWORD_SWAP,
+		       &regs->swap_cfg);
+	} else {
+		writel(SPI_MODE_CH_WIDTH_BYTE | SPI_MODE_BUS_WIDTH_BYTE,
+		       &regs->mode_cfg);
+		writel(0, &regs->swap_cfg);
+	}
 
 	/* do a soft reset */
 	setbits_le32(&regs->ch_cfg, SPI_CH_RST);
 	clrbits_le32(&regs->ch_cfg, SPI_CH_RST);
 
-	/* now set rx and tx channel ON */
-	setbits_le32(&regs->ch_cfg, SPI_RX_CH_ON | SPI_TX_CH_ON | SPI_CH_HS_EN);
+	/* now set tx channel ON */
+	setbits_le32(&regs->ch_cfg, SPI_TX_CH_ON | SPI_CH_HS_EN);
 	clrbits_le32(&regs->cs_reg, SPI_SLAVE_SIG_INACT); /* CS low */
 }
 /**
@@ -330,6 +335,9 @@ static void exynos_spi_read(unsigned int offset, unsigned int size,
 	while (!(readl(&regs->spi_sts) & SPI_ST_TX_DONE))
 		;
 
+	/* ready to receive now */
+	setbits_le32(&regs->ch_cfg, SPI_RX_CH_ON);
+
 	for (upto = 0, i = 0; upto < size; upto += todo, i++) {
 		todo = min(size - upto, (1 << 15));
 		spi_rx_tx(regs, todo, (void *)(addr + (i << 15)), NULL, 1);
@@ -340,6 +348,102 @@ static void exynos_spi_read(unsigned int offset, unsigned int size,
 #endif
 
 #ifdef CONFIG_ELOG
+
+/**
+ * Toggle SPI bus CS signal.
+ *
+ * This is required to separate SPI commands, for instance, 'write enable'
+ * from 'write page'.
+ *
+ * This function will first wait for the bus transmit activity to complete
+ * (the SPI command is still being transmitted), then it will deassert the CS
+ * signal, reset TX and RX channels, wait for 20 cycles (this is arbitrary,
+ * actual time requirement for popular chips is 20 ns), reassert the CS and
+ * re-enable TX channnel.
+ *
+ * @param regs   pointer to the SPI controller register file
+ */
+static void toggle_cs(struct exynos_spi *regs)
+{
+	int i = 0;
+
+	/* wait for the bus to drain */
+	while (!(readl(&regs->spi_sts) & SPI_ST_TX_DONE))
+		i++;
+
+	/* Deassert the CS. */
+	setbits_le32(&regs->cs_reg, SPI_SLAVE_SIG_INACT);
+
+	/* reset rx and tx channels */
+	clrbits_le32(&regs->ch_cfg, SPI_RX_CH_ON | SPI_TX_CH_ON);
+	setbits_le32(&regs->ch_cfg, SPI_CH_RST);
+	clrbits_le32(&regs->ch_cfg, SPI_CH_RST);
+
+	for (i = 0; i < 20; i++)
+		__asm__ __volatile__("");
+
+	/* Reassert the CS. */
+	clrbits_le32(&regs->cs_reg, SPI_SLAVE_SIG_INACT);
+
+	/* Reenable transmit */
+	setbits_le32(&regs->ch_cfg, SPI_TX_CH_ON);
+}
+
+/**
+ * This function will send the 'read status' command and poll the SPI flash
+ * chip status until the WIP (write in progress) bit is deasserted. The
+ * typical use case is waiting for write or erase operation to complete.
+ *
+ * The TX channel is expected to be enabled when this function is entered, and
+ * RX channel is expected to be disabled.
+ *
+ * @param regs   pointer to the SPI controller register file
+ * @return number of polling cycles before WIP bit cleared. Gives some idea of
+ *		  sanity of the operation.
+ */
+static unsigned wait_not_busy(struct exynos_spi *regs)
+{
+	int i = 0;
+
+	/*
+	 * Send the READ_STATUS command to the SPI chip so that it reports its
+	 * internal state machine 'WIP' status, which is set while write/erase
+	 * operation is in progress.
+	 *
+	 * The read status command can be repeated multiple times on the bus,
+	 * so we put it into all 4 bytes of the word in case the interface is
+	 * in word mode.
+	 */
+	writel((SF_READ_STATUS_CMD << 24) |
+	       (SF_READ_STATUS_CMD << 16) |
+	       (SF_READ_STATUS_CMD << 8)  |
+	       SF_READ_STATUS_CMD, &regs->tx_data);
+
+	/* wait for command transmission to finish. */
+	while (!(readl(&regs->spi_sts) & SPI_ST_TX_DONE))
+		;
+
+	/* now allow receive to work */
+	setbits_le32(&regs->ch_cfg, SPI_RX_CH_ON);
+	while (1) {
+		i++;
+		/*
+		 * keep sending the command so the bus is clocked. Again use 4
+		 * bytes in case the interface is in word mode.
+		 */
+		writel((SF_READ_STATUS_CMD << 24) |
+		       (SF_READ_STATUS_CMD << 16) |
+		       (SF_READ_STATUS_CMD << 8)  |
+		       SF_READ_STATUS_CMD, &regs->tx_data);
+		/* read all received bytes checking the status bit */
+		while (SPI_RX_FIFO_LVL(readl(&regs->spi_sts))) {
+			unsigned status = readl(&regs->rx_data);
+			if (!(status & 1))
+				return i;
+		}
+	}
+}
+
 /**
  * Write data into spi flash
  *
@@ -354,6 +458,7 @@ static void exynos_spi_write(unsigned int offset, unsigned int size,
 	struct exynos_spi *regs = (struct exynos_spi *)CONFIG_ENV_SPI_BASE;
 	uint8_t *data = (uint8_t *)addr;
 
+	exynos_spi_init(regs, 0);
 	while (size) {
 		int block_size, page_offset;
 
@@ -364,12 +469,11 @@ static void exynos_spi_write(unsigned int offset, unsigned int size,
 			block_size = size;
 
 		/* Send a write enable command */
-		exynos_spi_init(regs, 0);
 		writel(SF_WRITE_ENABLE_CMD, &regs->tx_data);
 		while (!(readl(&regs->spi_sts) & SPI_ST_TX_DONE))
 			;
-		exynos_spi_finish(regs);
-		exynos_spi_init(regs, 0);
+
+		toggle_cs(regs);
 
 		/* Send a write command followed by a 24 bit addr */
 		writel(SF_WRITE_DATA_CMD, &regs->tx_data);
@@ -378,18 +482,21 @@ static void exynos_spi_write(unsigned int offset, unsigned int size,
 		writel(offset >> 0, &regs->tx_data);
 
 		/* Write out a block. */
+		setbits_le32(&regs->ch_cfg, SPI_RX_CH_ON);
 		spi_rx_tx(regs, block_size, NULL, data, 0);
 
-		/* waiting for TX done */
-		while (!(readl(&regs->spi_sts) & SPI_ST_TX_DONE))
-			;
+		toggle_cs(regs);
 
-		exynos_spi_finish(regs);
+		wait_not_busy(regs);
 
 		data += block_size;
 		offset += block_size;
 		size -= block_size;
+
+		if (size)
+			toggle_cs(regs); /* will be more cycles */
 	}
+	exynos_spi_finish(regs);
 }
 
 /**
@@ -424,6 +531,9 @@ static int exynos_find_end_of_log(void)
 	/* waiting for TX done */
 	while (!(readl(&regs->spi_sts) & SPI_ST_TX_DONE))
 		;
+
+	/* ready to receive now */
+	setbits_le32(&regs->ch_cfg, SPI_RX_CH_ON);
 
 	spi_rx_tx(regs, sizeof(eheader), &eheader, NULL, 1);
 	offset += sizeof(eheader);
@@ -503,7 +613,7 @@ static int spl_use_dcache(enum boot_mode bootmode)
 /*
 * Copy U-boot from mmc to RAM:
 * COPY_BL2_FNPTR_ADDR: Address in iRAM, which Contains
-* Pointer to API (Data transfer from mmc to ram)
+* Pointer to API (Data transfer from mmc to ram).
 */
 static void copy_uboot_to_ram(enum boot_mode bootmode)
 {
@@ -808,5 +918,135 @@ int printf(const char *fmt, ...)
 int printf(const char *fmt, ...)
 {
 	return 0;
+}
+#endif
+
+#if ENABLE_TEST
+
+#define SF_SECTOR_ERASE_CMD 0x20
+#define SF_SECTOR_SIZE 4096
+
+/*
+ * This function, if enabled and invoked, will continuously erase and write
+ * with 9 byte blocks a 4K sector of SPI flash at the beginning of elog.
+ */
+void test_spi_driver(void)
+{
+	struct exynos_spi *regs = (struct exynos_spi *)CONFIG_ENV_SPI_BASE;
+
+	printf("will test spi driver\n");
+	int j = 0;
+	while (1) {
+		char test_data[9];
+
+		int i;
+		unsigned cycle_num = 0;
+		unsigned offset = 0;
+
+		printf("\nstarting %d\n", j++);
+
+		exynos_spi_init(regs, 0);
+		setbits_le32(&regs->ch_cfg, SPI_TX_CH_ON);
+		writel(SF_WRITE_ENABLE_CMD, &regs->tx_data);
+		toggle_cs(regs);
+
+		/* erase the first elog sector */
+		writel(SF_SECTOR_ERASE_CMD, &regs->tx_data);
+		writel(CONFIG_ELOG_OFFSET >> 16, &regs->tx_data);
+		writel(CONFIG_ELOG_OFFSET >> 8, &regs->tx_data);
+		writel(CONFIG_ELOG_OFFSET >> 0, &regs->tx_data);
+		toggle_cs(regs);
+		i = wait_not_busy(regs);
+
+		/* Erase taking less then 100 poll cycles is abnormal */
+		if (i < 100)
+			printf("starting a cycle with %d!\n", i);
+
+		while ((offset + sizeof(test_data)) < SF_SECTOR_SIZE) {
+			cycle_num++;
+
+			toggle_cs(regs);
+
+			/* verify data is erased. First send READ command */
+			writel(SF_READ_DATA_CMD, &regs->tx_data);
+			writel((offset + CONFIG_ELOG_OFFSET) >> 16,
+			       &regs->tx_data);
+			writel((offset + CONFIG_ELOG_OFFSET) >> 8,
+			       &regs->tx_data);
+			writel((offset + CONFIG_ELOG_OFFSET) >> 0,
+			       &regs->tx_data);
+
+			while (!(readl(&regs->spi_sts) & SPI_ST_TX_DONE))
+				;
+
+			/* Now read the data */
+			setbits_le32(&regs->ch_cfg, SPI_RX_CH_ON);
+			spi_rx_tx(regs, sizeof(test_data), test_data, NULL, 0);
+
+			/* deassert CS */
+			setbits_le32(&regs->cs_reg, SPI_SLAVE_SIG_INACT);
+
+			/* verify erase and prepare data */
+			for (i = 0; i < sizeof(test_data); i++) {
+				if (test_data[i] != 0xff) {
+					printf("bad erase at %d (%2.2x)\n!",
+					       offset + i, test_data[i]);
+					while (1)
+						;
+				}
+				test_data[i] = i + cycle_num;
+			}
+
+			toggle_cs(regs);
+			writel(SF_WRITE_ENABLE_CMD, &regs->tx_data);
+
+			/* Send a write command followed by a 24 bit addr */
+			writel(SF_WRITE_DATA_CMD, &regs->tx_data);
+			writel((offset + CONFIG_ELOG_OFFSET) >> 16,
+			       &regs->tx_data);
+			writel((offset + CONFIG_ELOG_OFFSET) >> 8,
+			       &regs->tx_data);
+			writel((offset + CONFIG_ELOG_OFFSET) >> 0,
+			       &regs->tx_data);
+
+			/* Write out a block. */
+			setbits_le32(&regs->ch_cfg, SPI_RX_CH_ON);
+			spi_rx_tx(regs, sizeof(test_data), NULL, test_data, 0);
+			toggle_cs(regs);
+
+			wait_not_busy(regs);
+			toggle_cs(regs);
+
+			/* verify that the block was written properly */
+			writel(SF_READ_DATA_CMD, &regs->tx_data);
+			writel((offset + CONFIG_ELOG_OFFSET) >> 16,
+			       &regs->tx_data);
+			writel((offset + CONFIG_ELOG_OFFSET) >> 8,
+			       &regs->tx_data);
+			writel((offset + CONFIG_ELOG_OFFSET) >> 0,
+			       &regs->tx_data);
+
+			while (!(readl(&regs->spi_sts) & SPI_ST_TX_DONE))
+				;
+
+			setbits_le32(&regs->ch_cfg, SPI_RX_CH_ON);
+			spi_rx_tx(regs, sizeof(test_data), NULL, test_data, 0);
+
+			/* deassert CS */
+			setbits_le32(&regs->cs_reg, SPI_SLAVE_SIG_INACT);
+
+			/* check received data */
+			for (i = 0; i < sizeof(test_data); i++) {
+				if (test_data[i] != ((i + cycle_num) & 0xff)) {
+					printf("Read error detected %d %d!\n",
+					       i, cycle_num);
+					while (1)
+						;
+				}
+			}
+			offset += sizeof(test_data);
+		}
+		exynos_spi_finish(regs);
+	}
 }
 #endif

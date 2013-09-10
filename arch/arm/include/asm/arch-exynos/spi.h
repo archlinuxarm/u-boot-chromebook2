@@ -45,6 +45,7 @@ struct exynos_spi {
 
 #define SF_READ_DATA_CMD	0x3
 #define SF_WRITE_DATA_CMD	0x2
+#define SF_READ_STATUS_CMD	0x5
 #define SF_WRITE_ENABLE_CMD	0x6
 
 /* SPI_CHCFG */
