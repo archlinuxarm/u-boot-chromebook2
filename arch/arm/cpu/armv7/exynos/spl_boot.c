@@ -562,9 +562,11 @@ static void copy_uboot_to_ram(enum boot_mode bootmode)
 		break;
 	}
 
-	if (spl_use_dcache(bootmode))
+	if (spl_use_dcache(bootmode)) {
 		flush_dcache_range(CONFIG_SYS_TEXT_BASE,
 				   CONFIG_SYS_TEXT_BASE + uboot_size);
+		invalidate_icache_all();
+	}
 }
 
 /* Tell the loaded U-Boot that it was loaded from SPL */
