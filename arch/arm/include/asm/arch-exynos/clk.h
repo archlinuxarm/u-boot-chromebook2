@@ -45,7 +45,7 @@ unsigned long get_i2c_clk(void);
 unsigned long get_pwm_clk(void);
 unsigned long get_uart_clk(int dev_index);
 unsigned long get_mmc_clk(int dev_index);
-void set_mmc_clk(int dev_index, unsigned int div);
+void set_mmc_clk(int dev_index, unsigned int rate);
 unsigned long get_lcd_clk(void);
 void set_lcd_clk(void);
 void set_mipi_clk(void);

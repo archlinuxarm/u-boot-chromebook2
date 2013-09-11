@@ -76,19 +76,13 @@ int exynos_dwmci_add_port(int index, u32 regbase, int bus_width,
 			  u32 clksel, int removable, int pre_init)
 {
 	struct dwmci_host *host = NULL;
-	unsigned int div;
-	unsigned long freq, sclk;
 	host = malloc(sizeof(struct dwmci_host));
 	if (!host) {
 		printf("dwmci_host malloc fail!\n");
 		return 1;
 	}
 	/* request mmc clock vlaue of 52MHz.  */
-	freq = 52000000;
-	sclk = get_mmc_clk(index);
-	div = DIV_ROUND_UP(sclk, freq);
-	/* set the clock divisor for mmc */
-	set_mmc_clk(index, div);
+	set_mmc_clk(index, 52000000);
 
 	host->name = "EXYNOS DWMMC";
 	host->ioaddr = (void *)regbase;

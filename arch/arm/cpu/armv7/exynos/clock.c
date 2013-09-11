@@ -848,12 +848,27 @@ static unsigned long exynos5420_get_mmc_clk(int dev_index)
 }
 
 /* exynos4: set the mmc clock */
-static void exynos4_set_mmc_clk(int dev_index, unsigned int div)
+static void exynos4_set_mmc_clk(int dev_index, unsigned int rate)
 {
 	struct exynos4_clock *clk =
 		(struct exynos4_clock *)samsung_get_base_clock();
 	unsigned int addr;
-	unsigned int val;
+	unsigned int val, sel, div;
+	unsigned long sclk;
+
+	sel = readl(&clk->src_fsys);
+	sel = (sel >> (dev_index << 2)) & 0xf;
+
+	if (sel == 0x6)
+		sclk = get_pll_clk(MPLL);
+	else if (sel == 0x7)
+		sclk = get_pll_clk(EPLL);
+	else if (sel == 0x8)
+		sclk = get_pll_clk(VPLL);
+	else
+		sclk = 0;
+
+	div = DIV_ROUND_UP(sclk, rate) - 1;
 
 	/*
 	 * CLK_DIV_FSYS1
@@ -880,12 +895,27 @@ static void exynos4_set_mmc_clk(int dev_index, unsigned int div)
 }
 
 /* exynos4x12: set the mmc clock */
-static void exynos4x12_set_mmc_clk(int dev_index, unsigned int div)
+static void exynos4x12_set_mmc_clk(int dev_index, unsigned int rate)
 {
 	struct exynos4x12_clock *clk =
 		(struct exynos4x12_clock *)samsung_get_base_clock();
 	unsigned int addr;
-	unsigned int val;
+	unsigned int val, sel, div;
+	unsigned long sclk;
+
+	sel = readl(&clk->src_fsys);
+	sel = (sel >> (dev_index << 2)) & 0xf;
+
+	if (sel == 0x6)
+		sclk = get_pll_clk(MPLL);
+	else if (sel == 0x7)
+		sclk = get_pll_clk(EPLL);
+	else if (sel == 0x8)
+		sclk = get_pll_clk(VPLL);
+	else
+		sclk = 0;
+
+	div = DIV_ROUND_UP(sclk, rate) - 1;
 
 	/*
 	 * CLK_DIV_FSYS1
@@ -907,12 +937,27 @@ static void exynos4x12_set_mmc_clk(int dev_index, unsigned int div)
 }
 
 /* exynos5: set the mmc clock */
-static void exynos5_set_mmc_clk(int dev_index, unsigned int div)
+static void exynos5_set_mmc_clk(int dev_index, unsigned int rate)
 {
 	struct exynos5_clock *clk =
 		(struct exynos5_clock *)samsung_get_base_clock();
 	unsigned int addr;
-	unsigned int val;
+	unsigned int val, sel, div;
+	unsigned long sclk;
+
+	sel = readl(&clk->src_fsys);
+	sel = (sel >> (dev_index << 2)) & 0xf;
+
+	if (sel == 0x6)
+		sclk = get_pll_clk(MPLL);
+	else if (sel == 0x7)
+		sclk = get_pll_clk(EPLL);
+	else if (sel == 0x8)
+		sclk = get_pll_clk(VPLL);
+	else
+		sclk = 0;
+
+	div = DIV_ROUND_UP(sclk, rate) - 1;
 
 	/*
 	 * CLK_DIV_FSYS1
@@ -934,12 +979,25 @@ static void exynos5_set_mmc_clk(int dev_index, unsigned int div)
 }
 
 /* exynos5: set the mmc clock */
-static void exynos5420_set_mmc_clk(int dev_index, unsigned int div)
+static void exynos5420_set_mmc_clk(int dev_index, unsigned int rate)
 {
 	struct exynos5420_clock *clk =
 		(struct exynos5420_clock *)samsung_get_base_clock();
 	unsigned int addr;
-	unsigned int val, shift;
+	unsigned int val, shift, sel, div;
+	unsigned long sclk;
+
+	sel = readl(&clk->clk_src_fsys);
+	sel = (sel >> ((dev_index * 4) + 8)) & 0x7;
+
+	if (sel == 0x3)
+		sclk = get_pll_clk(MPLL);
+	else if (sel == 0x6)
+		sclk = get_pll_clk(EPLL);
+	else
+		sclk = 0;
+
+	div = DIV_ROUND_UP(sclk, rate) - 1;
 
 	addr = (unsigned int)&clk->clk_div_fsys1;
 	shift = dev_index * 10;
@@ -1709,16 +1767,16 @@ unsigned long get_mmc_clk(int dev_index)
 		return exynos4_get_mmc_clk(dev_index);
 }
 
-void set_mmc_clk(int dev_index, unsigned int div)
+void set_mmc_clk(int dev_index, unsigned int rate)
 {
 	if (cpu_is_exynos5()) {
 		if (proid_is_exynos5420())
-			return exynos5420_set_mmc_clk(dev_index, div);
-		exynos5_set_mmc_clk(dev_index, div);
+			return exynos5420_set_mmc_clk(dev_index, rate);
+		exynos5_set_mmc_clk(dev_index, rate);
 	} else {
 		if (proid_is_exynos4412())
-			exynos4x12_set_mmc_clk(dev_index, div);
-		exynos4_set_mmc_clk(dev_index, div);
+			exynos4x12_set_mmc_clk(dev_index, rate);
+		exynos4_set_mmc_clk(dev_index, rate);
 	}
 }
 
