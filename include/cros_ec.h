@@ -45,6 +45,7 @@ struct cros_ec_dev {
 	int protocol_version;           /* Protocol version to use */
 	int optimise_flash_write:1;	/* Don't write erased flash blocks */
 
+	unsigned next_not_before;	/* don't try next transaction before */
 	/*
 	 * These two buffers will always be dword-aligned and include enough
 	 * space for up to 7 word-alignment bytes also, so we can ensure that

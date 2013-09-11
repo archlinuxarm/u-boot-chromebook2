@@ -280,6 +280,12 @@ static int ec_command_inptr(struct cros_ec_dev *dev, uint8_t cmd,
 	uint8_t *din = NULL;
 	int len;
 
+	if (dev->next_not_before) {
+		while (timer_get_us() < dev->next_not_before)
+			;
+		dev->next_not_before = 0;
+	}
+
 	len = send_command(dev, cmd, cmd_version, dout, dout_len,
 				&din, din_len);
 
@@ -594,7 +600,7 @@ int cros_ec_reboot(struct cros_ec_dev *dev, enum ec_reboot_cmd cmd,
 		 * better way to determine when the reboot is complete.  Could
 		 * we poll a memory-mapped LPC value?
 		 */
-		udelay(50000);
+		dev->next_not_before = timer_get_us() + 50000;
 	}
 
 	return 0;
