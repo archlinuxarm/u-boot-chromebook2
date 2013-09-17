@@ -55,6 +55,16 @@
 					f0 00];
 	};
 
+	/*
+	 * Temporary memory node for branch to make setup_arch_unused_memory()
+	 * work. This is not used anywhere other than cmd/cmd_vboot_twostop.c
+	 */
+	memory {
+		#address-cells = <1>;
+		#size-cells = <1>;
+		reg = <0x20000000 0x80000000>;
+	};
+
 	config {
 		google,bad-wake-gpios = <&gpio 0x56 0>; /* gpx0-6 */
 		hwid = "PIT TEST A-A 7848";
