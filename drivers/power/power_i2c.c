@@ -158,7 +158,7 @@ int pmic_reg_read(struct pmic *p, u32 reg, u32 *val)
 	return 0;
 }
 
-int pmic_reg_update(struct pmic *p, int reg, uint regval)
+int pmic_reg_clear_bits_masked(struct pmic *p, int reg, uint bic, uint or)
 {
 	u32 val;
 	int ret = 0;
@@ -168,13 +168,19 @@ int pmic_reg_update(struct pmic *p, int reg, uint regval)
 		debug("%s: PMIC %d register read failed\n", __func__, reg);
 		return -1;
 	}
-	val |= regval;
+	val &= ~bic;
+	val |= or;
 	ret = pmic_reg_write(p, reg, val);
 	if (ret) {
 		debug("%s: PMIC %d register write failed\n", __func__, reg);
 		return -1;
 	}
 	return 0;
+}
+
+int pmic_reg_update(struct pmic *p, int reg, uint regval)
+{
+	return pmic_reg_clear_bits_masked(p, reg, 0, regval);
 }
 
 int pmic_probe(struct pmic *p)

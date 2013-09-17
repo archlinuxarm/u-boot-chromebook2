@@ -131,8 +131,28 @@ struct pmic *pmic_get_by_id(enum fdt_compat_id pmic_compat);
  */
 int pmic_reg_update(struct pmic *p, int reg, uint regval);
 
+/**
+ * Update contents of a pmic register by optionally clearing and setting bits.
+ *
+ * This function reads a register, clears the bits in bic, sets the bits in
+ * or, and writes the resulting value back.
+ *
+ * @param p	  pointer to the pmic structure of the PMIC to access
+ * @param reg	  register address of the register to modify
+ * @param bic	  bits to clear in the register (0=none)
+ * @param or	  bits to set in the register (0=none)
+ * @return zero on success, nonzero on failure
+ */
+int pmic_reg_clear_bits_masked(struct pmic *p, int reg, uint bic, uint or);
+
 #ifdef CONFIG_OF_CONTROL
-enum pmic_reg_op { PMIC_REG_BAIL, PMIC_REG_WRITE, PMIC_REG_UPDATE };
+enum pmic_reg_op {
+	PMIC_REG_BAIL,
+	PMIC_REG_WRITE,
+	PMIC_REG_UPDATE,
+	PMIC_REG_CLEAR,
+};
+
 struct pmic_init_ops {
 	enum pmic_reg_op reg_op;
 	u8	reg_addr;

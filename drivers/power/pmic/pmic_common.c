@@ -82,14 +82,23 @@ int pmic_common_init(enum fdt_compat_id pmic_compat,
 
 	ret = 0;
 	while ((pmic_ops->reg_op != PMIC_REG_BAIL) && !ret) {
-		if (pmic_ops->reg_op == PMIC_REG_WRITE)
-			ret = pmic_reg_write(p,
-					     pmic_ops->reg_addr,
+		switch (pmic_ops->reg_op) {
+		case PMIC_REG_WRITE:
+			ret = pmic_reg_write(p, pmic_ops->reg_addr,
 					     pmic_ops->reg_value);
-		else
-			ret = pmic_reg_update(p,
-					     pmic_ops->reg_addr,
-					     pmic_ops->reg_value);
+			break;
+		case PMIC_REG_UPDATE:
+			ret = pmic_reg_update(p, pmic_ops->reg_addr,
+					      pmic_ops->reg_value);
+			break;
+		case PMIC_REG_CLEAR:
+			ret = pmic_reg_clear_bits_masked(p, pmic_ops->reg_addr,
+							 pmic_ops->reg_value,
+							 0);
+			break;
+		case PMIC_REG_BAIL:
+			break;	/* Can't happen due to while() above */
+		}
 		pmic_ops++;
 	}
 
