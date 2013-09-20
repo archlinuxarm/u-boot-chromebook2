@@ -150,7 +150,7 @@
 			reg = <0>;
 			compatible = "google,cros-ec";
 			spi-half-duplex;
-			spi-max-timeout-ms = <100>;
+			spi-max-timeout-ms = <1100>;
 			spi-frame-header = <0xec>;
 			ec-interrupt = <&gpio 93 1>; /* GPX1_5 */
 
