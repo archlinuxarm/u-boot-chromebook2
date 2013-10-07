@@ -69,6 +69,7 @@ struct spl_machine_param {
 	 * M		Memory Manufacturer name
 	 * w		Bad Wake GPIO number
 	 * W		Write protect firmware GPIO
+	 * t		offset into the image of the board rev convertion table
 	 * \0		termination
 	 */
 	char		params[16];	/* Length must be word-aligned */
@@ -91,7 +92,17 @@ struct spl_machine_param {
 	enum mem_manuf	mem_manuf;	/* Memory Manufacturer */
 	u32		bad_wake_gpio;	/* If high at wake time disallow wake */
 	u32		write_protect_gpio;	/* Firmware write protect */
+
+	/* board map table offset, off this structure base address */
+	u32		map_offset;
 } __attribute__((__packed__));
+
+/*
+ * Value to put in the params field above to aid build tools in filling up
+ * this structure.
+ */
+#define SPL_PARAM_STRING	"vmubfasirRMwWt"
+
 #endif
 
 /**

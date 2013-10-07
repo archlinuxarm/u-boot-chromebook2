@@ -34,7 +34,7 @@ static struct spl_machine_param machine_param
 		__attribute__((section(".machine_param"))) = {
 	.signature	= SIGNATURE,
 	.version	= 1,
-	.params		= "vmubfasirRMwW",
+	.params		= SPL_PARAM_STRING,
 	.size		= sizeof(machine_param),
 
 	.mem_iv_size	= 0x1f,
