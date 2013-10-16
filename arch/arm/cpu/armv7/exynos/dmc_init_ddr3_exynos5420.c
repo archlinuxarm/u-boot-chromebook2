@@ -25,6 +25,7 @@
 #include <common.h>
 #include <config.h>
 #include <asm/io.h>
+#include <asm/arch/board.h>
 #include <asm/arch/clock.h>
 #include <asm/arch/cpu.h>
 #include <asm/arch/dmc.h>
@@ -33,7 +34,6 @@
 
 #define TIMEOUT	10000
 
-/* TODO: add a setting for 4G that uses both chip selects */
 static struct mem_timings ares_ddr3_timings = {
 		.mem_manuf = MEM_MANUF_SAMSUNG,
 		.mem_type = DDR_MODE_DDR3,
@@ -93,7 +93,7 @@ static struct mem_timings ares_ddr3_timings = {
 			DMC_MEMCONTROL_ADD_LAT_PALL_CYCLE(0) |
 			DMC_MEMCONTROL_MEM_TYPE_DDR3 |
 			DMC_MEMCONTROL_MEM_WIDTH_32BIT |
-			DMC_MEMCONTROL_NUM_CHIP_1 |
+			/* DMC_MEMCONTROL_NUM_CHIP_N set below */
 			DMC_MEMCONTROL_BL_8 |
 			DMC_MEMCONTROL_PZQ_DISABLE |
 			DMC_MEMCONTROL_MRR_BYTE_7_0,
@@ -111,8 +111,8 @@ static struct mem_timings ares_ddr3_timings = {
 			DMC_CONCONTROL_AREF_EN_DISABLE |
 			DMC_CONCONTROL_IO_PD_CON_DISABLE,
 		.dmc_channels = 1,
-		.chips_per_channel = 1,
-		.chips_to_configure = 1,
+		.chips_per_channel = 1,		/* Modified below */
+		.chips_to_configure = 1,	/* Modified below */
 		.send_zq_init = 1,
 		.gate_leveling_enable = 1,
 };
@@ -126,8 +126,21 @@ int ddr3_mem_ctrl_init(int reset)
 	struct exynos5_tzasc *tzasc0, *tzasc1;
 	struct mem_timings *mem = &ares_ddr3_timings;
 	u32 val, nLockR, nLockW_phy0, nLockW_phy1;
+	int subrev;
 	int chip;
 	int i;
+
+	/* Bit 1 of subrev indicates 4G */
+	board_get_full_revision(NULL, &subrev);
+	if (subrev & (1 << 1)) {
+		/* 4GB */
+		mem->memcontrol |= DMC_MEMCONTROL_NUM_CHIP_2;
+		mem->chips_per_channel = 2;
+		mem->chips_to_configure = 2;
+	} else {
+		/* 2GB */
+		mem->memcontrol |= DMC_MEMCONTROL_NUM_CHIP_1;
+	}
 
 	phy0_ctrl = (struct exynos5_phy_control *)EXYNOS5_DMC_PHY0_BASE;
 	phy1_ctrl = (struct exynos5_phy_control *)EXYNOS5_DMC_PHY1_BASE;
