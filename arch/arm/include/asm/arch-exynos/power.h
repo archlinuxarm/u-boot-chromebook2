@@ -288,10 +288,10 @@ struct exynos5_power {
 	unsigned int	dptx_phy_control;
 	unsigned int	sata_phy_control;
 	unsigned char	res10[0xd8];
-	unsigned int	inform0;
-	unsigned int	inform1;
-	unsigned int	inform2;
-	unsigned int	inform3;
+	unsigned int	inform0;	/* SLEEP: fn pointer for sleep exit */
+	unsigned int	inform1;	/* SLEEP: S5P_CHECK_xxx value */
+	unsigned int	inform2;	/* 5420 iROM uses in eMMC boot up */
+	unsigned int	inform3;	/* SLEEP: cache board_rev strappings */
 	unsigned int	sysip_dat0;
 	unsigned int	sysip_dat1;
 	unsigned int	sysip_dat2;
@@ -847,6 +847,27 @@ struct exynos5_power {
 	unsigned int	cmu_reset_mau_option;
 	unsigned char	res163[0x24];
 };
+
+/*
+ * Note that the "inform" registers (INFORM0, INFORM1, INFORM2, INFORM3)
+ * in the above structure are scratch registers that are preserved across many
+ * types of resets including warm reset, software reset, and wakeup reset.
+ *
+ * For the most part these are freely available to the kernel and U-Boot to use,
+ * though they need to agree on how they're going to use them.  Specifically:
+ *
+ * INFORM0 - kernel places a pointer to the function to jump to upon resume
+ *           from sleep/idle/lpa.
+ * INFORM1 - If the kernel places S5P_CHECK_SLEEP, S5P_CHECK_DIDLE, or
+ *           S5P_CHECK_LPA here then U-Boot knows that this isn't a normal boot
+ *           and will try to resume.
+ * INFORM2 - The iROM on exynos5420 is said to touch this when booting from
+ *           eMMC.
+ * INFORM3 - Upon a normal boot U-Boot will cache the board revision / subrev
+ *           here so that we can refer to them at resume time. Kernel shouldn't
+ *           touch.
+ */
+
 #endif	/* __ASSEMBLY__ */
 
 void set_mipi_phy_ctrl(unsigned int dev_index, unsigned int enable);
