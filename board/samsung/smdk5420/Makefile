@@ -24,9 +24,9 @@ include $(TOPDIR)/config.mk
 
 LIB	= $(obj)lib$(BOARD).o
 
+ifdef CONFIG_SPL_BUILD
 COBJS	+= smdk5420_spl.o
-
-ifndef CONFIG_SPL_BUILD
+else
 COBJS	+= smdk5420.o
 endif
 
