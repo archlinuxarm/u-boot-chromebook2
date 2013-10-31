@@ -328,6 +328,7 @@
 #define CTRL_DLL_ON		(1 << 5)
 #define CTRL_FORCE_MASK		(0x7F << 8)
 #define CTRL_LOCK_COARSE_MASK	(0x7F << 10)
+#define CTRL_FINE_LOCKED	0x7
 
 
 #define CTRL_OFFSETD_RESET_VAL	0x8
