@@ -234,11 +234,34 @@ int cros_ec_if_decode_fdt(struct cros_ec_dev *dev, const void *blob)
  */
 int cros_ec_if_init(struct cros_ec_dev *dev, const void *blob)
 {
+	int ret;
+
 	dev->u.spi = spi_setup_slave_fdt(blob, dev->node, dev->parent_node);
 	if (!dev->u.spi) {
 		debug("%s: Could not setup SPI slave\n", __func__);
 		return -1;
 	}
+
+	/*
+	 * Give a 100us delay at init time.
+	 *
+	 * This is needed because the default state of the "chip select" line
+	 * may be low so we need some time for the EC to notice that we've
+	 * raised it high before starting the first transaction.  We'll make
+	 * sure it's high before we start our delay by claiming the bus, which
+	 * will configure the pinmux (and unclaiming doesn't unconfigure the
+	 * pinmux).
+	 *
+	 * In practice we found that only about 8us was needed, but 100us
+	 * is not a whole lot and is much safer.
+	 */
+	ret = spi_claim_bus(dev->u.spi);
+	if (ret) {
+		debug("%s: Couldn't claim SPI bus\n", __func__);
+		return ret;
+	}
+	udelay(100);
+	spi_release_bus(dev->u.spi);
 
 	return 0;
 }
