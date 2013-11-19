@@ -127,19 +127,16 @@ int ddr3_mem_ctrl_init(int reset)
 	struct mem_timings *mem = &ares_ddr3_timings;
 	u32 val, nLockR, nLockW_phy0, nLockW_phy1;
 	u32 lock0_info, lock1_info;
-	int subrev;
 	int chip;
 	int i;
 
-	/* Bit 1 of subrev indicates 4G */
-	board_get_full_revision(NULL, &subrev);
-	if (subrev & (1 << 1)) {
-		/* 4GB */
+	if (board_get_memory_size() > SZ_2G) {
+		/* Need both controllers. */
 		mem->memcontrol |= DMC_MEMCONTROL_NUM_CHIP_2;
 		mem->chips_per_channel = 2;
 		mem->chips_to_configure = 2;
 	} else {
-		/* 2GB */
+		/* 2GB requires a single controller */
 		mem->memcontrol |= DMC_MEMCONTROL_NUM_CHIP_1;
 	}
 

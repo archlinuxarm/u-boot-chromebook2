@@ -143,3 +143,18 @@ void board_get_full_revision(int *board_rev_out, int *subrev_out)
 	if (subrev_out)
 		*subrev_out = subrev;
 }
+
+phys_size_t board_get_memory_size(void)
+{
+	int subrev;
+	board_get_full_revision(NULL, &subrev);
+
+	/*
+	 * Two memory sizes are supported, 2GB and 3.5GB, as denoted by bit 1
+	 * in subrevision field.
+	 */
+	if (subrev & (1 << 1))
+		return 0xe0000000;
+
+	return 0x80000000;
+}

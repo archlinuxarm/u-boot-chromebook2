@@ -29,6 +29,7 @@
 #include <dwmmc.h>
 #include <dwmmc_simple.h>
 #include <asm/gpio.h>
+#include <asm/arch/board.h>
 #include <asm/arch/clock.h>
 #include <asm/arch/clk.h>
 #include <asm/arch/cpu.h>
@@ -121,9 +122,9 @@ static void spl_enable_dcache(void)
 	bd.bi_dram[0].start = CONFIG_PHY_IRAM_BASE;
 	bd.bi_dram[0].size = CONFIG_IRAM_TOP - CONFIG_PHY_IRAM_BASE;
 
-	/* Second is all of DRAM - 2GB for now */
+	/* Second is all of DRAM */
 	bd.bi_dram[1].start = CONFIG_SYS_SDRAM_BASE;
-	bd.bi_dram[1].size = 2UL << 30;
+	bd.bi_dram[1].size = board_get_memory_size();
 
 	gd->bd = &bd;
 	gd->arch.tlb_addr = CONFIG_PHY_IRAM_TLB_BASE;

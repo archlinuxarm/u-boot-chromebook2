@@ -33,6 +33,13 @@
 void board_get_full_revision(int *board_rev, int *subrev);
 
 /**
+ * Get installed memory time at run time.
+ *
+ * Currently returns either 2GB or 3.5GB based on board subrevision settings.
+ */
+phys_size_t board_get_memory_size(void);
+
+/**
  * Get the board revision information
  *
  * @return board revision, or -1 if not known
