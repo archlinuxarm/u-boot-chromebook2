@@ -260,12 +260,10 @@ extern uint8_t __bss_end;
 static void setup_arch_unused_memory(memory_wipe_t *wipe,
 	crossystem_data_t *cdata, VbCommonParams *cparams)
 {
-	struct fdt_memory config, ramoops, lp0;
+	struct fdt_memory ramoops, lp0;
 
-	if (cros_fdtdec_memory(gd->fdt_blob, "/memory", &config))
-		VbExError("FDT decode memory section error\n");
-
-	memory_wipe_add(wipe, config.start, config.end);
+	memory_wipe_add(wipe, CONFIG_SYS_SDRAM_BASE,
+			CONFIG_SYS_SDRAM_BASE + gd->ram_size);
 
 #if !(defined(CONFIG_SYS_ICACHE_OFF) && defined(CONFIG_SYS_DCACHE_OFF))
 	/* Exclude the TLB */
