@@ -29,6 +29,7 @@
 #include <spi.h>
 #include <tmu.h>
 #include <asm/io.h>
+#include <asm/sizes.h>
 #include <asm/arch/board.h>
 #include <asm/arch/cpu.h>
 #include <asm/arch/dwmmc.h>
@@ -118,35 +119,71 @@ int board_init(void)
 int dram_init(void)
 {
 	int i;
-	u32 addr;
 	int real_nr_dram_banks = get_num_dram_banks();
 
 	for (i = 0; i < real_nr_dram_banks; i++) {
+		u32 addr, size;
+
 		addr = CONFIG_SYS_SDRAM_BASE + (i * SDRAM_BANK_SIZE);
-		gd->ram_size += get_ram_size((long *)addr, SDRAM_BANK_SIZE);
+		size = get_ram_size((long *)addr, SDRAM_BANK_SIZE);
+		gd->ram_size += size;
+
+		if ((addr + size) == 0) {
+			/* Do not wrap around zero, leave a one page gap. */
+			gd->ram_size -= 4096;
+			break;
+		}
 	}
 	return 0;
 }
 
 void dram_init_banksize(void)
 {
-	int i;
+	int i, j;
 	u32 addr, size;
 	int real_nr_dram_banks = get_num_dram_banks();
 
-	for (i = 0; i < real_nr_dram_banks; i++) {
+	/*
+	 * Just to be on the safe side, is not required when number of banks
+	 * is fixed.
+	 */
+	memset(gd->bd->bi_dram, 0, sizeof(gd->bd->bi_dram));
+
+	for (i = 0, j = 0; i < real_nr_dram_banks; i++) {
 		addr = CONFIG_SYS_SDRAM_BASE + (i * SDRAM_BANK_SIZE);
 		size = get_ram_size((long *)addr, SDRAM_BANK_SIZE);
 
-		gd->bd->bi_dram[i].start = addr;
-		gd->bd->bi_dram[i].size = size;
+		/*
+		 * If the new bank is adjacent to the previous one AND the
+		 * total size would not cross the bank base address alignment
+		 * AND the total size would not exceed 1GB, we can merge the
+		 * two banks.
+		 *
+		 * These alignment and maximum size limitations seem to be
+		 * imposed by the kernel this change was tested with (3.8.11).
+		 * Without it the system enters rolling reboot when say the
+		 * kernel is given a single 2GB page starting at 0x20000000.
+		 */
+		if (j &&
+		    (gd->bd->bi_dram[j - 1].start +
+		     gd->bd->bi_dram[j - 1].size) == addr) {
+			u32 new_size;
+
+			new_size = gd->bd->bi_dram[j - 1].size + size;
+			if (!(gd->bd->bi_dram[j - 1].start & (new_size - 1)) &&
+			    (new_size <= SZ_1G)) {
+				gd->bd->bi_dram[j - 1].size = new_size;
+				continue;
+			}
+		}
+		gd->bd->bi_dram[j].start = addr;
+		gd->bd->bi_dram[j].size = size;
+		j++;
 	}
-#ifdef CONFIG_RUN_TIME_BANK_NUMBER
-	if (i < CONFIG_NR_DRAM_BANKS)
-		memset(gd->bd->bi_dram + i, 0,
-		       sizeof(gd->bd->bi_dram[0]
-			      ) * (CONFIG_NR_DRAM_BANKS - 1));
-#endif
+
+	/* Make sure the last bank does not wrap at zero. */
+	if ((gd->bd->bi_dram[j - 1].size + gd->bd->bi_dram[j - 1].start) == 0)
+		gd->bd->bi_dram[j - 1].size -= 4096; /* One page. */
 }
 
 static int board_uart_init(void)
