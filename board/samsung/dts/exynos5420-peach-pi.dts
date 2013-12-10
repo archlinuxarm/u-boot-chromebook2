@@ -1,5 +1,5 @@
 /*
- * Google Peach Pit Rev 1 / 2 board device tree source
+ * Google Peach Pi board device tree source
  *
  * Copyright (c) 2013 The Chromium OS Authors. All rights reserved.
  * Use of this source code is governed by a BSD-style license that can be
@@ -8,15 +8,15 @@
 
 /dts-v1/;
 /include/ "exynos54xx.dtsi"
-/include/ "exynos5420-peach-pit.dtsi"
+/include/ "exynos5420-peach.dtsi"
 #ifdef CONFIG_CHROMEOS
 /include/ "flashmap-exynos-ro.dtsi"
 /include/ "flashmap-4mb-rw.dtsi"
 /include/ "chromeos-exynos.dtsi"
 #endif
 / {
-	model = "Google Peach Pit Rev 1/2";
+	model = "Google Peach Pi";
 
-	compatible = "google,pit-rev2", "google,pit-rev1", "google,pit",
+	compatible = "google,pi-rev#", "google,pi",
 		"google,peach", "samsung,exynos5420", "samsung,exynos5";
 };
