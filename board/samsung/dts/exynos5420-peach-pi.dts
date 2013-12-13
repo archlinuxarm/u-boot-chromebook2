@@ -19,4 +19,29 @@
 
 	compatible = "google,pi-rev#", "google,pi",
 		"google,peach", "samsung,exynos5420", "samsung,exynos5";
+
+	fimd@14400000 {
+		samsung,vl-freq = <60>;
+		samsung,vl-col = <1920>;
+		samsung,vl-row = <1080>;
+		samsung,vl-width = <1920>;
+		samsung,vl-height = <1080>;
+
+		samsung,vl-clkp;
+		samsung,vl-dp;
+		samsung,vl-bpix = <4>;
+
+		samsung,vl-hspw = <80>;
+		samsung,vl-hbpd = <172>;
+		samsung,vl-hfpd = <60>;
+		samsung,vl-vspw = <10>;
+		samsung,vl-vbpd = <25>;
+		samsung,vl-vfpd = <10>;
+		samsung,vl-cmd-allow-len = <0xf>;
+
+		samsung,winid = <3>;
+		samsung,interface-mode = <1>;
+		samsung,dp-enabled = <1>;
+		samsung,dual-lcd-enabled = <0>;
+	};
 };
