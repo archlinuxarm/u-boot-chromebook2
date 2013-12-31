@@ -328,12 +328,6 @@ IS_EXYNOS_TYPE(exynos5420, 0x5420)
 #define proid_is_exynos5250()	(0)
 #endif
 
-#if defined(CONFIG_EXYNOS5250)
-#define proid_is_exynos5250()	proid_is_exynos5250_()
-#else
-#define proid_is_exynos5250()	(0)
-#endif
-
 #if defined(CONFIG_EXYNOS4412)
 #define proid_is_exynos4412()	proid_is_exynos4412_()
 #else
