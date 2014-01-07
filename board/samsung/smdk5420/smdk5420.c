@@ -55,7 +55,21 @@ const struct exynos_apll_pms exynos_pms = {
 
 #ifdef CONFIG_LCD
 #ifdef CONFIG_CHROMEOS_PEACH
-static void exynos_lcd_power_on_rev1(void)
+static int has_edp_bridge(void)
+{
+	int node;
+
+	node = fdtdec_next_compatible(gd->fdt_blob, 0, COMPAT_PARADE_PS8625);
+
+	/* No node for bridge in device tree. */
+	if (node <= 0)
+		return 0;
+
+	/* Default is with bridge ic */
+	return 1;
+}
+
+static void exynos_lcd_power_on_bridge_rev1(void)
 {
 	struct pmic *p;
 	p = pmic_get_by_id(COMPAT_MAXIM_MAX77802_PMIC);
@@ -91,7 +105,7 @@ static void exynos_lcd_power_on_rev1(void)
 	tps65090_fet_enable(6);
 }
 
-static void exynos_lcd_power_on_rev5(void)
+static void exynos_lcd_power_on_bridge_rev5(void)
 {
 	tps65090_fet_enable(6);
 
@@ -112,12 +126,24 @@ static void exynos_lcd_power_on_rev5(void)
 		printf("%s: ps8625_init() failed\n", __func__);
 }
 
+static void exynos_lcd_power_on_nobridge(void)
+{
+	tps65090_fet_enable(6);		/* P3.3V_LCD */
+
+	gpio_direction_input(EXYNOS5420_GPIO_X26);	/* EDP_HPD */
+	gpio_set_pull(EXYNOS5420_GPIO_X26, S5P_GPIO_PULL_NONE);
+}
+
 void exynos_lcd_power_on(void)
 {
-	if (board_get_revision() < 5)
-		exynos_lcd_power_on_rev1();
-	else
-		exynos_lcd_power_on_rev5();
+	if (!has_edp_bridge()) {
+		exynos_lcd_power_on_nobridge();
+	} else {
+		if (board_get_revision() < 5)
+			exynos_lcd_power_on_bridge_rev1();
+		else
+			exynos_lcd_power_on_bridge_rev5();
+	}
 }
 
 void exynos_backlight_on(unsigned int onoff)
@@ -128,9 +154,11 @@ void exynos_backlight_on(unsigned int onoff)
 
 	tps65090_fet_enable(1);
 
-	/* LED backlight reset */
-	gpio_cfg_pin(EXYNOS5420_GPIO_X30, S5P_GPIO_OUTPUT);
-	gpio_set_value(EXYNOS5420_GPIO_X30, onoff);
+	if (!has_edp_bridge()) {
+		/* LCD1_BL_EN = XEINT_18 */
+		gpio_cfg_pin(EXYNOS5420_GPIO_X22, S5P_GPIO_OUTPUT);
+		gpio_set_value(EXYNOS5420_GPIO_X22, onoff);
+	}
 }
 #else
 void exynos_lcd_power_on(void)
