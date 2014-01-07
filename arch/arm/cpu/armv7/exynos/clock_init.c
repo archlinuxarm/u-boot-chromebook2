@@ -890,7 +890,7 @@ static void exynos5420_system_clock_init(void)
 
 void system_clock_init(void)
 {
-	if (proid_is_exynos5420()) {
+	if (proid_is_exynos542x()) {
 		exynos5420_system_clock_init();
 		return;
 	}

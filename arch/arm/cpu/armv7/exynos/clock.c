@@ -1696,7 +1696,7 @@ static unsigned long exynos4_get_i2c_clk(void)
 unsigned long get_pll_clk(int pllreg)
 {
 	if (cpu_is_exynos5()) {
-		if (proid_is_exynos5420())
+		if (proid_is_exynos542x())
 			return exynos5420_get_pll_clk(pllreg);
 		return exynos5_get_pll_clk(pllreg);
 	} else {
@@ -1720,7 +1720,7 @@ unsigned long get_arm_clk(void)
 unsigned long get_i2c_clk(void)
 {
 	if (cpu_is_exynos5()) {
-		if (proid_is_exynos5420())
+		if (proid_is_exynos542x())
 			return exynos5420_get_i2c_clk();
 		return exynos5_get_i2c_clk();
 	} else if (cpu_is_exynos4()) {
@@ -1734,7 +1734,7 @@ unsigned long get_i2c_clk(void)
 unsigned long get_pwm_clk(void)
 {
 	if (cpu_is_exynos5()) {
-		if (proid_is_exynos5420())
+		if (proid_is_exynos542x())
 			return exynos5420_get_pwm_clk();
 		return clock_get_periph_rate(PERIPH_ID_PWM0);
 	} else {
@@ -1747,7 +1747,7 @@ unsigned long get_pwm_clk(void)
 unsigned long get_uart_clk(int dev_index)
 {
 	if (cpu_is_exynos5()) {
-		if (proid_is_exynos5420())
+		if (proid_is_exynos542x())
 			return exynos5420_get_uart_clk(dev_index);
 		return exynos5_get_uart_clk(dev_index);
 	} else {
@@ -1760,7 +1760,7 @@ unsigned long get_uart_clk(int dev_index)
 unsigned long get_mmc_clk(int dev_index)
 {
 	if (cpu_is_exynos5()) {
-		if (proid_is_exynos5420())
+		if (proid_is_exynos542x())
 			return exynos5420_get_mmc_clk(dev_index);
 		return exynos5_get_mmc_clk(dev_index);
 	} else
@@ -1770,7 +1770,7 @@ unsigned long get_mmc_clk(int dev_index)
 void set_mmc_clk(int dev_index, unsigned int rate)
 {
 	if (cpu_is_exynos5()) {
-		if (proid_is_exynos5420())
+		if (proid_is_exynos542x())
 			return exynos5420_set_mmc_clk(dev_index, rate);
 		exynos5_set_mmc_clk(dev_index, rate);
 	} else {
@@ -1784,7 +1784,7 @@ unsigned long get_lcd_clk(void)
 {
 	if (cpu_is_exynos4())
 		return exynos4_get_lcd_clk();
-	else if (proid_is_exynos5420())
+	else if (proid_is_exynos542x())
 		return exynos5420_get_lcd_clk();
 	return exynos5_get_lcd_clk();
 }
@@ -1793,7 +1793,7 @@ void set_lcd_clk(void)
 {
 	if (cpu_is_exynos4())
 		exynos4_set_lcd_clk();
-	else if (proid_is_exynos5420())
+	else if (proid_is_exynos542x())
 		exynos5420_set_lcd_clk();
 	else
 		exynos5_set_lcd_clk();
@@ -1808,7 +1808,7 @@ void set_mipi_clk(void)
 int set_spi_clk(int periph_id, unsigned int rate)
 {
 	if (cpu_is_exynos5()) {
-		if (proid_is_exynos5420())
+		if (proid_is_exynos542x())
 			return exynos5420_set_spi_clk(periph_id, rate);
 		return exynos5_set_spi_clk(periph_id, rate);
 	} else
@@ -1826,7 +1826,7 @@ int set_i2s_clk_prescaler(unsigned int src_frq, unsigned int dst_frq)
 void set_i2s_clk_source(void)
 {
 	if (cpu_is_exynos5()) {
-		if (proid_is_exynos5420())
+		if (proid_is_exynos542x())
 			exynos5420_set_i2s_clk_source();
 		else
 			exynos5_set_i2s_clk_source();

@@ -69,7 +69,7 @@ void exynos5420_tzpc_init(void)
 
 void tzpc_init(void)
 {
-	if (proid_is_exynos5420())
+	if (proid_is_exynos542x())
 		exynos5420_tzpc_init();
 	else
 		exynos5250_tzpc_init();

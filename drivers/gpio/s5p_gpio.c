@@ -401,7 +401,7 @@ int s5p_name_to_gpio(const char *name)
 	 * banks are c4 on Exynos5 and y7 on Exynos5420. The rest of the below
 	 * assignments help to handle these irregularities.
 	 */
-	if (proid_is_exynos5420()) {
+	if (proid_is_exynos542x()) {
 		tabp = exynos5420_gpio_table;
 		irregular_bank_name = 'y';
 		irregular_set_number = '7';

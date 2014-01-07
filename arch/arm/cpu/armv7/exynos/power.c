@@ -275,7 +275,7 @@ bool power_watchdog_fired(void)
 		unsigned int val;
 
 		val = readl(&power->rst_stat);
-		if (proid_is_exynos5420())
+		if (proid_is_exynos542x())
 			val &= EXYNOS5420_RST_STAT_SYS_WDTRESET;
 		else if (proid_is_exynos5250())
 			val &= EXYNOS5250_RST_STAT_SYS_WDTRESET;
