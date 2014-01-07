@@ -66,7 +66,7 @@
 #define CONFIG_LCD
 #define RPLL_MDIV		0x5E
 #define RPLL_PDIV		0x2
-#define RPLL_SDIV		0x4
+#define RPLL_SDIV		0x3
 #define CONFIG_EXYNOS_FB
 #define CONFIG_EXYNOS_DP
 #define LCD_BPP			LCD_COLOR16
