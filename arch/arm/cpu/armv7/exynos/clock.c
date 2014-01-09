@@ -85,22 +85,24 @@ static struct set_epll_con_val exynos5_epll_div[] = {
 /* exynos: return pll clock frequency */
 static int exynos_get_pll_clk(int pllreg, unsigned int r, unsigned int k)
 {
-	unsigned long m, p, s = 0, mask, fout;
+	unsigned long m, p, s = 0, fout;
 	unsigned int freq;
-	/*
-	 * APLL_CON: MIDV [25:16]
-	 * MPLL_CON: MIDV [25:16]
-	 * EPLL_CON: MIDV [24:16]
-	 * VPLL_CON: MIDV [24:16]
-	 * BPLL_CON: MIDV [25:16]: Exynos5
-	 */
-	if (pllreg == APLL || pllreg == MPLL || pllreg == BPLL ||
-							pllreg == SPLL)
-		mask = 0x3ff;
-	else
-		mask = 0x1ff;
 
-	m = (r >> 16) & mask;
+	/*
+	 * Certain registers use 10 bit wide field to store mdiv value.
+	 * The rest use 9 bits.
+	 */
+	switch (pllreg) {
+	case APLL:
+	case BPLL:
+	case IPLL:
+	case MPLL:
+	case SPLL:
+		m = (r >> 16) & 0x3ff;
+
+	default:
+		m = (r >> 16) & 0x1ff;
+	}
 
 	/* PDIV [13:8] */
 	p = (r >> 8) & 0x3f;
@@ -383,8 +385,8 @@ static unsigned long exynos5420_get_pll_clk(int pllreg)
 	case CPLL:
 		r = readl(&clk->cpll_con0);
 		break;
-	case DPLL:
-		r = readl(&clk->dpll_con0);
+	case IPLL:
+		r = readl(&clk->ipll_con0);
 		break;
 	default:
 		printf("Unsupported PLL (%d)\n", pllreg);
@@ -1092,38 +1094,48 @@ static unsigned long exynos5_get_lcd_clk(void)
 	return pclk;
 }
 
-static unsigned long exynos5420_get_lcd_clk(void)
+static unsigned long exynos542x_get_lcd_clk(void)
 {
 	struct exynos5420_clock *clk =
 		(struct exynos5420_clock *)samsung_get_base_clock();
-	unsigned long pclk, sclk;
-	unsigned int sel;
-	unsigned int ratio;
+	unsigned long sclk;
+	unsigned sel;
+	unsigned ratio;
 
-	/*
-	 * CLK_SRC_DISP10
-	 * CLKMUX_FIMD1 [4]
-	 * 0: SCLK_RPLL
-	 * 1: SCLK_SPLL
-	 */
-	sel = readl(&clk->clk_src_disp10);
-	sel &= (1 << 4);
+	sel = (readl(&clk->clk_src_disp10) >> 4) & 7;
 
-	if (sel)
-		sclk = get_pll_clk(SPLL);
-	else
-		sclk = get_pll_clk(RPLL);
+	if (proid_is_exynos5422()) {
+		/*
+		 * Mapping of CLK_SRC_DISP10 CLKMUX_FIMD1 [6:4] values into
+		 * PLLs. The first element is a placeholrer to bypass the
+		 * default settig.
+		 */
+		const int reg_map[] = {0, CPLL, DPLL, MPLL, SPLL,
+				       IPLL, EPLL,  RPLL};
+		if (sel)
+			sclk = get_pll_clk(reg_map[sel]);
+		else
+			sclk = 24000000;
+	} else {
+		/*
+		 * CLK_SRC_DISP10
+		 * CLKMUX_FIMD1 [4]
+		 * 0: SCLK_RPLL
+		 * 1: SCLK_SPLL
+		 */
+		if (sel & 1)
+			sclk = get_pll_clk(SPLL);
+		else
+			sclk = get_pll_clk(RPLL);
+	}
 
 	/*
 	 * CLK_DIV_DISP10
 	 * FIMD1_RATIO [3:0]
 	 */
-	ratio = readl(&clk->clk_div_disp10);
-	ratio = ratio & 0xf;
+	ratio = readl(&clk->clk_div_disp10) & 0xf;
 
-	pclk = sclk / (ratio + 1);
-
-	return pclk;
+	return sclk / (ratio + 1);
 }
 
 void exynos4_set_lcd_clk(void)
@@ -1250,7 +1262,7 @@ void exynos5_set_lcd_clk(void)
 	writel(cfg, &clk->div_disp1_0);
 }
 
-void exynos5420_set_lcd_clk(void)
+static void exynos542x_set_lcd_clk(void)
 {
 #ifdef CONFIG_EXYNOS5420
 	struct exynos5420_clock *clk =
@@ -1267,6 +1279,19 @@ void exynos5420_set_lcd_clk(void)
 	writel(val, &clk->rpll_con0);
 	while ((readl(&clk->rpll_con0) & PLL_LOCKED) == 0)
 		;
+
+	if (proid_is_exynos5422()) {
+		unsigned int cfg;
+
+		/*
+		 * Use RPLL for pixel clock
+		 * CLK_SRC_DISP10 CLKMUX_FIMD1 [6:4]
+		 * ==================
+		 * 111: SCLK_RPLL
+		 */
+		cfg = readl(&clk->clk_src_disp10) | (7 << 4);
+		writel(cfg, &clk->clk_src_disp10);
+	}
 #endif
 }
 
@@ -1785,7 +1810,7 @@ unsigned long get_lcd_clk(void)
 	if (cpu_is_exynos4())
 		return exynos4_get_lcd_clk();
 	else if (proid_is_exynos542x())
-		return exynos5420_get_lcd_clk();
+		return exynos542x_get_lcd_clk();
 	return exynos5_get_lcd_clk();
 }
 
@@ -1794,7 +1819,7 @@ void set_lcd_clk(void)
 	if (cpu_is_exynos4())
 		exynos4_set_lcd_clk();
 	else if (proid_is_exynos542x())
-		exynos5420_set_lcd_clk();
+		exynos542x_set_lcd_clk();
 	else
 		exynos5_set_lcd_clk();
 }
