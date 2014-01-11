@@ -872,6 +872,7 @@ struct exynos5_clock {
 	unsigned char	res123[0xf5d8];
 };
 
+/* This covers both 5420 and 5422 */
 struct exynos5420_clock {
 	unsigned int apll_lock;			/* 0x10010000 */
 	unsigned char res1[0xfc];
@@ -1090,7 +1091,9 @@ struct exynos5420_clock {
 	unsigned int clk_src_top5;
 	unsigned int clk_src_top6;
 	unsigned int clk_src_top7;
-	unsigned char res65[0xc];
+	unsigned int clk_src_top8;
+	unsigned int clk_src_top9;
+	unsigned char res65[0x4];
 	unsigned int clk_src_disp10;		/* 0x1002022c */
 	unsigned char res66[0x10];
 	unsigned int clk_src_mau;

@@ -836,6 +836,8 @@ static void exynos5420_system_clock_init(void)
 	writel(CLK_SRC_TOP1_VAL, &clk->clk_src_top1);
 	writel(CLK_SRC_TOP2_VAL, &clk->clk_src_top2);
 	writel(CLK_SRC_TOP7_VAL, &clk->clk_src_top7);
+	if (proid_is_exynos5422())
+		writel(CLK_SRC_TOP9_VAL, &clk->clk_src_top9);
 
 	writel(CLK_DIV_TOP0_VAL, &clk->clk_div_top0);
 	writel(CLK_DIV_TOP1_VAL, &clk->clk_div_top1);
