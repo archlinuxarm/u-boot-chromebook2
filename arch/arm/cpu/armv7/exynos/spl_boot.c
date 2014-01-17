@@ -627,7 +627,12 @@ static void copy_uboot_to_ram(enum boot_mode bootmode)
 	u32 (*copy_bl2)(u32 offset, u32 nblock, u32 dst);
 	u32 (*copy_bl2_from_emmc)(u32 nblock, u32 dst);
 	void (*end_bootop_from_emmc)(void);
-	u32 (*usb_copy)(void);
+	/*
+	 * Note that older hardware (before 5422) does not expect any
+	 * arguments, but it does not hurt to pass them, so a common function
+	 * prototype is used.
+	 */
+	u32 (*usb_copy)(u32 num_of_block, u32 *dst);
 
 	uboot_size = param->uboot_size;
 
@@ -666,7 +671,7 @@ static void copy_uboot_to_ram(enum boot_mode bootmode)
 		 */
 		is_cr_z_set = config_branch_prediction(0);
 		usb_copy = get_irom_func(USB_INDEX);
-		usb_copy();
+		usb_copy(0, (u32 *)CONFIG_SYS_TEXT_BASE);
 		config_branch_prediction(is_cr_z_set);
 		break;
 	default:
