@@ -378,9 +378,9 @@ const struct exynos5420_pll_pms pms = {
 	.ipll_pdiv = 0x3,
 	.ipll_sdiv = 0x2,
 
-	/* VPLL @430MHz */
-	.vpll_mdiv = 0xd7,
-	.vpll_pdiv = 0x3,
+	/* VPLL @420MHz */
+	.vpll_mdiv = 0x8c,
+	.vpll_pdiv = 0x2,
 	.vpll_sdiv = 0x2,
 
 	/* BPLL @800MHz */
