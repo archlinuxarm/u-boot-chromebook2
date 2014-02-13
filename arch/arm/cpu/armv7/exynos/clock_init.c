@@ -349,8 +349,8 @@ const struct exynos5420_pll_pms pms = {
 	.apll_sdiv = 0x1,
 
 	/* KPLL @600MHz */
-	.kpll_mdiv = 0x190,
-	.kpll_pdiv = 0x4,
+	.kpll_mdiv = 0xc8,
+	.kpll_pdiv = 0x2,
 	.kpll_sdiv = 0x2,
 
 	/* MPLL @800MHz*/
@@ -359,8 +359,8 @@ const struct exynos5420_pll_pms pms = {
 	.mpll_sdiv = 0x1,
 
 	/* DPLL @600MHz */
-	.dpll_mdiv = 0x190,
-	.dpll_pdiv = 0x4,
+	.dpll_mdiv = 0xc8,
+	.dpll_pdiv = 0x2,
 	.dpll_sdiv = 0x2,
 
 	/* EPLL @600MHz */
