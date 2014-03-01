@@ -298,8 +298,8 @@ struct exynos5_power {
 	unsigned int	sysip_dat3;
 	unsigned char	res11[0xe0];
 	unsigned int	pmu_spare0;
-	unsigned int	pmu_spare1;
-	unsigned int	pmu_spare2;
+	unsigned int	pmu_spare1; /* Store PHY0_CON4 for read leveling */
+	unsigned int	pmu_spare2; /* Store PHY1_CON4 for read leveling */
 	unsigned int	pmu_spare3;
 	unsigned char	res12[0x70];
 	unsigned int	irom_data_reg0;
