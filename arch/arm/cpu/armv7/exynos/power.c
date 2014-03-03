@@ -233,6 +233,33 @@ uint32_t get_reset_status(void)
 		return  exynos4_get_reset_status();
 }
 
+static bool exynos542x_call_memctrl_patch(void)
+{
+	struct exynos5_power *power =
+		(struct exynos5_power *)samsung_get_base_power();
+	typedef int (*patch_func)(void);
+
+	/*
+	 * We'll use bit 24 of inform3 to indicate whether we're patched.
+	 *
+	 * If we're patched then the patch will be in inform0.  It's up to
+	 * the patch to re-set inform0 to the proper resume vector after it's
+	 * done (later called by exynos5_power_exit_wakeup()).
+	 */
+	if ((power->inform3 & S5P_PATCH_MEMORY_REINIT) != 0)
+		return ((patch_func)power->inform0)();
+
+	return false;
+}
+
+bool call_memctrl_patch(void)
+{
+	if (proid_is_exynos542x())
+		return exynos542x_call_memctrl_patch();
+
+	return false;
+}
+
 static void exynos5_power_exit_wakeup(void)
 {
 	struct exynos5_power *power =

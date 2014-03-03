@@ -866,6 +866,10 @@ struct exynos5_power {
  * INFORM3 - Upon a normal boot U-Boot will cache the board revision / subrev
  *           here so that we can refer to them at resume time. Kernel shouldn't
  *           touch.
+ *           - At normal boot we will store 0xc0de0000 | (rev << 8) | subrev;
+ *           - We also use bit 24 to indicate whether the kernel needs patch
+ *             the resume process before memory init.  In that case INFORM0
+ *             will be called earlier in resume.
  */
 
 #endif	/* __ASSEMBLY__ */
@@ -922,6 +926,15 @@ void set_xclkout(void);
  *  Read inform1 to get the reset status
  */
 uint32_t get_reset_status(void);
+
+/*
+ *  If inform3/inform0 indicates a kernel patch, call it.
+ *
+ *  @return	True if the kernel would like to skip memory controller init.
+ *  		False if no kernel patch or we should continue with memory
+ *  		controller init anyway.
+ */
+bool call_memctrl_patch(void);
 
 /*
  *  Read the resume function and call it

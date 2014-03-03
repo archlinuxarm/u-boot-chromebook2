@@ -80,6 +80,9 @@
 #define S5P_CHECK_DIDLE			0xBAD00000
 #define S5P_CHECK_LPA			0xABAD0000
 
+/* Kernel set this bit in INFORM3 to indicate that memory reinit needs patch */
+#define S5P_PATCH_MEMORY_REINIT		0x01000000
+
 /* Offset for inform registers */
 #define INFORM0_OFFSET			0x800
 #define INFORM1_OFFSET			0x804
